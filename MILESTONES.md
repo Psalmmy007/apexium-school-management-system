@@ -57,7 +57,7 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 - [x] Score entry schema + API + UI, per subject per term
 - [x] Configurable grading scheme (WAEC-style grade bands, stored as config, not hardcoded)
-- [ ] Class ranking computation
+- [x] Class ranking computation
 - [ ] Build a hand-verified sample dataset (a small class with known correct grades and ranks) and an automated test asserting the system's output matches it exactly
 
 **Definition of Done:** The automated test against the verified sample dataset passes exactly — no rounding or ranking discrepancies.
