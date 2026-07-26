@@ -22,7 +22,7 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 ## Milestone 1: Student Information System (SIS) — [ ] NOT STARTED
 
 - [x] Student schema: biodata, photo reference, guardian/parent links, class/section assignment, `school_id`
-- [ ] Student CRUD: API (Next.js Route Handlers) + admin UI pages (list, add, edit, view)
+- [x] Student CRUD: API (Next.js Route Handlers) + admin UI pages (list, add, edit, view)
 - [ ] Bulk CSV import for rosters, with row-level error reporting (which rows failed and why)
 - [ ] Automated test: create two schools, add students to each, assert School A's admin can never query, see, or edit School B's students
 
