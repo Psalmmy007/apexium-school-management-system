@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build outputs
+.next/
+dist/
+build/
+out/
+
+# Environment variables — NEVER commit real values
+.env
+.env.local
+.env.*.local
+
+# Drizzle migrations output (keep schema, ignore generated SQL if needed)
+# We keep migrations in version control so they are tracked
+
+# Test outputs
+coverage/
+playwright-report/
+test-results/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/settings.json
+
+# pnpm
+.pnpm-debug.log
+
+# Supabase local
+supabase/.branches/
+supabase/.temp/

@@ -1,0 +1,14 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "rootDir": "src",
+    "outDir": "dist",
+    "paths": {
+      "@apexium/types": ["../../packages/types/src/index.ts"],
+      "@apexium/db": ["../../packages/db/src/index.ts"]
+    }
+  },
+  "include": ["src"]
+}
