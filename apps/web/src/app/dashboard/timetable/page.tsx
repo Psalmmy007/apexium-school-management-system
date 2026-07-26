@@ -28,6 +28,7 @@ interface OptionItem {
   code?: string;
   firstName?: string;
   lastName?: string;
+  email?: string;
   startTime?: string;
   endTime?: string;
 }

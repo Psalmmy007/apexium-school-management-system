@@ -6,6 +6,7 @@ import {
   timestamp,
   boolean,
   integer,
+  doublePrecision,
   pgEnum,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
@@ -123,8 +124,8 @@ export const subjects = pgTable("subjects", {
   schoolId: uuid("school_id")
     .notNull()
     .references(() => schools.id, { onDelete: "cascade" }),
-  name: varchar("name", { length: 100 }).notNull(), // e.g. "Mathematics", "Physics"
-  code: varchar("code", { length: 50 }), // e.g. "MATH101"
+  name: varchar("name", { length: 100 }).notNull(),
+  code: varchar("code", { length: 50 }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -139,10 +140,29 @@ export const periods = pgTable("periods", {
   schoolId: uuid("school_id")
     .notNull()
     .references(() => schools.id, { onDelete: "cascade" }),
-  name: varchar("name", { length: 100 }).notNull(), // e.g. "Period 1", "Morning Period"
-  startTime: varchar("start_time", { length: 5 }).notNull(), // e.g. "08:00"
-  endTime: varchar("end_time", { length: 5 }).notNull(), // e.g. "08:45"
+  name: varchar("name", { length: 100 }).notNull(),
+  startTime: varchar("start_time", { length: 5 }).notNull(),
+  endTime: varchar("end_time", { length: 5 }).notNull(),
   sortOrder: integer("sort_order").notNull().default(1),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// ── Table: terms (Academic terms) ──────────────────────────────
+export const terms = pgTable("terms", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  schoolId: uuid("school_id")
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 100 }).notNull(), // e.g. "First Term"
+  session: varchar("session", { length: 50 }).notNull(), // e.g. "2025/2026"
+  startDate: timestamp("start_date", { withTimezone: true }),
+  endDate: timestamp("end_date", { withTimezone: true }),
+  isCurrent: boolean("is_current").notNull().default(false),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -347,19 +367,62 @@ export const timetableEntries = pgTable(
       .defaultNow(),
   },
   (table) => ({
-    // Unique constraint: A class cannot have two subjects in the same period on the same day
     classPeriodDayIdx: uniqueIndex("class_period_day_idx").on(
       table.schoolId,
       table.classId,
       table.periodId,
       table.dayOfWeek
     ),
-    // Unique constraint: A teacher cannot teach two classes in the same period on the same day
     teacherPeriodDayIdx: uniqueIndex("teacher_period_day_idx").on(
       table.schoolId,
       table.teacherId,
       table.periodId,
       table.dayOfWeek
+    ),
+  })
+);
+
+// ── Table: student_scores (Academic Scores per term) ──────────
+export const studentScores = pgTable(
+  "student_scores",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => students.id, { onDelete: "cascade" }),
+    classId: uuid("class_id")
+      .notNull()
+      .references(() => classes.id, { onDelete: "cascade" }),
+    subjectId: uuid("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "cascade" }),
+    termId: uuid("term_id")
+      .notNull()
+      .references(() => terms.id, { onDelete: "cascade" }),
+    caScore: doublePrecision("ca_score").notNull().default(0), // Out of 40
+    examScore: doublePrecision("exam_score").notNull().default(0), // Out of 60
+    totalScore: doublePrecision("total_score").notNull().default(0), // caScore + examScore
+    grade: varchar("grade", { length: 5 }), // Calculated e.g. "A1", "B2", "C4", "F9"
+    remarks: text("remarks"),
+    enteredBy: uuid("entered_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    studentSubjectTermIdx: uniqueIndex("student_subject_term_idx").on(
+      table.schoolId,
+      table.studentId,
+      table.subjectId,
+      table.termId
     ),
   })
 );
@@ -371,12 +434,14 @@ export const schoolsRelations = relations(schools, ({ many }) => ({
   sections: many(sections),
   subjects: many(subjects),
   periods: many(periods),
+  terms: many(terms),
   students: many(students),
   studentGuardians: many(studentGuardians),
   studentAttendance: many(studentAttendance),
   staffAttendance: many(staffAttendance),
   conflictLogs: many(attendanceConflictLogs),
   timetableEntries: many(timetableEntries),
+  studentScores: many(studentScores),
 }));
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -388,6 +453,15 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   attendanceMarked: many(studentAttendance),
   staffAttendanceRecords: many(staffAttendance),
   timetableAssigned: many(timetableEntries),
+  scoresEntered: many(studentScores),
+}));
+
+export const termsRelations = relations(terms, ({ one, many }) => ({
+  school: one(schools, {
+    fields: [terms.schoolId],
+    references: [schools.id],
+  }),
+  scores: many(studentScores),
 }));
 
 export const classesRelations = relations(classes, ({ one, many }) => ({
@@ -400,6 +474,7 @@ export const classesRelations = relations(classes, ({ one, many }) => ({
   attendance: many(studentAttendance),
   conflictLogs: many(attendanceConflictLogs),
   timetableEntries: many(timetableEntries),
+  scores: many(studentScores),
 }));
 
 export const subjectsRelations = relations(subjects, ({ one, many }) => ({
@@ -408,6 +483,7 @@ export const subjectsRelations = relations(subjects, ({ one, many }) => ({
     references: [schools.id],
   }),
   timetableEntries: many(timetableEntries),
+  scores: many(studentScores),
 }));
 
 export const periodsRelations = relations(periods, ({ one, many }) => ({
@@ -447,3 +523,30 @@ export const timetableEntriesRelations = relations(
     }),
   })
 );
+
+export const studentScoresRelations = relations(studentScores, ({ one }) => ({
+  school: one(schools, {
+    fields: [studentScores.schoolId],
+    references: [schools.id],
+  }),
+  student: one(students, {
+    fields: [studentScores.studentId],
+    references: [students.id],
+  }),
+  class: one(classes, {
+    fields: [studentScores.classId],
+    references: [classes.id],
+  }),
+  subject: one(subjects, {
+    fields: [studentScores.subjectId],
+    references: [subjects.id],
+  }),
+  term: one(terms, {
+    fields: [studentScores.termId],
+    references: [terms.id],
+  }),
+  enteredBy: one(users, {
+    fields: [studentScores.enteredBy],
+    references: [users.id],
+  }),
+}));

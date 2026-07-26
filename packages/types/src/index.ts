@@ -99,6 +99,45 @@ export interface Period {
   updatedAt: Date;
 }
 
+// ── Academic Term ─────────────────────────────────────────────
+export interface AcademicTerm {
+  id: string;
+  schoolId: string;
+  name: string; // e.g. "First Term"
+  session: string; // e.g. "2025/2026"
+  startDate: Date | null;
+  endDate: Date | null;
+  isCurrent: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ── Student Score & Academics ─────────────────────────────────
+export interface StudentScore {
+  id: string;
+  schoolId: string;
+  studentId: string;
+  classId: string;
+  subjectId: string;
+  termId: string;
+  caScore: number; // Max 40
+  examScore: number; // Max 60
+  totalScore: number; // caScore + examScore (Max 100)
+  grade: string | null; // e.g. "A1", "B2", "C4", "F9"
+  remarks: string | null;
+  enteredBy: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+
+  // Joined display fields
+  studentFirstName?: string;
+  studentLastName?: string;
+  admissionNumber?: string;
+  subjectName?: string;
+  className?: string;
+  termName?: string;
+}
+
 // ── Timetable Entry ───────────────────────────────────────────
 export interface TimetableEntry {
   id: string;
