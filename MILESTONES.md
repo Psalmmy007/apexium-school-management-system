@@ -55,7 +55,7 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 ## Milestone 4: Academics — Scores & Grading — [ ] NOT STARTED
 
-- [ ] Score entry schema + API + UI, per subject per term
+- [x] Score entry schema + API + UI, per subject per term
 - [ ] Configurable grading scheme (WAEC-style grade bands, stored as config, not hardcoded)
 - [ ] Class ranking computation
 - [ ] Build a hand-verified sample dataset (a small class with known correct grades and ranks) and an automated test asserting the system's output matches it exactly

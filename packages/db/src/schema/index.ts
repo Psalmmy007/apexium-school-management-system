@@ -158,11 +158,31 @@ export const terms = pgTable("terms", {
   schoolId: uuid("school_id")
     .notNull()
     .references(() => schools.id, { onDelete: "cascade" }),
-  name: varchar("name", { length: 100 }).notNull(), // e.g. "First Term"
-  session: varchar("session", { length: 50 }).notNull(), // e.g. "2025/2026"
+  name: varchar("name", { length: 100 }).notNull(),
+  session: varchar("session", { length: 50 }).notNull(),
   startDate: timestamp("start_date", { withTimezone: true }),
   endDate: timestamp("end_date", { withTimezone: true }),
   isCurrent: boolean("is_current").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// ── Table: grading_scales (Configurable grade bands per school) ─
+export const gradingScales = pgTable("grading_scales", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  schoolId: uuid("school_id")
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 100 }).notNull().default("WAEC Grade Scale"),
+  grade: varchar("grade", { length: 5 }).notNull(), // e.g. "A1", "B2"
+  minScore: doublePrecision("min_score").notNull(), // e.g. 75.0
+  maxScore: doublePrecision("max_score").notNull(), // e.g. 100.0
+  remark: varchar("remark", { length: 100 }).notNull(), // e.g. "Excellent"
+  sortOrder: integer("sort_order").notNull().default(1),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -402,10 +422,10 @@ export const studentScores = pgTable(
     termId: uuid("term_id")
       .notNull()
       .references(() => terms.id, { onDelete: "cascade" }),
-    caScore: doublePrecision("ca_score").notNull().default(0), // Out of 40
-    examScore: doublePrecision("exam_score").notNull().default(0), // Out of 60
-    totalScore: doublePrecision("total_score").notNull().default(0), // caScore + examScore
-    grade: varchar("grade", { length: 5 }), // Calculated e.g. "A1", "B2", "C4", "F9"
+    caScore: doublePrecision("ca_score").notNull().default(0),
+    examScore: doublePrecision("exam_score").notNull().default(0),
+    totalScore: doublePrecision("total_score").notNull().default(0),
+    grade: varchar("grade", { length: 5 }),
     remarks: text("remarks"),
     enteredBy: uuid("entered_by").references(() => users.id, {
       onDelete: "set null",
@@ -435,6 +455,7 @@ export const schoolsRelations = relations(schools, ({ many }) => ({
   subjects: many(subjects),
   periods: many(periods),
   terms: many(terms),
+  gradingScales: many(gradingScales),
   students: many(students),
   studentGuardians: many(studentGuardians),
   studentAttendance: many(studentAttendance),
@@ -462,6 +483,13 @@ export const termsRelations = relations(terms, ({ one, many }) => ({
     references: [schools.id],
   }),
   scores: many(studentScores),
+}));
+
+export const gradingScalesRelations = relations(gradingScales, ({ one }) => ({
+  school: one(schools, {
+    fields: [gradingScales.schoolId],
+    references: [schools.id],
+  }),
 }));
 
 export const classesRelations = relations(classes, ({ one, many }) => ({
