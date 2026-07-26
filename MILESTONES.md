@@ -42,12 +42,12 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 ---
 
-## Milestone 3: Timetable / Class Scheduling — [ ] NOT STARTED
+## Milestone 3: Timetable / Class Scheduling — [x] COMPLETE
 
-- [ ] Timetable schema: subject, teacher, class, period, `school_id`
-- [ ] Conflict prevention enforced at the data/service layer (a teacher cannot be assigned to two classes in the same period; a class cannot have two subjects in the same period) — not just a UI warning
-- [ ] Admin UI to build and edit a timetable
-- [ ] Automated test: attempt to create a double-booking, assert the system rejects it
+- [x] Timetable schema: subject, teacher, class, period, `school_id`
+- [x] Conflict prevention enforced at the data/service layer (a teacher cannot be assigned to two classes in the same period; a class cannot have two subjects in the same period) — not just a UI warning
+- [x] Admin UI to build and edit a timetable
+- [x] Automated test: attempt to create a double-booking, assert the system rejects it
 
 **Definition of Done:** A full week's timetable can be built for a class, and the double-booking test passes.
 

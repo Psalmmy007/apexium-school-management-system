@@ -1,4 +1,5 @@
 export * from "./schema/index.js";
 export * from "./services/import-students.js";
+export * from "./services/timetable.js";
 export { db } from "./client.js";
 export type { Db } from "./client.js";
