@@ -242,6 +242,33 @@ export const staffAttendance = pgTable(
   })
 );
 
+// ── Table: attendance_conflict_logs (Permanent Conflict Audit Trail) ──
+export const attendanceConflictLogs = pgTable("attendance_conflict_logs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  schoolId: uuid("school_id")
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  studentId: uuid("student_id")
+    .notNull()
+    .references(() => students.id, { onDelete: "cascade" }),
+  classId: uuid("class_id")
+    .notNull()
+    .references(() => classes.id, { onDelete: "cascade" }),
+  date: varchar("date", { length: 10 }).notNull(),
+  period: varchar("period", { length: 50 }).notNull().default("daily"),
+  previousStatus: varchar("previous_status", { length: 50 }).notNull(),
+  winningStatus: varchar("winning_status", { length: 50 }).notNull(),
+  previousUpdatedAt: timestamp("previous_updated_at", { withTimezone: true }),
+  winningUpdatedAt: timestamp("winning_updated_at", { withTimezone: true }),
+  reason: text("reason").notNull(),
+  resolvedBy: uuid("resolved_by").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // ── Relations ─────────────────────────────────────────────────
 export const schoolsRelations = relations(schools, ({ many }) => ({
   users: many(users),
@@ -251,6 +278,7 @@ export const schoolsRelations = relations(schools, ({ many }) => ({
   studentGuardians: many(studentGuardians),
   studentAttendance: many(studentAttendance),
   staffAttendance: many(staffAttendance),
+  conflictLogs: many(attendanceConflictLogs),
 }));
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -271,6 +299,7 @@ export const classesRelations = relations(classes, ({ one, many }) => ({
   sections: many(sections),
   students: many(students),
   attendance: many(studentAttendance),
+  conflictLogs: many(attendanceConflictLogs),
 }));
 
 export const sectionsRelations = relations(sections, ({ one, many }) => ({
@@ -301,6 +330,7 @@ export const studentsRelations = relations(students, ({ one, many }) => ({
   }),
   guardians: many(studentGuardians),
   attendance: many(studentAttendance),
+  conflictLogs: many(attendanceConflictLogs),
 }));
 
 export const studentAttendanceRelations = relations(
@@ -342,6 +372,28 @@ export const staffAttendanceRelations = relations(
     }),
     marker: one(users, {
       fields: [staffAttendance.markedBy],
+      references: [users.id],
+    }),
+  })
+);
+
+export const attendanceConflictLogsRelations = relations(
+  attendanceConflictLogs,
+  ({ one }) => ({
+    school: one(schools, {
+      fields: [attendanceConflictLogs.schoolId],
+      references: [schools.id],
+    }),
+    student: one(students, {
+      fields: [attendanceConflictLogs.studentId],
+      references: [students.id],
+    }),
+    class: one(classes, {
+      fields: [attendanceConflictLogs.classId],
+      references: [classes.id],
+    }),
+    resolver: one(users, {
+      fields: [attendanceConflictLogs.resolvedBy],
       references: [users.id],
     }),
   })

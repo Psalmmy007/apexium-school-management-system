@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSessionUser } from "@/lib/auth/session";
-import { db, studentAttendance } from "@apexium/db";
+import { db, studentAttendance, attendanceConflictLogs } from "@apexium/db";
 import { eq, and } from "drizzle-orm";
 
 interface IncomingSyncDoc {
@@ -103,13 +103,46 @@ export async function POST(request: NextRequest) {
             .returning();
 
           syncedResults.push(updated);
-          if (incomingTime > existingTime) {
-            conflictLog.push(`Reconciled record ${existing.id}: updated from ${existing.status} to ${status} (newer timestamp)`);
+
+          // If there was a conflict (different status or timestamp edit), write to permanent audit log table
+          if (existing.status !== status || incomingTime > existingTime) {
+            const reasonMsg = `Reconciled conflict: ${existing.status} (t=${existingTime}) -> ${status} (t=${incomingTime})`;
+            conflictLog.push(reasonMsg);
+
+            await db.insert(attendanceConflictLogs).values({
+              schoolId: user.schoolId,
+              studentId,
+              classId,
+              date,
+              period,
+              previousStatus: existing.status,
+              winningStatus: status,
+              previousUpdatedAt: existing.updatedAt,
+              winningUpdatedAt: incomingTimestamp,
+              reason: reasonMsg,
+              resolvedBy: user.id,
+            });
           }
         } else {
           // Server record is strictly newer — preserve server state
           syncedResults.push(existing);
-          conflictLog.push(`Reconciled record ${existing.id}: preserved server status ${existing.status} (server timestamp newer)`);
+
+          const reasonMsg = `Preserved server state: kept ${existing.status} (t=${existingTime}) over older incoming ${status} (t=${incomingTime})`;
+          conflictLog.push(reasonMsg);
+
+          await db.insert(attendanceConflictLogs).values({
+            schoolId: user.schoolId,
+            studentId,
+            classId,
+            date,
+            period,
+            previousStatus: status,
+            winningStatus: existing.status,
+            previousUpdatedAt: incomingTimestamp,
+            winningUpdatedAt: existing.updatedAt,
+            reason: reasonMsg,
+            resolvedBy: user.id,
+          });
         }
       }
     }
