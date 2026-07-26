@@ -12,6 +12,24 @@ export const USER_ROLES: UserRole[] = ["admin", "teacher", "parent", "student"];
 export type Gender = "male" | "female" | "other";
 export type StudentStatus = "active" | "inactive" | "graduated" | "transferred";
 export type AttendanceStatus = "present" | "absent" | "late" | "excused";
+export type DayOfWeek =
+  | "monday"
+  | "tuesday"
+  | "wednesday"
+  | "thursday"
+  | "friday"
+  | "saturday"
+  | "sunday";
+
+export const DAYS_OF_WEEK: DayOfWeek[] = [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
+];
 
 // ── School (Tenant) ──────────────────────────────────────────
 export interface School {
@@ -58,6 +76,51 @@ export interface Section {
   name: string;
   createdAt: Date;
   updatedAt: Date;
+}
+
+// ── Subject & Period ──────────────────────────────────────────
+export interface Subject {
+  id: string;
+  schoolId: string;
+  name: string;
+  code: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Period {
+  id: string;
+  schoolId: string;
+  name: string;
+  startTime: string; // e.g. "08:00"
+  endTime: string; // e.g. "08:45"
+  sortOrder: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ── Timetable Entry ───────────────────────────────────────────
+export interface TimetableEntry {
+  id: string;
+  schoolId: string;
+  classId: string;
+  sectionId: string | null;
+  subjectId: string;
+  teacherId: string;
+  periodId: string;
+  dayOfWeek: DayOfWeek;
+  roomNumber: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+
+  // Joined display fields
+  className?: string;
+  subjectName?: string;
+  subjectCode?: string | null;
+  teacherName?: string;
+  periodName?: string;
+  periodStartTime?: string;
+  periodEndTime?: string;
 }
 
 // ── Student ───────────────────────────────────────────────────

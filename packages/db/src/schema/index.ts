@@ -5,6 +5,7 @@ import {
   text,
   timestamp,
   boolean,
+  integer,
   pgEnum,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
@@ -32,6 +33,16 @@ export const attendanceStatusEnum = pgEnum("attendance_status", [
   "absent",
   "late",
   "excused",
+]);
+
+export const dayOfWeekEnum = pgEnum("day_of_week", [
+  "monday",
+  "tuesday",
+  "wednesday",
+  "thursday",
+  "friday",
+  "saturday",
+  "sunday",
 ]);
 
 // ── Table: schools (tenants) ──────────────────────────────────
@@ -106,6 +117,40 @@ export const sections = pgTable("sections", {
     .defaultNow(),
 });
 
+// ── Table: subjects ───────────────────────────────────────────
+export const subjects = pgTable("subjects", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  schoolId: uuid("school_id")
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 100 }).notNull(), // e.g. "Mathematics", "Physics"
+  code: varchar("code", { length: 50 }), // e.g. "MATH101"
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// ── Table: periods ────────────────────────────────────────────
+export const periods = pgTable("periods", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  schoolId: uuid("school_id")
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 100 }).notNull(), // e.g. "Period 1", "Morning Period"
+  startTime: varchar("start_time", { length: 5 }).notNull(), // e.g. "08:00"
+  endTime: varchar("end_time", { length: 5 }).notNull(), // e.g. "08:45"
+  sortOrder: integer("sort_order").notNull().default(1),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // ── Table: students ───────────────────────────────────────────
 export const students = pgTable(
   "students",
@@ -144,7 +189,7 @@ export const students = pgTable(
   })
 );
 
-// ── Table: student_guardians (guardian/parent links) ──────────
+// ── Table: student_guardians ──────────────────────────────────
 export const studentGuardians = pgTable("student_guardians", {
   id: uuid("id").primaryKey().defaultRandom(),
   schoolId: uuid("school_id")
@@ -156,7 +201,7 @@ export const studentGuardians = pgTable("student_guardians", {
   parentId: uuid("parent_id")
     .notNull()
     .references(() => users.id, { onDelete: "cascade" }),
-  relationship: varchar("relationship", { length: 50 }).notNull(), // Father, Mother, Guardian, etc.
+  relationship: varchar("relationship", { length: 50 }).notNull(),
   isPrimary: boolean("is_primary").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
@@ -183,8 +228,8 @@ export const studentAttendance = pgTable(
     sectionId: uuid("section_id").references(() => sections.id, {
       onDelete: "set null",
     }),
-    date: varchar("date", { length: 10 }).notNull(), // "YYYY-MM-DD"
-    period: varchar("period", { length: 50 }).notNull().default("daily"), // "daily", "morning", "period_1"
+    date: varchar("date", { length: 10 }).notNull(),
+    period: varchar("period", { length: 50 }).notNull().default("daily"),
     status: attendanceStatusEnum("status").notNull(),
     remarks: text("remarks"),
     markedBy: uuid("marked_by").references(() => users.id, {
@@ -218,7 +263,7 @@ export const staffAttendance = pgTable(
     userId: uuid("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
-    date: varchar("date", { length: 10 }).notNull(), // "YYYY-MM-DD"
+    date: varchar("date", { length: 10 }).notNull(),
     status: attendanceStatusEnum("status").notNull(),
     checkInTime: timestamp("check_in_time", { withTimezone: true }),
     checkOutTime: timestamp("check_out_time", { withTimezone: true }),
@@ -242,7 +287,7 @@ export const staffAttendance = pgTable(
   })
 );
 
-// ── Table: attendance_conflict_logs (Permanent Conflict Audit Trail) ──
+// ── Table: attendance_conflict_logs ───────────────────────────
 export const attendanceConflictLogs = pgTable("attendance_conflict_logs", {
   id: uuid("id").primaryKey().defaultRandom(),
   schoolId: uuid("school_id")
@@ -269,16 +314,69 @@ export const attendanceConflictLogs = pgTable("attendance_conflict_logs", {
     .defaultNow(),
 });
 
+// ── Table: timetable_entries ──────────────────────────────────
+export const timetableEntries = pgTable(
+  "timetable_entries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    classId: uuid("class_id")
+      .notNull()
+      .references(() => classes.id, { onDelete: "cascade" }),
+    sectionId: uuid("section_id").references(() => sections.id, {
+      onDelete: "set null",
+    }),
+    subjectId: uuid("subject_id")
+      .notNull()
+      .references(() => subjects.id, { onDelete: "cascade" }),
+    teacherId: uuid("teacher_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    periodId: uuid("period_id")
+      .notNull()
+      .references(() => periods.id, { onDelete: "cascade" }),
+    dayOfWeek: dayOfWeekEnum("day_of_week").notNull(),
+    roomNumber: varchar("room_number", { length: 50 }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    // Unique constraint: A class cannot have two subjects in the same period on the same day
+    classPeriodDayIdx: uniqueIndex("class_period_day_idx").on(
+      table.schoolId,
+      table.classId,
+      table.periodId,
+      table.dayOfWeek
+    ),
+    // Unique constraint: A teacher cannot teach two classes in the same period on the same day
+    teacherPeriodDayIdx: uniqueIndex("teacher_period_day_idx").on(
+      table.schoolId,
+      table.teacherId,
+      table.periodId,
+      table.dayOfWeek
+    ),
+  })
+);
+
 // ── Relations ─────────────────────────────────────────────────
 export const schoolsRelations = relations(schools, ({ many }) => ({
   users: many(users),
   classes: many(classes),
   sections: many(sections),
+  subjects: many(subjects),
+  periods: many(periods),
   students: many(students),
   studentGuardians: many(studentGuardians),
   studentAttendance: many(studentAttendance),
   staffAttendance: many(staffAttendance),
   conflictLogs: many(attendanceConflictLogs),
+  timetableEntries: many(timetableEntries),
 }));
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -289,6 +387,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   guardianLinks: many(studentGuardians),
   attendanceMarked: many(studentAttendance),
   staffAttendanceRecords: many(staffAttendance),
+  timetableAssigned: many(timetableEntries),
 }));
 
 export const classesRelations = relations(classes, ({ one, many }) => ({
@@ -300,101 +399,51 @@ export const classesRelations = relations(classes, ({ one, many }) => ({
   students: many(students),
   attendance: many(studentAttendance),
   conflictLogs: many(attendanceConflictLogs),
+  timetableEntries: many(timetableEntries),
 }));
 
-export const sectionsRelations = relations(sections, ({ one, many }) => ({
+export const subjectsRelations = relations(subjects, ({ one, many }) => ({
   school: one(schools, {
-    fields: [sections.schoolId],
+    fields: [subjects.schoolId],
     references: [schools.id],
   }),
-  class: one(classes, {
-    fields: [sections.classId],
-    references: [classes.id],
-  }),
-  students: many(students),
-  attendance: many(studentAttendance),
+  timetableEntries: many(timetableEntries),
 }));
 
-export const studentsRelations = relations(students, ({ one, many }) => ({
+export const periodsRelations = relations(periods, ({ one, many }) => ({
   school: one(schools, {
-    fields: [students.schoolId],
+    fields: [periods.schoolId],
     references: [schools.id],
   }),
-  class: one(classes, {
-    fields: [students.classId],
-    references: [classes.id],
-  }),
-  section: one(sections, {
-    fields: [students.sectionId],
-    references: [sections.id],
-  }),
-  guardians: many(studentGuardians),
-  attendance: many(studentAttendance),
-  conflictLogs: many(attendanceConflictLogs),
+  timetableEntries: many(timetableEntries),
 }));
 
-export const studentAttendanceRelations = relations(
-  studentAttendance,
+export const timetableEntriesRelations = relations(
+  timetableEntries,
   ({ one }) => ({
     school: one(schools, {
-      fields: [studentAttendance.schoolId],
+      fields: [timetableEntries.schoolId],
       references: [schools.id],
     }),
-    student: one(students, {
-      fields: [studentAttendance.studentId],
-      references: [students.id],
-    }),
     class: one(classes, {
-      fields: [studentAttendance.classId],
+      fields: [timetableEntries.classId],
       references: [classes.id],
     }),
     section: one(sections, {
-      fields: [studentAttendance.sectionId],
+      fields: [timetableEntries.sectionId],
       references: [sections.id],
     }),
-    marker: one(users, {
-      fields: [studentAttendance.markedBy],
+    subject: one(subjects, {
+      fields: [timetableEntries.subjectId],
+      references: [subjects.id],
+    }),
+    teacher: one(users, {
+      fields: [timetableEntries.teacherId],
       references: [users.id],
     }),
-  })
-);
-
-export const staffAttendanceRelations = relations(
-  staffAttendance,
-  ({ one }) => ({
-    school: one(schools, {
-      fields: [staffAttendance.schoolId],
-      references: [schools.id],
-    }),
-    user: one(users, {
-      fields: [staffAttendance.userId],
-      references: [users.id],
-    }),
-    marker: one(users, {
-      fields: [staffAttendance.markedBy],
-      references: [users.id],
-    }),
-  })
-);
-
-export const attendanceConflictLogsRelations = relations(
-  attendanceConflictLogs,
-  ({ one }) => ({
-    school: one(schools, {
-      fields: [attendanceConflictLogs.schoolId],
-      references: [schools.id],
-    }),
-    student: one(students, {
-      fields: [attendanceConflictLogs.studentId],
-      references: [students.id],
-    }),
-    class: one(classes, {
-      fields: [attendanceConflictLogs.classId],
-      references: [classes.id],
-    }),
-    resolver: one(users, {
-      fields: [attendanceConflictLogs.resolvedBy],
-      references: [users.id],
+    period: one(periods, {
+      fields: [timetableEntries.periodId],
+      references: [periods.id],
     }),
   })
 );
