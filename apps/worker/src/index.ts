@@ -1,5 +1,8 @@
 import { Worker, Queue } from "bullmq";
 import { Redis } from "ioredis";
+import fs from "fs/promises";
+import path from "path";
+import { generateReportCardPdfBuffer, type StudentReportCardData } from "./services/report-card-pdf.js";
 
 // ── Redis connection ──────────────────────────────────────────
 const redisUrl = process.env.REDIS_URL ?? "redis://localhost:6379";
@@ -8,50 +11,73 @@ const connection = new Redis(redisUrl, {
   maxRetriesPerRequest: null, // required by BullMQ
 });
 
-connection.on("connect", () => console.log("✅  Worker connected to Redis"));
-connection.on("error", (err: Error) => console.error("❌  Redis error:", err));
+connection.on("connect", () => console.log("✅ Worker connected to Redis"));
+connection.on("error", (err: Error) => console.error("❌ Redis error:", err));
 
 // ── Queue definitions ─────────────────────────────────────────
-// These queues will grow as features are added in later milestones.
 export const pdfQueue = new Queue("pdf-generation", { connection });
 export const importQueue = new Queue("bulk-import", { connection });
 
-// ── Workers ───────────────────────────────────────────────────
+// Target storage directory for generated PDF report cards
+const PDF_STORAGE_DIR = path.join(process.cwd(), "public", "reports");
 
-// PDF Generation Worker (Milestone 5)
-const pdfWorker = new Worker(
+export interface PdfGenerationJobData {
+  jobId: string;
+  schoolId: string;
+  classId: string;
+  academicSession: string;
+  termName: string;
+  studentsData: StudentReportCardData[];
+}
+
+// ── PDF Generation Worker (Milestone 5) ────────────────────────
+export const pdfWorker = new Worker<PdfGenerationJobData>(
   "pdf-generation",
   async (job) => {
-    console.log(`[pdf-generation] Processing job ${job.id}:`, job.data);
-    // TODO (Milestone 5): implement PDF generation with Puppeteer/pdf-lib
-    throw new Error("PDF generation not yet implemented");
+    const { jobId, schoolId, classId, academicSession, termName, studentsData } = job.data;
+    console.log(`[pdf-generation] Processing job ${job.id} for Class ${classId} (${studentsData.length} students)`);
+
+    const outputDir = path.join(PDF_STORAGE_DIR, schoolId, jobId);
+    await fs.mkdir(outputDir, { recursive: true });
+
+    const generatedFiles: Array<{ studentId: string; fileName: string; path: string }> = [];
+
+    for (let i = 0; i < studentsData.length; i++) {
+      const studentCard = studentsData[i];
+      const buffer = await generateReportCardPdfBuffer(studentCard);
+
+      const fileName = `report-${studentCard.student.admissionNumber}.pdf`;
+      const filePath = path.join(outputDir, fileName);
+
+      await fs.writeFile(filePath, buffer);
+
+      generatedFiles.push({
+        studentId: studentCard.student.admissionNumber,
+        fileName,
+        path: `/reports/${schoolId}/${jobId}/${fileName}`,
+      });
+
+      // Update progress
+      const progressPercent = Math.round(((i + 1) / studentsData.length) * 100);
+      await job.updateProgress(progressPercent);
+    }
+
+    return {
+      success: true,
+      totalCount: studentsData.length,
+      files: generatedFiles,
+      jobId,
+    };
   },
   { connection }
 );
 
-// Bulk Import Worker (Milestone 1)
-const importWorker = new Worker(
-  "bulk-import",
-  async (job) => {
-    console.log(`[bulk-import] Processing job ${job.id}:`, job.data);
-    // TODO (Milestone 1): implement CSV student import
-    throw new Error("Bulk import not yet implemented");
-  },
-  { connection }
-);
+pdfWorker.on("completed", (job, result) => {
+  console.log(`[pdf-generation] Job ${job.id} completed. Generated ${result.totalCount} PDFs.`);
+});
 
-pdfWorker.on("completed", (job) =>
-  console.log(`[pdf-generation] Job ${job.id} completed`)
-);
-pdfWorker.on("failed", (job, err) =>
-  console.error(`[pdf-generation] Job ${job?.id} failed:`, err.message)
-);
+pdfWorker.on("failed", (job, err) => {
+  console.error(`[pdf-generation] Job ${job?.id} failed:`, err.message);
+});
 
-importWorker.on("completed", (job) =>
-  console.log(`[bulk-import] Job ${job.id} completed`)
-);
-importWorker.on("failed", (job, err) =>
-  console.error(`[bulk-import] Job ${job?.id} failed:`, err.message)
-);
-
-console.log("🚀  Apexium worker started. Waiting for jobs...");
+console.log("🚀 Apexium worker started. Waiting for jobs...");

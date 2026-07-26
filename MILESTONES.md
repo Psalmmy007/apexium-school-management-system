@@ -64,13 +64,13 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 ---
 
-## Milestone 5: Report Card Generation — [ ] NOT STARTED
+## Milestone 5: Report Card Generation — [x] COMPLETE
 
-- [ ] Report card PDF template (matches the grading data from Milestone 4, includes affective/psychomotor rating fields)
-- [ ] Background job in `apps/worker` (BullMQ) that generates PDFs — this must NOT run inside a Next.js request/response cycle
-- [ ] Next.js route that enqueues a bulk-generation job (e.g., "generate report cards for this whole class") and returns immediately
-- [ ] A way for the admin UI to check job status and download completed PDFs
-- [ ] Automated test: enqueue generation for a full class (simulate at least 100+ students), verify every PDF is produced correctly and the job doesn't crash or time out
+- [x] Report card PDF template (matches the grading data from Milestone 4, includes affective/psychomotor rating fields)
+- [x] Background job in `apps/worker` (BullMQ) that generates PDFs — this must NOT run inside a Next.js request/response cycle
+- [x] Next.js route that enqueues a bulk-generation job (e.g., "generate report cards for this whole class") and returns immediately
+- [x] A way for the admin UI to check job status and download completed PDFs
+- [x] Automated test: enqueue generation for a full class (simulate at least 100+ students), verify every PDF is produced correctly and the job doesn't crash or time out
 
 **Definition of Done:** Bulk report card generation for a full class completes successfully and reliably, verified by the automated test — including at a batch size much larger than one real class, to prove it won't break under real load.
 

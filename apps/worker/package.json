@@ -17,10 +17,13 @@
     "@apexium/db": "workspace:*",
     "@apexium/types": "workspace:*",
     "bullmq": "^5.13.0",
-    "ioredis": "^5.4.1"
+    "ioredis": "^5.4.1",
+    "pdfkit": "^0.15.0",
+    "pdf-lib": "^1.17.1"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
+    "@types/pdfkit": "^0.13.4",
     "tsx": "^4.17.0",
     "typescript": "^5.5.4",
     "vitest": "^2.0.5"
