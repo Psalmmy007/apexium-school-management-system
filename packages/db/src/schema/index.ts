@@ -6,10 +6,11 @@ import {
   timestamp,
   boolean,
   pgEnum,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
-// ── Enum: user roles ──────────────────────────────────────────
+// ── Enums ─────────────────────────────────────────────────────
 export const userRoleEnum = pgEnum("user_role", [
   "admin",
   "teacher",
@@ -17,8 +18,16 @@ export const userRoleEnum = pgEnum("user_role", [
   "student",
 ]);
 
+export const genderEnum = pgEnum("gender", ["male", "female", "other"]);
+
+export const studentStatusEnum = pgEnum("student_status", [
+  "active",
+  "inactive",
+  "graduated",
+  "transferred",
+]);
+
 // ── Table: schools (tenants) ──────────────────────────────────
-// This is the top-level tenant table. Every other table references it.
 export const schools = pgTable("schools", {
   id: uuid("id").primaryKey().defaultRandom(),
   name: varchar("name", { length: 255 }).notNull(),
@@ -37,8 +46,6 @@ export const schools = pgTable("schools", {
 });
 
 // ── Table: users ──────────────────────────────────────────────
-// Every user belongs to exactly one school.
-// The `id` mirrors the Supabase Auth user UUID so we can join on it.
 export const users = pgTable("users", {
   id: uuid("id").primaryKey(), // matches auth.users.id in Supabase
   schoolId: uuid("school_id")
@@ -58,14 +65,168 @@ export const users = pgTable("users", {
     .defaultNow(),
 });
 
+// ── Table: classes ────────────────────────────────────────────
+export const classes = pgTable("classes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  schoolId: uuid("school_id")
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 100 }).notNull(), // e.g. "JSS 1", "Grade 10"
+  code: varchar("code", { length: 50 }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// ── Table: sections ───────────────────────────────────────────
+export const sections = pgTable("sections", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  schoolId: uuid("school_id")
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  classId: uuid("class_id")
+    .notNull()
+    .references(() => classes.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 100 }).notNull(), // e.g. "A", "Gold"
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
+// ── Table: students ───────────────────────────────────────────
+export const students = pgTable(
+  "students",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    admissionNumber: varchar("admission_number", { length: 50 }).notNull(),
+    firstName: varchar("first_name", { length: 100 }).notNull(),
+    lastName: varchar("last_name", { length: 100 }).notNull(),
+    middleName: varchar("middle_name", { length: 100 }),
+    gender: genderEnum("gender"),
+    dateOfBirth: timestamp("date_of_birth", { withTimezone: true }),
+    address: text("address"),
+    photoUrl: text("photo_url"),
+    classId: uuid("class_id").references(() => classes.id, {
+      onDelete: "set null",
+    }),
+    sectionId: uuid("section_id").references(() => sections.id, {
+      onDelete: "set null",
+    }),
+    status: studentStatusEnum("status").notNull().default("active"),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    schoolAdmissionIdx: uniqueIndex("school_admission_idx").on(
+      table.schoolId,
+      table.admissionNumber
+    ),
+  })
+);
+
+// ── Table: student_guardians (guardian/parent links) ──────────
+export const studentGuardians = pgTable("student_guardians", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  schoolId: uuid("school_id")
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  studentId: uuid("student_id")
+    .notNull()
+    .references(() => students.id, { onDelete: "cascade" }),
+  parentId: uuid("parent_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  relationship: varchar("relationship", { length: 50 }).notNull(), // Father, Mother, Guardian, etc.
+  isPrimary: boolean("is_primary").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // ── Relations ─────────────────────────────────────────────────
 export const schoolsRelations = relations(schools, ({ many }) => ({
   users: many(users),
+  classes: many(classes),
+  sections: many(sections),
+  students: many(students),
+  studentGuardians: many(studentGuardians),
 }));
 
-export const usersRelations = relations(users, ({ one }) => ({
+export const usersRelations = relations(users, ({ one, many }) => ({
   school: one(schools, {
     fields: [users.schoolId],
     references: [schools.id],
   }),
+  guardianLinks: many(studentGuardians),
 }));
+
+export const classesRelations = relations(classes, ({ one, many }) => ({
+  school: one(schools, {
+    fields: [classes.schoolId],
+    references: [schools.id],
+  }),
+  sections: many(sections),
+  students: many(students),
+}));
+
+export const sectionsRelations = relations(sections, ({ one, many }) => ({
+  school: one(schools, {
+    fields: [sections.schoolId],
+    references: [schools.id],
+  }),
+  class: one(classes, {
+    fields: [sections.classId],
+    references: [classes.id],
+  }),
+  students: many(students),
+}));
+
+export const studentsRelations = relations(students, ({ one, many }) => ({
+  school: one(schools, {
+    fields: [students.schoolId],
+    references: [schools.id],
+  }),
+  class: one(classes, {
+    fields: [students.classId],
+    references: [classes.id],
+  }),
+  section: one(sections, {
+    fields: [students.sectionId],
+    references: [sections.id],
+  }),
+  guardians: many(studentGuardians),
+}));
+
+export const studentGuardiansRelations = relations(
+  studentGuardians,
+  ({ one }) => ({
+    school: one(schools, {
+      fields: [studentGuardians.schoolId],
+      references: [schools.id],
+    }),
+    student: one(students, {
+      fields: [studentGuardians.studentId],
+      references: [students.id],
+    }),
+    parent: one(users, {
+      fields: [studentGuardians.parentId],
+      references: [users.id],
+    }),
+  })
+);

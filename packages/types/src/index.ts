@@ -8,6 +8,10 @@ export type UserRole = "admin" | "teacher" | "parent" | "student";
 
 export const USER_ROLES: UserRole[] = ["admin", "teacher", "parent", "student"];
 
+// ── Enums ────────────────────────────────────────────────────
+export type Gender = "male" | "female" | "other";
+export type StudentStatus = "active" | "inactive" | "graduated" | "transferred";
+
 // ── School (Tenant) ──────────────────────────────────────────
 export interface School {
   id: string;
@@ -17,6 +21,7 @@ export interface School {
   phone: string | null;
   email: string | null;
   logoUrl: string | null;
+  isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -33,6 +38,65 @@ export interface User {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+}
+
+// ── Class & Section ───────────────────────────────────────────
+export interface Class {
+  id: string;
+  schoolId: string;
+  name: string;
+  code: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface Section {
+  id: string;
+  schoolId: string;
+  classId: string;
+  name: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// ── Student ───────────────────────────────────────────────────
+export interface Student {
+  id: string;
+  schoolId: string;
+  admissionNumber: string;
+  firstName: string;
+  lastName: string;
+  middleName: string | null;
+  gender: Gender | null;
+  dateOfBirth: Date | null;
+  address: string | null;
+  photoUrl: string | null;
+  classId: string | null;
+  sectionId: string | null;
+  status: StudentStatus;
+  createdAt: Date;
+  updatedAt: Date;
+
+  // Joined relations (optional)
+  className?: string;
+  sectionName?: string;
+  guardians?: StudentGuardian[];
+}
+
+export interface StudentGuardian {
+  id: string;
+  schoolId: string;
+  studentId: string;
+  parentId: string;
+  relationship: string;
+  isPrimary: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+
+  // Joined parent info
+  parentFirstName?: string;
+  parentLastName?: string;
+  parentEmail?: string;
 }
 
 // ── Auth session ──────────────────────────────────────────────

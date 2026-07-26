@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { schools, users, userRoleEnum } from "./index";
+import { schools, users, userRoleEnum } from "./index.js";
 
 describe("Database Schema Definitions", () => {
   it("defines school and user tables with school_id tenant references", () => {
