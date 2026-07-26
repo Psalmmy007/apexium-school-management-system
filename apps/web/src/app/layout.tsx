@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { PwaRegister } from "@/components/pwa-register";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -16,6 +17,7 @@ export const metadata: Metadata = {
   description:
     "Comprehensive school management system for modern schools — student records, attendance, timetables, grading, and report cards.",
   keywords: ["school management", "ERP", "student information system"],
+  manifest: "/manifest.json",
 };
 
 export default function RootLayout({
@@ -26,6 +28,7 @@ export default function RootLayout({
   return (
     <html lang="en" className={inter.variable}>
       <body className="min-h-screen bg-surface font-sans antialiased">
+        <PwaRegister />
         {children}
       </body>
     </html>
