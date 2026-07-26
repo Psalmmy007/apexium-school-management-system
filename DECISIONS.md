@@ -79,3 +79,10 @@ This file records every technical decision made during development. It exists so
 **Date:** 2026-07-26
 **Context:** Need a cohesive, high-contrast, scalable design system for the multi-tenant ERP shell and components.
 **Decision:** Adopt Corporate Glassmorphism styling powered by UI UX Pro Max skill guidelines. Dark Slate-900 sidebar (`#0F172A`), Indigo-600 primary brand (`#4F46E5`), Sky-500 secondary (`#0EA5E9`), Emerald-500 present (`#10B981`), Amber-500 warning (`#F59E0B`), and Red-500 danger (`#EF4444`). Inter typography with strict scaling (12px-36px). Responsive 4-tier breakpoint behavior.
+
+---
+
+## Decision 012 — Offline Attendance Reconciliation: Last-Write-Wins (LWW) + Conflict Audit Logging
+**Date:** 2026-07-26
+**Context:** When multiple teachers mark attendance offline for the same class or student, the system must reconcile state upon reconnection without data loss or unhandled DB errors.
+**Decision:** Implement Last-Write-Wins (LWW) conflict resolution based on `updatedAt` timestamps. When syncing, the record with the newer timestamp updates the database. The sync endpoint returns a structured `conflictLog` array recording every reconciled entry (student ID, previous status, winning status, timestamps). Outdated or stale sync attempts do not overwrite newer entries.

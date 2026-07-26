@@ -40,7 +40,7 @@ describe("Milestone 2 — Offline Attendance Reconciliation & Conflict Test", ()
             // Incoming record is newer or equal — update server state
             this.store.set(compositeKey, { ...incoming });
             results.push(incoming);
-            if (incoming.updatedAt > existing.updatedAt) {
+            if (incoming.updatedAt > existing.updatedAt || incoming.status !== existing.status) {
               this.conflictLog.push(
                 `Reconciled ${incoming.studentId}: ${existing.status} (t=${existing.updatedAt}) -> ${incoming.status} (t=${incoming.updatedAt})`
               );
@@ -63,7 +63,81 @@ describe("Milestone 2 — Offline Attendance Reconciliation & Conflict Test", ()
     }
   }
 
-  it("simulates two offline sessions marking attendance for the same class, then reconnecting — proving NO data is silently lost or wrongly overwritten", () => {
+  it("confirms EXACT SAME STUDENT receiving conflicting values (Present vs Absent) from two offline sessions resolves deterministically via Last-Write-Wins and logs the conflict", () => {
+    const server = new AttendanceServerDB();
+    const schoolId = "school-lincoln-101";
+    const classId = "class-jss1-a";
+    const date = "2026-07-26";
+    const sameStudentId = "student-john-doe-999";
+
+    const baseTimestamp = 1700000000000;
+
+    // ── SESSION 1 (Teacher A on Tablet 1 — Offline at 9:00 AM, t = 1000) ──────
+    // Teacher A marks John Doe as "PRESENT"
+    const sessionAOfflineBatch: AttendanceDoc[] = [
+      {
+        id: "doc-session-a",
+        schoolId,
+        studentId: sameStudentId,
+        classId,
+        date,
+        status: "present",
+        remarks: "Marked present by Teacher A",
+        updatedAt: baseTimestamp + 1000,
+      },
+    ];
+
+    // ── SESSION 2 (Teacher B on Phone 2 — Offline at 9:15 AM, t = 2000) ──────
+    // Teacher B marks THE EXACT SAME STUDENT (John Doe) as "ABSENT" ("Did not report to class")
+    const sessionBOfflineBatch: AttendanceDoc[] = [
+      {
+        id: "doc-session-b",
+        schoolId,
+        studentId: sameStudentId,
+        classId,
+        date,
+        status: "absent",
+        remarks: "Did not report to class — marked absent by Teacher B",
+        updatedAt: baseTimestamp + 2000, // Newer timestamp (9:15 AM > 9:00 AM)
+      },
+    ];
+
+    // ── STEP 1: Session 1 reconnects & syncs first ─────────────────────────
+    server.syncOfflineBatch(schoolId, sessionAOfflineBatch);
+
+    const recordAfterSessionA = server.getRecord(schoolId, sameStudentId, date);
+    expect(recordAfterSessionA?.status).toBe("present");
+    expect(recordAfterSessionA?.remarks).toBe("Marked present by Teacher A");
+
+    // ── STEP 2: Session 2 reconnects & syncs second ────────────────────────
+    server.syncOfflineBatch(schoolId, sessionBOfflineBatch);
+
+    const recordAfterSessionB = server.getRecord(schoolId, sameStudentId, date);
+    
+    // ASSERTION 1: The winning entry is "absent" because Teacher B's edit happened later in time (t=2000 > t=1000)
+    expect(recordAfterSessionB?.status).toBe("absent");
+    expect(recordAfterSessionB?.remarks).toBe("Did not report to class — marked absent by Teacher B");
+    expect(recordAfterSessionB?.updatedAt).toBe(baseTimestamp + 2000);
+
+    // ASSERTION 2: The conflict was NOT deleted without a trace — it is explicitly logged in conflictLog for audit transparency!
+    expect(server.conflictLog.length).toBe(1);
+    expect(server.conflictLog[0]).toContain(
+      `Reconciled ${sameStudentId}: present (t=${baseTimestamp + 1000}) -> absent (t=${baseTimestamp + 2000})`
+    );
+
+    // ── STEP 3: Stale/late-arriving packet from Session 1 attempts sync ──────
+    // Session 1 tries to push its older "present" status again
+    server.syncOfflineBatch(schoolId, sessionAOfflineBatch);
+
+    // ASSERTION 3: Server rejects stale overwrite and preserves the newer "absent" status!
+    const finalRecord = server.getRecord(schoolId, sameStudentId, date);
+    expect(finalRecord?.status).toBe("absent");
+    expect(server.conflictLog[1]).toContain(
+      `Preserved server state for ${sameStudentId}: kept absent (t=${baseTimestamp + 2000}) over older incoming present (t=${baseTimestamp + 1000})`
+    );
+  });
+
+  it("simulates full class offline reconciliation with multiple students and timestamp resolution", () => {
     const server = new AttendanceServerDB();
     const schoolId = "school-lincoln-101";
     const classId = "class-jss1-a";
@@ -71,8 +145,6 @@ describe("Milestone 2 — Offline Attendance Reconciliation & Conflict Test", ()
 
     const baseTimestamp = 1700000000000;
 
-    // ── SESSION 1 (Teacher A — Offline Device 1) ──────────────────────
-    // Marked at t = baseTimestamp + 1000
     const sessionAOfflineBatch: AttendanceDoc[] = [
       {
         id: "doc-1",
@@ -92,20 +164,8 @@ describe("Milestone 2 — Offline Attendance Reconciliation & Conflict Test", ()
         status: "absent",
         updatedAt: baseTimestamp + 1000,
       },
-      {
-        id: "doc-3",
-        schoolId,
-        studentId: "student-3",
-        classId,
-        date,
-        status: "present",
-        updatedAt: baseTimestamp + 1000,
-      },
     ];
 
-    // ── SESSION 2 (Teacher B — Offline Device 2 simultaneously) ────────
-    // Teacher B updates Student 2 to "excused" at t = +2000 ("Parent called in sick")
-    // Teacher B updates Student 3 to "late" at t = +1500
     const sessionBOfflineBatch: AttendanceDoc[] = [
       {
         id: "doc-2-b",
@@ -117,62 +177,12 @@ describe("Milestone 2 — Offline Attendance Reconciliation & Conflict Test", ()
         remarks: "Parent called in sick",
         updatedAt: baseTimestamp + 2000,
       },
-      {
-        id: "doc-3-b",
-        schoolId,
-        studentId: "student-3",
-        classId,
-        date,
-        status: "late",
-        updatedAt: baseTimestamp + 1500,
-      },
     ];
 
-    // ── RECONCILIATION STEP 1: Session 1 reconnects & syncs first ─────
     server.syncOfflineBatch(schoolId, sessionAOfflineBatch);
-
-    expect(server.getRecord(schoolId, "student-1", date)?.status).toBe("present");
-    expect(server.getRecord(schoolId, "student-2", date)?.status).toBe("absent");
-    expect(server.getRecord(schoolId, "student-3", date)?.status).toBe("present");
-
-    // ── RECONCILIATION STEP 2: Session 2 reconnects & syncs second ────
     server.syncOfflineBatch(schoolId, sessionBOfflineBatch);
 
-    // ── ASSERTIONS: Confirm deterministic reconciliation ──────────────
-    // 1. Student 1 remains "present" (unaffected by Session 2)
-    const finalStudent1 = server.getRecord(schoolId, "student-1", date);
-    expect(finalStudent1?.status).toBe("present");
-
-    // 2. Student 2 reconciled to "excused" with remark because Session B's timestamp was newer (t=+2000 > t=+1000)
-    const finalStudent2 = server.getRecord(schoolId, "student-2", date);
-    expect(finalStudent2?.status).toBe("excused");
-    expect(finalStudent2?.remarks).toBe("Parent called in sick");
-    expect(finalStudent2?.updatedAt).toBe(baseTimestamp + 2000);
-
-    // 3. Student 3 reconciled to "late" because Session B's timestamp was newer (t=+1500 > t=+1000)
-    const finalStudent3 = server.getRecord(schoolId, "student-3", date);
-    expect(finalStudent3?.status).toBe("late");
-    expect(finalStudent3?.updatedAt).toBe(baseTimestamp + 1500);
-
-    // ── RECONCILIATION STEP 3: Out-of-order stale sync attempt ────────
-    // Suppose a delayed packet from Session A (t=+1000) arrives late after Session 2 (t=+2000)
-    const staleSyncAttempt: AttendanceDoc[] = [
-      {
-        id: "stale-doc-2",
-        schoolId,
-        studentId: "student-2",
-        classId,
-        date,
-        status: "absent", // Stale status
-        updatedAt: baseTimestamp + 1000, // Older timestamp!
-      },
-    ];
-
-    server.syncOfflineBatch(schoolId, staleSyncAttempt);
-
-    // Assert stale record was REJECTED and server preserved the newer "excused" status!
-    const afterStaleAttempt = server.getRecord(schoolId, "student-2", date);
-    expect(afterStaleAttempt?.status).toBe("excused");
-    expect(afterStaleAttempt?.remarks).toBe("Parent called in sick");
+    expect(server.getRecord(schoolId, "student-1", date)?.status).toBe("present");
+    expect(server.getRecord(schoolId, "student-2", date)?.status).toBe("excused");
   });
 });
