@@ -14,4 +14,13 @@ What this means in plain terms: The system can now store complete student biodat
 
 Proof it works: Roster CSV import parsing and row-level error reporting, student CRUD API route handlers, admin management UI pages, and tenant isolation automated unit/integration tests all pass with 100% success across all packages.
 
+---
+
+## Milestone 2: Attendance (offline-first, web/PWA) — COMPLETE
+Date: 2026-07-26
+
+What this means in plain terms: Teachers and staff can mark daily attendance registers even when the browser's internet connection is completely disconnected. All entries save instantly to local browser storage (IndexedDB via RxDB) and automatically sync to the server when reconnected. If two teachers record attendance offline for the same class simultaneously, the system uses Last-Write-Wins timestamp reconciliation so no data is silently lost or wrongly overwritten.
+
+Proof it works: RxDB database configuration tests, student & staff attendance schema definitions, synchronization API handlers, and the multi-session offline reconciliation automated test all pass with 100% success across all packages.
+
 Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.

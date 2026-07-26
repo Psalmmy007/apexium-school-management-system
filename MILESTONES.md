@@ -30,13 +30,13 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 ---
 
-## Milestone 2: Attendance (offline-first, web/PWA) — [ ] NOT STARTED
+## Milestone 2: Attendance (offline-first, web/PWA) — [x] COMPLETE
 
 - [x] Set up RxDB with the IndexedDB storage adapter in `apps/web`, plus a basic PWA service worker so the app is usable offline in the browser
 - [x] Attendance schema (per student, per class, per period/day, `school_id`) + sync endpoint (Next.js Route Handler) that RxDB replicates against
 - [x] Teacher UI: mark student attendance
 - [x] Staff attendance (same pattern, separate schema)
-- [ ] Automated test simulating offline attendance entry from two separate sessions for the same class, then reconciling — confirm no data is silently lost or wrongly overwritten
+- [x] Automated test simulating offline attendance entry from two separate sessions for the same class, then reconciling — confirm no data is silently lost or wrongly overwritten
 
 **Definition of Done:** Attendance can be marked with the browser's network disabled, and appears correctly on the admin dashboard once reconnected; the conflict test passes.
 
