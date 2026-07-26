@@ -15,6 +15,13 @@
       "when": 1785065297614,
       "tag": "0001_redundant_whiplash",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1785065548265,
+      "tag": "0002_familiar_mephistopheles",
+      "breakpoints": true
     }
   ]
 }
