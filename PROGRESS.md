@@ -19,20 +19,26 @@ Proof it works: Roster CSV import parsing and row-level error reporting, student
 ## Milestone 2: Attendance (offline-first, web/PWA) — COMPLETE
 Date: 2026-07-26
 
-What this means in plain terms: Teachers and staff can mark daily attendance registers even when the browser's internet connection is completely disconnected. All entries save instantly to local browser storage (IndexedDB via RxDB) and automatically sync to the server when reconnected. If two teachers record attendance offline for the same class simultaneously, the system uses Last-Write-Wins timestamp reconciliation so no data is silently lost or wrongly overwritten.
+What this means in plain terms: Teachers and staff can mark daily attendance registers even when the browser's internet connection is completely disconnected. All entries save instantly to local browser storage (IndexedDB via RxDB) and automatically sync to the server when reconnected. If two teachers record attendance offline for the same class simultaneously, the system uses Last-Write-Wins timestamp reconciliation so no data is silently lost or wrongly overwritten, recording a permanent conflict log in the database.
 
 Proof it works: RxDB database configuration tests, student & staff attendance schema definitions, synchronization API handlers, and the multi-session offline reconciliation automated test all pass with 100% success across all packages.
-
-Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
 
 ---
 
 ## Milestone 3: Timetable / Class Scheduling — COMPLETE
 Date: 2026-07-26
 
-What this means in plain terms: School administrators can now build and manage a complete weekly timetable for any class. The system automatically enforces conflict rules at the data layer — preventing double-booking so that no teacher can be assigned to two classes simultaneously, and no class can have two subjects scheduled in the same period.
+What this means in plain terms: School administrators can construct a complete weekly timetable matrix for any class. Hard conflict prevention is enforced at the database and service layer — preventing double-booking a teacher to two separate classes in the same period or assigning two subjects to the same class at the same time.
 
-Proof it works: Timetable schema definitions, double-booking conflict prevention service routines, timetable options API endpoints, weekly matrix builder UI, and automated double-booking prevention tests pass with 100% success across all packages.
+Proof it works: Database schema unique constraints, double-booking prevention service unit tests, and interactive weekly timetable matrix UI components pass 100% across all packages.
+
+---
+
+## Milestone 4: Academics — Scores & Grading — COMPLETE
+Date: 2026-07-26
+
+What this means in plain terms: Teachers can record Continuous Assessment (CA out of 40) and Examination (Exam out of 60) scores for students per subject and academic term. The system automatically computes total scores (out of 100), applies configurable grading scales (such as standard WAEC A1–F9 grade bands), and calculates class positions (1st, 2nd, 3rd...) with proper tie handling.
+
+Proof it works: The automated test against a hand-calculated reference class dataset passes 100% with zero rounding or ranking discrepancies.
 
 Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
-
