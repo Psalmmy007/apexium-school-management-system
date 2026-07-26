@@ -32,7 +32,7 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 ## Milestone 2: Attendance (offline-first, web/PWA) — [ ] NOT STARTED
 
-- [ ] Set up RxDB with the IndexedDB storage adapter in `apps/web`, plus a basic PWA service worker so the app is usable offline in the browser
+- [x] Set up RxDB with the IndexedDB storage adapter in `apps/web`, plus a basic PWA service worker so the app is usable offline in the browser
 - [ ] Attendance schema (per student, per class, per period/day, `school_id`) + sync endpoint (Next.js Route Handler) that RxDB replicates against
 - [ ] Teacher UI: mark student attendance
 - [ ] Staff attendance (same pattern, separate schema)

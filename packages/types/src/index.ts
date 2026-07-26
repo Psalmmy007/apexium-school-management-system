@@ -11,6 +11,7 @@ export const USER_ROLES: UserRole[] = ["admin", "teacher", "parent", "student"];
 // ── Enums ────────────────────────────────────────────────────
 export type Gender = "male" | "female" | "other";
 export type StudentStatus = "active" | "inactive" | "graduated" | "transferred";
+export type AttendanceStatus = "present" | "absent" | "late" | "excused";
 
 // ── School (Tenant) ──────────────────────────────────────────
 export interface School {
@@ -97,6 +98,27 @@ export interface StudentGuardian {
   parentFirstName?: string;
   parentLastName?: string;
   parentEmail?: string;
+}
+
+// ── Attendance ────────────────────────────────────────────────
+export interface AttendanceRecord {
+  id: string;
+  schoolId: string;
+  studentId: string;
+  classId: string;
+  sectionId: string | null;
+  date: string; // YYYY-MM-DD
+  period: string; // "daily", "morning", "period_1"
+  status: AttendanceStatus;
+  remarks: string | null;
+  markedBy: string | null;
+  updatedAt: Date;
+  createdAt: Date;
+
+  // Joined fields
+  studentFirstName?: string;
+  studentLastName?: string;
+  admissionNumber?: string;
 }
 
 // ── Auth session ──────────────────────────────────────────────

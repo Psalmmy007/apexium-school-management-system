@@ -27,6 +27,13 @@ export const studentStatusEnum = pgEnum("student_status", [
   "transferred",
 ]);
 
+export const attendanceStatusEnum = pgEnum("attendance_status", [
+  "present",
+  "absent",
+  "late",
+  "excused",
+]);
+
 // ── Table: schools (tenants) ──────────────────────────────────
 export const schools = pgTable("schools", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -159,6 +166,47 @@ export const studentGuardians = pgTable("student_guardians", {
     .defaultNow(),
 });
 
+// ── Table: student_attendance ─────────────────────────────────
+export const studentAttendance = pgTable(
+  "student_attendance",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => students.id, { onDelete: "cascade" }),
+    classId: uuid("class_id")
+      .notNull()
+      .references(() => classes.id, { onDelete: "cascade" }),
+    sectionId: uuid("section_id").references(() => sections.id, {
+      onDelete: "set null",
+    }),
+    date: varchar("date", { length: 10 }).notNull(), // "YYYY-MM-DD"
+    period: varchar("period", { length: 50 }).notNull().default("daily"), // "daily", "morning", "period_1"
+    status: attendanceStatusEnum("status").notNull(),
+    remarks: text("remarks"),
+    markedBy: uuid("marked_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    studentDatePeriodIdx: uniqueIndex("student_date_period_idx").on(
+      table.schoolId,
+      table.studentId,
+      table.date,
+      table.period
+    ),
+  })
+);
+
 // ── Relations ─────────────────────────────────────────────────
 export const schoolsRelations = relations(schools, ({ many }) => ({
   users: many(users),
@@ -166,6 +214,7 @@ export const schoolsRelations = relations(schools, ({ many }) => ({
   sections: many(sections),
   students: many(students),
   studentGuardians: many(studentGuardians),
+  studentAttendance: many(studentAttendance),
 }));
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -174,6 +223,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
     references: [schools.id],
   }),
   guardianLinks: many(studentGuardians),
+  attendanceMarked: many(studentAttendance),
 }));
 
 export const classesRelations = relations(classes, ({ one, many }) => ({
@@ -183,6 +233,7 @@ export const classesRelations = relations(classes, ({ one, many }) => ({
   }),
   sections: many(sections),
   students: many(students),
+  attendance: many(studentAttendance),
 }));
 
 export const sectionsRelations = relations(sections, ({ one, many }) => ({
@@ -195,6 +246,7 @@ export const sectionsRelations = relations(sections, ({ one, many }) => ({
     references: [classes.id],
   }),
   students: many(students),
+  attendance: many(studentAttendance),
 }));
 
 export const studentsRelations = relations(students, ({ one, many }) => ({
@@ -211,21 +263,30 @@ export const studentsRelations = relations(students, ({ one, many }) => ({
     references: [sections.id],
   }),
   guardians: many(studentGuardians),
+  attendance: many(studentAttendance),
 }));
 
-export const studentGuardiansRelations = relations(
-  studentGuardians,
+export const studentAttendanceRelations = relations(
+  studentAttendance,
   ({ one }) => ({
     school: one(schools, {
-      fields: [studentGuardians.schoolId],
+      fields: [studentAttendance.schoolId],
       references: [schools.id],
     }),
     student: one(students, {
-      fields: [studentGuardians.studentId],
+      fields: [studentAttendance.studentId],
       references: [students.id],
     }),
-    parent: one(users, {
-      fields: [studentGuardians.parentId],
+    class: one(classes, {
+      fields: [studentAttendance.classId],
+      references: [classes.id],
+    }),
+    section: one(sections, {
+      fields: [studentAttendance.sectionId],
+      references: [sections.id],
+    }),
+    marker: one(users, {
+      fields: [studentAttendance.markedBy],
       references: [users.id],
     }),
   })
