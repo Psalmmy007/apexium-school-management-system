@@ -51,7 +51,7 @@ Based on query execution profiles during high-concurrency multi-tenant operation
 
 A complete relational backup restore drill was executed programmatically in `packages/db/src/services/backup-restore.ts` and verified in `packages/db/src/services/backup-restore.test.ts`:
 
-1. **Full Relational Export:** Exported complete school data across all 6 core relational tables (`schools`, `classes`, `subjects`, `terms`, `students`, `studentScores`, `studentAttendance`).
+1. **Full Relational Export:** Exported complete school data across all 7 core relational tables (`schools`, `classes`, `subjects`, `terms`, `students`, `studentScores`, `studentAttendance`).
 2. **Target Provisioning & Foreign Key Remapping:** Created an isolated drill tenant and remapped foreign keys across classes, subjects, terms, students, academic scores, and attendance registers.
-3. **Relational Data Parity Check:** Verified matching row counts and field-level value equality across all restored tables (subject names, term statuses, score values, attendance dates/statuses).
+3. **Relational Data Parity Check:** Verified matching row counts and field-level value equality across all 7 restored tables (subject names, term statuses, score values, attendance dates/statuses).
 4. **Post-Restore Tenant Independence Test:** Mutated student records (`firstName` and `status`) in the restored tenant and queried the original tenant's student record directly from the database. Confirmed the original tenant's record remained 100% unchanged (`firstName: "OriginalFirst"`, `status: "active"`).
