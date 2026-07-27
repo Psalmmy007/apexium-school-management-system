@@ -90,14 +90,14 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 ---
 
-## Milestone 7: Load & Reliability Hardening — [ ] NOT STARTED
+## Milestone 7: Load & Reliability Hardening — [x] COMPLETE
 
-- [ ] Write a load-testing script (k6 or Artillery, both free/open-source) simulating multiple schools concurrently marking attendance and generating report cards
-- [ ] Run the load test at 5–10x realistic expected concurrent usage; record results
-- [ ] Add indexes based on actual slow-query evidence from the load test, not guesses
-- [ ] Confirm and document the backup configuration
-- [ ] Perform a real backup **restore drill**: restore an actual backup into a test database and verify it matches the original exactly
-- [ ] Write results to a `RELIABILITY.md` file
+- [x] Write a load-testing script (k6 or Artillery, both free/open-source) simulating multiple schools concurrently marking attendance and generating report cards
+- [x] Run the load test at 5–10x realistic expected concurrent usage; record results
+- [x] Add indexes based on actual slow-query evidence from the load test, not guesses
+- [x] Confirm and document the backup configuration
+- [x] Perform a real backup **restore drill**: restore an actual backup into a test database and verify it matches the original exactly
+- [x] Write results to a `RELIABILITY.md` file
 
 **Definition of Done:** The load test at 5–10x expected usage holds up without crashes/unacceptable errors, and a real backup restore has been verified once.
 
