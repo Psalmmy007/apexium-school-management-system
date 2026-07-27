@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSessionUser } from "@/lib/auth/session";
-import { db, students, classes, sections } from "@apexium/db";
+import { db, students, classes, sections, enforceStudentCap } from "@apexium/db";
 import { eq, and, like, or, sql } from "drizzle-orm";
 
 // ── GET /api/students — List students with filtering ──────────
@@ -120,6 +120,16 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: "Admission number, first name, and last name are required." },
         { status: 400 }
+      );
+    }
+
+    // License seat cap enforcement
+    try {
+      await enforceStudentCap(user.schoolId);
+    } catch (capError: any) {
+      return NextResponse.json(
+        { success: false, error: capError.message || "Student seat cap reached for your active license plan." },
+        { status: 403 }
       );
     }
 

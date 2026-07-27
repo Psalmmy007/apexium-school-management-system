@@ -99,6 +99,7 @@ export default async function DashboardLayout({
           {user.role === "admin" && (
             <>
               <p className="nav-group-label mt-4">System</p>
+              <NavItem href="/dashboard/settings/licenses" id="nav-licenses" label="License Center" icon={<IconLicense />} />
               <NavItem href="/dashboard/settings" id="nav-settings" label="Settings" icon={<IconSettings />} />
             </>
           )}
@@ -282,3 +283,14 @@ function IconPromotion() {
     </svg>
   );
 }
+
+function IconLicense() {
+  return (
+    <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round"
+        d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751A11.959 11.959 0 0 1 12 2.714Z"
+      />
+    </svg>
+  );
+}
+
