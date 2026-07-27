@@ -1,8 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSessionUser } from "@/lib/auth/session";
 import { enqueueReportCardGenerationJob } from "@/lib/reports/report-card-service";
-import { db, students, classes, studentScores, subjects, terms, schools, studentTermReports, computeClassRankings } from "@apexium/db";
-import { eq, and } from "drizzle-orm";
+import { db, students, classes, studentScores, subjects, terms, schools, studentTermReports, studentAttendance, computeClassRankings } from "@apexium/db";
+import { eq, and, gte, lte } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
   const user = await getSessionUser();
@@ -162,10 +162,54 @@ export async function POST(request: NextRequest) {
         reportsMap.set(rep.studentId, rep);
       }
 
+      // Format term start and end dates as YYYY-MM-DD for attendance lookup
+      const termStartDate = currentTerm[0].startDate ? new Date(currentTerm[0].startDate) : null;
+      const termEndDate = currentTerm[0].endDate ? new Date(currentTerm[0].endDate) : null;
+
+      function formatDateToYmd(date: Date): string {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2, "0");
+        const d = String(date.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+      }
+
+      const startDateStr = termStartDate ? formatDateToYmd(termStartDate) : "1970-01-01";
+      const endDateStr = termEndDate ? formatDateToYmd(termEndDate) : "2100-12-31";
+
+      // Query attendance records for the class during the term dates
+      const classAttendance = await db
+        .select({
+          studentId: studentAttendance.studentId,
+          status: studentAttendance.status,
+        })
+        .from(studentAttendance)
+        .where(
+          and(
+            eq(studentAttendance.schoolId, user.schoolId),
+            eq(studentAttendance.classId, classId),
+            gte(studentAttendance.date, startDateStr),
+            lte(studentAttendance.date, endDateStr)
+          )
+        );
+
+      // Group attendance stats by studentId
+      const attendanceMap = new Map<string, { present: number; absent: number; total: number }>();
+      for (const att of classAttendance) {
+        const stats = attendanceMap.get(att.studentId) || { present: 0, absent: 0, total: 0 };
+        stats.total += 1;
+        if (att.status === "present" || att.status === "late") {
+          stats.present += 1;
+        } else if (att.status === "absent") {
+          stats.absent += 1;
+        }
+        attendanceMap.set(att.studentId, stats);
+      }
+
       // Build report card data payload
       studentsList = rankings.map((rank) => {
         const studentGrades = scoresMap.get(rank.studentId) || [];
         const studentReport = reportsMap.get(rank.studentId);
+        const attStats = attendanceMap.get(rank.studentId) || { present: 0, absent: 0, total: 0 };
 
         // Safely parse traits from JSON field (array of { trait, rating })
         let affectiveDomain: Array<any> = [];
@@ -194,6 +238,9 @@ export async function POST(request: NextRequest) {
             averageScore: rank.averageScore,
             position: rank.rank,
             totalStudents: rankings.length,
+            daysPresent: attStats.present,
+            daysAbsent: attStats.absent,
+            totalDays: attStats.total,
           },
           grades: studentGrades,
           affectiveDomain,

@@ -19,6 +19,9 @@ export interface StudentReportCardData {
     averageScore: number;
     position: number;
     totalStudents: number;
+    daysPresent?: number;
+    daysAbsent?: number;
+    totalDays?: number;
   };
   grades: Array<{
     subjectName: string;
@@ -90,15 +93,22 @@ export function generateReportCardPdfBuffer(data: StudentReportCardData): Promis
 
       // ── Summary Bar ─────────────────────────────────────────
       const summaryTop = 194;
-      doc.rect(36, summaryTop, 523, 32).fill("#EEF2FF").stroke("#C7D2FE");
+      doc.rect(36, summaryTop, 523, 50).fill("#EEF2FF").stroke("#C7D2FE");
 
       doc.fillColor(INDIGO).fontSize(10).font("Helvetica-Bold");
       doc.text(`Class Position: ${data.summary.position} / ${data.summary.totalStudents}`, 48, summaryTop + 10);
       doc.text(`Total Score: ${data.summary.totalScore.toFixed(1)}`, 230, summaryTop + 10);
       doc.text(`Average: ${data.summary.averageScore.toFixed(1)}%`, 400, summaryTop + 10);
 
+      // Row 2: Attendance Stats
+      const present = data.summary.daysPresent ?? 0;
+      const absent = data.summary.daysAbsent ?? 0;
+      const total = data.summary.totalDays ?? 0;
+      doc.fillColor(SLATE_DARK).fontSize(9).font("Helvetica-Bold");
+      doc.text(`Attendance Summary:  Present: ${present} days  |  Absent: ${absent} days  |  Total: ${total} days`, 48, summaryTop + 32);
+
       // ── Grades Table Header ─────────────────────────────────
-      let tableTop = 238;
+      let tableTop = 258;
       doc.rect(36, tableTop, 523, 24).fill(SLATE_DARK);
 
       doc.fillColor("#FFFFFF").fontSize(9).font("Helvetica-Bold");

@@ -21,6 +21,9 @@ describe("Milestone 5: Bulk Report Card Generation & Performance Test", () => {
         averageScore: 80.6,
         position: 1,
         totalStudents: 25,
+        daysPresent: 18,
+        daysAbsent: 2,
+        totalDays: 20,
       },
       grades: [
         { subjectName: "Mathematics", subjectCode: "MATH101", caScore: 32, examScore: 54, totalScore: 86, grade: "A1", remark: "Excellent" },
@@ -63,6 +66,9 @@ describe("Milestone 5: Bulk Report Card Generation & Performance Test", () => {
         averageScore: 75,
         position: idx + 1,
         totalStudents: BATCH_SIZE,
+        daysPresent: 90,
+        daysAbsent: 10,
+        totalDays: 100,
       },
       grades: [
         { subjectName: "Mathematics", caScore: 30, examScore: 50, totalScore: 80, grade: "A1", remark: "Excellent" },
@@ -100,6 +106,9 @@ describe("Milestone 5: Bulk Report Card Generation & Performance Test", () => {
         averageScore: 80,
         position: 4,
         totalStudents: 30,
+        daysPresent: 45,
+        daysAbsent: 5,
+        totalDays: 50,
       },
       grades: [
         { subjectName: "Mathematics", caScore: 35, examScore: 45, totalScore: 80, grade: "A1", remark: "Excellent" },
