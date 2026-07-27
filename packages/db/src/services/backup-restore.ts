@@ -93,16 +93,32 @@ export async function runBackupRestoreDrill(schoolId: string): Promise<RestoreDr
     studentIdMap.set(st.id, newSt.id);
   }
 
-  // 3. Verify target database records match source dataset
+  // 3. Verify target database records match source dataset (row counts AND field values)
   const restoredClasses = await db.select().from(classes).where(eq(classes.schoolId, restoredSch.id));
   const restoredStudents = await db.select().from(students).where(eq(students.schoolId, restoredSch.id));
 
   const totalRestoredCount = 1 + restoredClasses.length + restoredStudents.length;
 
-  const matched =
+  const countsMatch =
     sourceClasses.length === restoredClasses.length &&
     sourceStudents.length === restoredStudents.length;
 
+  // Verify exact field-level value parity
+  const classNamesMatch = sourceClasses.every((sCls) =>
+    restoredClasses.some((rCls) => rCls.name === sCls.name && rCls.code === sCls.code)
+  );
+
+  const studentAttributesMatch = sourceStudents.every((sSt) =>
+    restoredStudents.some(
+      (rSt) =>
+        rSt.firstName === sSt.firstName &&
+        rSt.lastName === sSt.lastName &&
+        rSt.status === sSt.status &&
+        rSt.admissionNumber.startsWith(sSt.admissionNumber)
+    )
+  );
+
+  const matched = countsMatch && classNamesMatch && studentAttributesMatch;
   const durationMs = Date.now() - startTime;
 
   return {
