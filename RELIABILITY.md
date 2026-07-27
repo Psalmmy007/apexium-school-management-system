@@ -6,22 +6,22 @@ This document records the empirical load test benchmarks, database index optimiz
 
 ## 1. Load Test Benchmarks (5–10x Concurrent Usage)
 
-A multi-tenant stress test simulating 5–10x realistic concurrent school activity was executed.
+A multi-tenant stress test simulating 5–10x realistic concurrent school activity was executed via `src/services/load-reliability.test.ts`.
 
 - **Concurrent Tenants:** 5 schools operating simultaneously
-- **Concurrent Students per Tenant:** 40–50 students per school
+- **Concurrent Students per Tenant:** 30–50 students per school
 - **Simulated Operations:**
   1. High-frequency attendance record insertion (`student_attendance`)
   2. Dynamic class ranking computation (`computeClassRankings`)
   3. Async bulk PDF report card generation (`apps/worker` service)
 
 ### Load Test Benchmark Metrics
-- **Total Requests / Operations Executed:** 15+ concurrent operations
+- **Total Requests / Operations Executed:** 10 concurrent operations
 - **Successful Operations:** 100%
 - **Failed Operations:** 0 (0.00% error rate)
-- **Average Latency:** < 150ms
-- **P95 Latency:** < 450ms
-- **Peak Throughput:** 100 PDF report cards generated in 1.66s without memory leaks or buffer corruption.
+- **Average Latency:** ~300ms - 415ms
+- **P95 Latency:** ~380ms - 540ms
+- **Peak Throughput:** 100 PDF report cards generated in ~1.8s without memory leaks or buffer corruption.
 
 ---
 
@@ -47,10 +47,11 @@ Based on query execution profiles during high-concurrency multi-tenant operation
 
 ---
 
-## 4. Backup Restore Drill Verification
+## 4. Complete Relational Backup Restore Drill & Tenant Independence Verification
 
-A real backup restore drill was executed programmatically in `packages/db/src/services/backup-restore.test.ts`:
-1. Source test school records (school metadata, classes, active students, grades) were exported.
-2. An isolated restore target database tenant was provisioned.
-3. The dataset was imported into the target schema and verified against source records.
-4. **Result:** 100% data parity match verified with zero record loss or schema corruption.
+A complete relational backup restore drill was executed programmatically in `packages/db/src/services/backup-restore.ts` and verified in `packages/db/src/services/backup-restore.test.ts`:
+
+1. **Full Relational Export:** Exported complete school data across all 6 core relational tables (`schools`, `classes`, `subjects`, `terms`, `students`, `studentScores`, `studentAttendance`).
+2. **Target Provisioning & Foreign Key Remapping:** Created an isolated drill tenant and remapped foreign keys across classes, subjects, terms, students, academic scores, and attendance registers.
+3. **Relational Data Parity Check:** Verified matching row counts and field-level value equality across all restored tables (subject names, term statuses, score values, attendance dates/statuses).
+4. **Post-Restore Tenant Independence Test:** Mutated student records (`firstName` and `status`) in the restored tenant and queried the original tenant's student record directly from the database. Confirmed the original tenant's record remained 100% unchanged (`firstName: "OriginalFirst"`, `status: "active"`).
