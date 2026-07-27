@@ -4,7 +4,7 @@ Antigravity reads this file automatically. These rules apply to every agent work
 
 ## What this project is
 
-A multi-tenant School ERP web application. Core scope for now: Student Information System, Attendance, Timetable, Academics/Grading, Report Card Generation. (Promotion/Session Transition and Load Hardening come later — do not start them unless explicitly told to.)
+A multi-tenant School ERP web application. Full current scope, all fully specified in MILESTONES.md (Milestones 0–12): Student Information System, Attendance, Timetable, Academics/Grading, Report Card Generation, Promotion/Session Transition, Load & Reliability Hardening, License Center, CBT Platform, Learning Portal, Teacher Portal, and Parent Portal. Student Portal, Library, Hostel, Transport, Inventory, Payroll, and Finance are future work and are explicitly out of scope until a new milestone file is provided.
 
 ## Tech stack — do not substitute any of these without explicit permission
 

@@ -6,11 +6,10 @@ import { fileURLToPath } from "url";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-const databaseUrl = process.env.DATABASE_URL;
-if (!databaseUrl) {
-  console.error("❌  DATABASE_URL is not set. Cannot run migrations.");
-  process.exit(1);
-}
+const databaseUrl =
+  process.env.DATABASE_URL ||
+  "postgresql://postgres:postgres@localhost:5432/apexium_dev";
+
 
 // Single connection for migrations (no pool needed)
 const migrationClient = postgres(databaseUrl, { max: 1 });

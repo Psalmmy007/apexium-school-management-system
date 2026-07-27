@@ -50,6 +50,13 @@
       "when": 1785144727563,
       "tag": "0006_sad_firelord",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1785148092137,
+      "tag": "0007_unusual_lady_vermin",
+      "breakpoints": true
     }
   ]
 }

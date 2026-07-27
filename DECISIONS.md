@@ -86,3 +86,10 @@ This file records every technical decision made during development. It exists so
 **Date:** 2026-07-26
 **Context:** When multiple teachers mark attendance offline for the same class or student, the system must reconcile state upon reconnection without data loss or unhandled DB errors.
 **Decision:** Implement Last-Write-Wins (LWW) conflict resolution based on `updatedAt` timestamps. When syncing, the record with the newer timestamp updates the database. The sync endpoint returns a structured `conflictLog` array recording every reconciled entry (student ID, previous status, winning status, timestamps). Outdated or stale sync attempts do not overwrite newer entries.
+
+---
+
+## Decision 013 — Term status column type: varchar(20)
+**Date:** 2026-07-27
+**Context:** We need to extend the `terms` table with a `status` field (active/closed).
+**Decision:** Use `varchar("status", { length: 20 }).notNull().default("active")` instead of a custom PostgreSQL enum. This is highly portable, avoids potential enum-related migration issues across environments, and is straightforward to typecheck using TypeScript union types.

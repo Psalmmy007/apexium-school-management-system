@@ -1,4 +1,4 @@
-# MILESTONES.md — Build Checklist (Milestone 0 → 5)
+# MILESTONES.md — Build Checklist (Milestone 0 → 12)
 
 Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unchecked task at a time. Do not skip ahead. Do not start a milestone marked below the current one.
 
@@ -15,7 +15,7 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 - [x] Set up reproducible local dev setup (Supabase CLI or docker-compose for Postgres/Redis)
 - [x] Write automated test: create a school, create one user per role, log each in, confirm each sees an empty dashboard
 
-**Definition of Done (must pass automatically, not just "look right"):** The automated test above passes in CI.
+**Definition of Done:** The automated test above passes in CI.
 
 ---
 
@@ -37,15 +37,16 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 - [x] Teacher UI: mark student attendance
 - [x] Staff attendance (same pattern, separate schema)
 - [x] Automated test simulating offline attendance entry from two separate sessions for the same class, then reconciling — confirm no data is silently lost or wrongly overwritten
+- [x] Conflict resolution decision recorded in DECISIONS.md, with a permanent `attendance_conflict_logs` table so any conflict can be looked up later
 
-**Definition of Done:** Attendance can be marked with the browser's network disabled, and appears correctly on the admin dashboard once reconnected; the conflict test passes.
+**Definition of Done:** Attendance can be marked with the browser's network disabled, and appears correctly on the admin dashboard once reconnected; the conflict test passes; conflicts are permanently queryable.
 
 ---
 
 ## Milestone 3: Timetable / Class Scheduling — [x] COMPLETE
 
 - [x] Timetable schema: subject, teacher, class, period, `school_id`
-- [x] Conflict prevention enforced at the data/service layer (a teacher cannot be assigned to two classes in the same period; a class cannot have two subjects in the same period) — not just a UI warning
+- [x] Conflict prevention enforced at the data/service layer — not just a UI warning
 - [x] Admin UI to build and edit a timetable
 - [x] Automated test: attempt to create a double-booking, assert the system rejects it
 
@@ -58,24 +59,126 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 - [x] Score entry schema + API + UI, per subject per term
 - [x] Configurable grading scheme (WAEC-style grade bands, stored as config, not hardcoded)
 - [x] Class ranking computation
-- [x] Build a hand-verified sample dataset (a small class with known correct grades and ranks) and an automated test asserting the system's output matches it exactly
+- [x] Hand-verified sample dataset with an automated test asserting the system's output matches it exactly
 
-**Definition of Done:** The automated test against the verified sample dataset passes exactly — no rounding or ranking discrepancies.
+**Definition of Done:** The automated test against the verified sample dataset passes exactly.
 
 ---
 
 ## Milestone 5: Report Card Generation — [x] COMPLETE
 
-- [x] Report card PDF template (matches the grading data from Milestone 4, includes affective/psychomotor rating fields)
-- [x] Background job in `apps/worker` (BullMQ) that generates PDFs — this must NOT run inside a Next.js request/response cycle
-- [x] Next.js route that enqueues a bulk-generation job (e.g., "generate report cards for this whole class") and returns immediately
-- [x] A way for the admin UI to check job status and download completed PDFs
-- [x] Automated test: enqueue generation for a full class (simulate at least 100+ students), verify every PDF is produced correctly and the job doesn't crash or time out
+- [x] Report card PDF template (grading data + affective/psychomotor rating fields)
+- [x] Background job in `apps/worker` (BullMQ) that generates PDFs
+- [x] Next.js route that enqueues a bulk-generation job and returns immediately
+- [x] Admin UI to check job status and download completed PDFs
+- [x] Automated test: enqueue generation for 100+ students, verify no crash/timeout
 
-**Definition of Done:** Bulk report card generation for a full class completes successfully and reliably, verified by the automated test — including at a batch size much larger than one real class, to prove it won't break under real load.
+**Definition of Done:** Bulk report card generation completes successfully and reliably.
 
 ---
 
-## STOP after Milestone 5
+## Milestone 6: Promotion & Session Transition — [x] COMPLETE
 
-Do not begin Promotion & Session Transition (Milestone 6) or Load & Reliability Hardening (Milestone 7) unless explicitly instructed. Wait for the human.
+- [x] Extend the `terms`/session model with a `status` field (active/closed), `school_id` included
+- [x] Promotion workflow: bulk-promote all students in a class to the next class/section for the new session
+- [x] Exception handling: a student can instead be marked to **repeat** the current class, or to **graduate/leave**, as explicit selectable choices per student
+- [x] Historical integrity: prior-term scores, attendance, and rankings remain permanently linked to that term and fully queryable after promotion
+- [x] Admin UI: review roster, choose promote/repeat/graduate per student, confirm and execute for the whole class
+- [x] Automated test: promote a full class with at least one repeat and one graduate case; verify correct outcomes and that prior-term records remain unchanged and retrievable
+
+**Definition of Done:** A class is promoted to a new session — including a repeat case and a graduate case handled correctly — with every student's prior-term history intact, proven by test.
+
+---
+
+## Milestone 7: Load & Reliability Hardening — [ ] NOT STARTED
+
+- [ ] Write a load-testing script (k6 or Artillery, both free/open-source) simulating multiple schools concurrently marking attendance and generating report cards
+- [ ] Run the load test at 5–10x realistic expected concurrent usage; record results
+- [ ] Add indexes based on actual slow-query evidence from the load test, not guesses
+- [ ] Confirm and document the backup configuration
+- [ ] Perform a real backup **restore drill**: restore an actual backup into a test database and verify it matches the original exactly
+- [ ] Write results to a `RELIABILITY.md` file
+
+**Definition of Done:** The load test at 5–10x expected usage holds up without crashes/unacceptable errors, and a real backup restore has been verified once.
+
+---
+
+## Milestone 8: License Center — [ ] NOT STARTED
+
+- [ ] License schema: `licenses` table (`school_id`, tier/plan, enabled-modules flags, seat/student cap, status, issued_at, expires_at) + `license_events` table logging every renewal/upgrade/downgrade
+- [ ] License key generation and activation service
+- [ ] Module-gating: license record determines which modules (Core ERP, and later CBT/Learning/etc.) a school can access; enforced at the route/middleware level, not just hidden in the UI
+- [ ] Seat/student-count enforcement: creating a student beyond the licensed cap is rejected with a clear, specific in-app message — never a silent failure
+- [ ] Expiry tracking with automated renewal reminders at configurable intervals before expiry (e.g. 30/14/3 days out)
+- [ ] Superadmin dashboard (for you, not the schools) listing every licensed school, tier, status, expiry, and seat usage, with search/filter
+- [ ] Self-service upgrade/downgrade: a school admin can change tier without contacting support; caps and module access update immediately
+- [ ] Offline license validation: a cached check that works without internet, requiring only periodic (not constant) online re-validation — a school must never be locked out mid-day purely because it's genuinely offline
+- [ ] Automated test covering: exceeding the student cap is rejected; an expired license blocks gated-module access but never deletes or hides existing data (read access to your own data should survive an expiry); an upgrade correctly raises caps and unlocks modules immediately
+
+**Definition of Done:** Licensing, capping, expiry, and upgrades are all enforced automatically and verified by test — and an expired license never results in data loss or an unexplained lockout.
+
+---
+
+## Milestone 9: CBT Platform — [ ] NOT STARTED
+
+- [ ] Question bank schema: subjects, questions (MCQ/theory/objective), options, correct answers, difficulty/tags, `school_id`
+- [ ] Exam schema: exam definition (title, subject, duration, question set, class/term) + student exam session tracking (start time, answers, status)
+- [ ] Exam-taking UI: timed, with auto-submit on timeout, randomized question/option order per student
+- [ ] Continuous answer auto-save: answers persist locally (RxDB/IndexedDB) as the student progresses and sync continuously to the server — not only at final submission
+- [ ] Auto-grading service for objective/MCQ questions; theory questions flagged for manual grading
+- [ ] Result analytics: per-question, per-class, per-subject breakdown for teachers/admins
+- [ ] Lockdown/anti-cheat mode: restrict copy-paste and tab/app switching during an exam
+- [ ] Automated test: simulate a browser crash/refresh mid-exam — verify every previously answered question is preserved, the student resumes exactly where they left off, and the timer correctly continues rather than resetting
+- [ ] Automated test: two students taking the same exam receive different (randomized) question/option order and are both graded correctly against their own presented order
+
+**Definition of Done:** A full exam can be taken including a simulated mid-exam crash with zero answer loss and a correctly continuing timer — this is the single most important guarantee for this module, given real exam-day stakes.
+
+---
+
+## Milestone 10: Learning Portal (LMS) — [ ] NOT STARTED
+
+- [ ] Lesson schema: lessons (title, subject, class, term, content body, attachments), curriculum/scheme-of-work topic mapping, `school_id`
+- [ ] Assignment schema: definition, due date, submission records (student, file/text, submitted_at, grade, feedback)
+- [ ] Teacher UI: create lesson notes with attachments, create assignments
+- [ ] Student UI: view lessons, submit assignments (file upload via Cloudflare R2), see feedback/grades
+- [ ] Video/audio content: support external embeds (YouTube/Vimeo links) as the default path — avoids hosting cost and bandwidth strain — with an optional low-resolution direct upload path
+- [ ] Low-bandwidth mode: content defaults to text/compressed-first with an explicit "load media" action rather than auto-loading heavy content
+- [ ] Gradebook integration: assignment grades write into the same score structure used by the Milestone 4 Academics module — not a separate, disconnected gradebook
+- [ ] Automated test: full cycle — teacher creates lesson + assignment, student submits, teacher grades — and the resulting grade is verifiably the same data the core Academics module reads, proving the shared data model wasn't broken
+
+**Definition of Done:** A full lesson-to-graded-assignment cycle works end to end, and the grade is provably the same underlying record the core gradebook sees.
+
+---
+
+## Milestone 11: Teacher Portal — [ ] NOT STARTED
+
+- [ ] Teacher home dashboard: unified view of assigned classes, today's timetable, pending grading, recent messages — pulled from existing Core ERP/Learning Portal data, not duplicated
+- [ ] Messaging schema: threaded messages between teacher and parent/admin, `school_id`, read/unread status
+- [ ] Messaging UI: teacher can message a parent (via the existing guardian relationship from Milestone 1) or admin, and see reply threads
+- [ ] Fast bulk score/attendance entry UI (spreadsheet-like, whole class in one screen) if not already fully covered by earlier milestones
+- [ ] Confirm offline capability (attendance/grading) still holds inside this unified portal — no regression from the Milestone 2 guarantee
+- [ ] Automated test: teacher messages a parent linked to one of their real students; verify the message is correctly scoped to that school and that relationship, not accessible to unrelated parents
+
+**Definition of Done:** A teacher can see their day, do bulk entry, and message a parent from one place — with messaging correctly scoped per-tenant and tied to a real guardian relationship, verified by test.
+
+---
+
+## Milestone 12: Parent Portal — [ ] NOT STARTED
+
+- [ ] Parent account linkage: login tied to existing guardian records from Milestone 1, supporting multiple children under one parent account
+- [ ] Parent dashboard: per-child attendance, grades, and report card downloads (reusing Milestone 5's PDF generation), switchable across multiple children
+- [ ] Minimal fee schema (ahead of a full future Finance module): fee structure per class/term, invoices, payments, outstanding balance calculation, `school_id`
+- [ ] Paystack integration for online fee payment, with the payment webhook — not the client-side response — as the source of truth for confirming payment
+- [ ] Installment plan support: a fee split into scheduled installments, with automated reminders as each due date approaches
+- [ ] Parent-side messaging inbox for threads started in Milestone 11, with reply capability
+- [ ] Announcements/events calendar, school-wide or class-specific, visible to relevant parents
+- [ ] WhatsApp/SMS-first notification channel (via Termii or Africa's Talking) for fee reminders, announcements, and messages — not in-app/email only
+- [ ] Automated test: create a fee with 3 installments, simulate one payment via a Paystack webhook call, verify the balance updates correctly and a reminder fires for the next unpaid installment; verify a parent with 2 children sees both correctly and only their own children's data
+
+**Definition of Done:** A parent can log in, see accurate multi-child data, pay a fee installment with the webhook handled reliably (real money is involved here, this cannot be optimistic-UI-only), and receive reminders — all scoped correctly and verified by test.
+
+---
+
+## STOP after Milestone 12
+
+Do not begin any further module (Student Portal, Library, Hostel, Transport, Inventory, Payroll, Finance, or anything else) unless explicitly instructed with a new milestone spec. Wait for the human.

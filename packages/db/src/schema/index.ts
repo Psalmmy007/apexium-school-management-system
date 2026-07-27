@@ -164,6 +164,7 @@ export const terms = pgTable("terms", {
   startDate: timestamp("start_date", { withTimezone: true }),
   endDate: timestamp("end_date", { withTimezone: true }),
   isCurrent: boolean("is_current").notNull().default(false),
+  status: varchar("status", { length: 20 }).notNull().default("active"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),

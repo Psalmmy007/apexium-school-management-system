@@ -108,6 +108,7 @@ export interface AcademicTerm {
   startDate: Date | null;
   endDate: Date | null;
   isCurrent: boolean;
+  status: "active" | "closed";
   createdAt: Date;
   updatedAt: Date;
 }
