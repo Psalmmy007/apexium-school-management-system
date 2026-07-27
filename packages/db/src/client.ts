@@ -1,6 +1,6 @@
 import { drizzle } from "drizzle-orm/postgres-js";
 import postgres from "postgres";
-import * as schema from "./schema/index.js";
+import * as schema from "./schema/index";
 
 // DATABASE_URL from environment, defaulting to local Docker Postgres if not set
 const databaseUrl =

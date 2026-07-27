@@ -6,8 +6,8 @@ import {
   isModuleEnabled,
   upgradeSchoolLicense,
   generateLicenseKey,
-} from "./license.js";
-import { db, schools, students, licenses, licenseEvents } from "../index.js";
+} from "./license";
+import { db, schools, students, licenses, licenseEvents } from "../index";
 import { eq } from "drizzle-orm";
 
 describe("Milestone 8: License Center Integration Tests", () => {

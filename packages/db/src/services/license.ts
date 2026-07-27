@@ -1,4 +1,4 @@
-import { db, licenses, licenseEvents, students } from "../index.js";
+import { db, licenses, licenseEvents, students } from "../index";
 import { eq, count } from "drizzle-orm";
 import crypto from "crypto";
 

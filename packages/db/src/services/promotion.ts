@@ -1,4 +1,4 @@
-import { db, students, terms, classes } from "../index.js";
+import { db, students, terms, classes } from "../index";
 import { eq, and } from "drizzle-orm";
 
 export interface StudentPromotionAction {
