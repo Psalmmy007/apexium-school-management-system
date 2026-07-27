@@ -107,6 +107,10 @@ describe("Milestone 6: Promotion & Session Rollover Integration Tests", () => {
       status: "active",
     }).returning();
 
+    // Snapshot School A student's starting state for comparison after rejection
+    const stuA1SnapshotClassId = stuA1.classId;
+    const stuA1SnapshotStatus  = stuA1.status;
+
     // Create School B student
     const [stuB] = await db.insert(students).values({
       schoolId: schoolBId,
@@ -117,7 +121,13 @@ describe("Milestone 6: Promotion & Session Rollover Integration Tests", () => {
       status: "active",
     }).returning();
 
-    // Attempt 1: School A admin tries to promote class including a School B student
+    // Snapshot School B state before any promotion attempt
+    const stuBSnapshotClassId = stuB.classId;
+    const stuBSnapshotStatus  = stuB.status;
+    const [termBBefore] = await db.select().from(terms).where(eq(terms.id, termBId));
+    const termBSnapshotStatus = termBBefore.status;
+
+    // ── Attempt 1: School A admin tries to promote class including a School B student ──
     await expect(
       executeClassPromotion({
         schoolId: schoolAId,
@@ -131,11 +141,21 @@ describe("Milestone 6: Promotion & Session Rollover Integration Tests", () => {
       })
     ).rejects.toThrow("Tenant isolation violation: Student");
 
-    // Verify School A student remains in original class (transaction rolled back)
-    const [verifyStuA1] = await db.select().from(students).where(eq(students.id, stuA1.id));
-    expect(verifyStuA1.classId).toBe(classA1Id);
+    // Explicitly verify School A's student is completely unchanged — classId AND status
+    const [verifyStuA1_attempt1] = await db.select().from(students).where(eq(students.id, stuA1.id));
+    expect(verifyStuA1_attempt1.classId, "School A student classId must be unchanged after rejected attempt 1").toBe(stuA1SnapshotClassId);
+    expect(verifyStuA1_attempt1.status, "School A student status must be unchanged after rejected attempt 1").toBe(stuA1SnapshotStatus);
 
-    // Attempt 2: School A admin tries to specify a target class owned by School B
+    // Verify School B student is also completely untouched after the rejection
+    const [verifyStuB_attempt1] = await db.select().from(students).where(eq(students.id, stuB.id));
+    expect(verifyStuB_attempt1.classId, "School B student classId must be unchanged").toBe(stuBSnapshotClassId);
+    expect(verifyStuB_attempt1.status, "School B student status must be unchanged").toBe(stuBSnapshotStatus);
+
+    // Verify School B's active term is also completely untouched
+    const [termBAfter1] = await db.select().from(terms).where(eq(terms.id, termBId));
+    expect(termBAfter1.status, "School B term status must be unchanged").toBe(termBSnapshotStatus);
+
+    // ── Attempt 2: School A admin tries to specify a target class owned by School B ──
     await expect(
       executeClassPromotion({
         schoolId: schoolAId,
@@ -148,11 +168,21 @@ describe("Milestone 6: Promotion & Session Rollover Integration Tests", () => {
       })
     ).rejects.toThrow("Tenant isolation violation: Target class");
 
-    // Verify School B student and classes are completely untouched
-    const [verifyStuB] = await db.select().from(students).where(eq(students.id, stuB.id));
-    expect(verifyStuB.classId).toBe(classBId);
-    expect(verifyStuB.status).toBe("active");
+    // Explicitly verify School A's student is completely unchanged after attempt 2 as well
+    const [verifyStuA1_attempt2] = await db.select().from(students).where(eq(students.id, stuA1.id));
+    expect(verifyStuA1_attempt2.classId, "School A student classId must be unchanged after rejected attempt 2").toBe(stuA1SnapshotClassId);
+    expect(verifyStuA1_attempt2.status, "School A student status must be unchanged after rejected attempt 2").toBe(stuA1SnapshotStatus);
+
+    // Verify School B student and classes are still completely untouched after attempt 2
+    const [verifyStuB_attempt2] = await db.select().from(students).where(eq(students.id, stuB.id));
+    expect(verifyStuB_attempt2.classId, "School B student classId must still be unchanged").toBe(stuBSnapshotClassId);
+    expect(verifyStuB_attempt2.status, "School B student status must still be unchanged").toBe(stuBSnapshotStatus);
+
+    // Verify School B's active term remains untouched after both failed attempts
+    const [termBAfter2] = await db.select().from(terms).where(eq(terms.id, termBId));
+    expect(termBAfter2.status, "School B term status must still be unchanged").toBe(termBSnapshotStatus);
   });
+
 
   it("successfully promotes class, handles exception cases, transitions terms, and preserves historical integrity", async () => {
     // 1. Set up School A roster in JSS 1 (classA1Id)
