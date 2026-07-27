@@ -1,4 +1,4 @@
-import { db, studentScores, students, calculateGrade, type GradeBand } from "../index.js";
+import { db, studentScores, students, calculateGrade, type GradeBand } from "../index";
 import { eq, and } from "drizzle-orm";
 
 export interface StudentRankResult {
