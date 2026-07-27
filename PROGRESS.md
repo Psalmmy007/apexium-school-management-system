@@ -55,8 +55,11 @@ Proof it works: The high-volume automated load test successfully generated 100+ 
 ## Milestone 6: Promotion & Session Transition — COMPLETE
 Date: 2026-07-27
 
-What this means in plain terms: School administrators can now execute annual session rollovers and bulk student promotions. The system allows individual exception handling — promoting students to the next class, retaining repeating students in their current class, or marking graduating students as alumni. All prior-term academic scores, attendance registers, and rankings remain permanently linked and fully queryable after promotion.
+What this means in plain terms: School administrators can now execute annual session rollovers and bulk student promotions. The system allows individual exception handling — promoting students to the next class, retaining repeating students in their current class, or marking graduating students as alumni. The promotion workflow enforces strict school-level tenant isolation, rejecting any request that contains students or target classes from a different school. All prior-term academic scores, attendance registers, and rankings remain permanently linked and fully queryable after promotion.
 
-Proof it works: The promotion service routines, API route handler, admin matrix UI page (`/dashboard/promotion`), and automated unit test suite verifying promote, repeat, and graduate outcomes alongside historical data integrity pass with 100% success.
+Proof it works: 
+1. The integration test suite verifies that promoting School A's class has zero impact on School B's students, classes, or active terms, and that cross-tenant operations throw clear validation errors and roll back transactions.
+2. The historical integrity test verifies that querying class rankings (`computeClassRankings`) for the closed term and original class returns correct rankings and positions for all students (promoted, repeated, graduated) exactly as they were pre-promotion.
+All typechecks and unit tests pass successfully.
 
 Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
