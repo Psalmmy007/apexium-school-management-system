@@ -9,6 +9,7 @@ import {
   doublePrecision,
   pgEnum,
   uniqueIndex,
+  index,
   json,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
@@ -228,6 +229,10 @@ export const students = pgTable(
       table.schoolId,
       table.admissionNumber
     ),
+    classStudentsIdx: index("class_students_idx").on(
+      table.schoolId,
+      table.classId
+    ),
   })
 );
 
@@ -290,6 +295,10 @@ export const studentAttendance = pgTable(
       table.studentId,
       table.date,
       table.period
+    ),
+    classAttendanceIdx: index("class_attendance_idx").on(
+      table.schoolId,
+      table.classId
     ),
   })
 );
@@ -444,6 +453,11 @@ export const studentScores = pgTable(
       table.schoolId,
       table.studentId,
       table.subjectId,
+      table.termId
+    ),
+    classScoresIdx: index("class_scores_idx").on(
+      table.schoolId,
+      table.classId,
       table.termId
     ),
   })

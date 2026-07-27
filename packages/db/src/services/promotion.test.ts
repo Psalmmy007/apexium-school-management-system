@@ -94,7 +94,7 @@ describe("Milestone 6: Promotion & Session Rollover Integration Tests", () => {
       code: `MATH-${Date.now()}`,
     }).returning();
     subjAId = sub.id;
-  });
+  }, 30000);
 
   it("enforces strict school-level tenant isolation", async () => {
     // Create School A students

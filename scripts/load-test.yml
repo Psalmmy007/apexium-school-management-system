@@ -1,0 +1,45 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    - duration: 30
+      arrivalRate: 10
+      rampTo: 50
+      name: "Ramp up to 5-10x concurrent school usage"
+    - duration: 60
+      arrivalRate: 50
+      name: "Sustained high-volume multi-school load"
+  defaults:
+    headers:
+      Content-Type: "application/json"
+
+scenarios:
+  - name: "Multi-tenant Attendance Marking & Sync"
+    weight: 7
+    flow:
+      - post:
+          url: "/api/attendance/sync"
+          json:
+            schoolId: "school-demo-load-001"
+            records:
+              - studentId: "stu-load-1"
+                classId: "cls-load-1"
+                date: "2026-07-27"
+                status: "present"
+                markedBy: "usr-teacher-1"
+                updatedAt: 1785160000000
+              - studentId: "stu-load-2"
+                classId: "cls-load-1"
+                date: "2026-07-27"
+                status: "absent"
+                markedBy: "usr-teacher-1"
+                updatedAt: 1785160000000
+
+  - name: "Concurrent Bulk Report Card Queue Request"
+    weight: 3
+    flow:
+      - post:
+          url: "/api/reports/bulk-generate"
+          json:
+            schoolId: "school-demo-load-001"
+            classId: "cls-load-1"
+            termId: "term-load-1"
