@@ -1,4 +1,4 @@
-import { db, timetableEntries, classes, subjects, users, periods } from "../index";
+import { db, timetableEntries, classes, subjects, users, periods } from "../index.js";
 import { eq, and } from "drizzle-orm";
 
 export interface CreateTimetableParams {

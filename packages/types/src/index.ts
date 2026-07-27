@@ -107,10 +107,34 @@ export interface AcademicTerm {
   session: string; // e.g. "2025/2026"
   startDate: Date | null;
   endDate: Date | null;
-  isCurrent: boolean;
-  status: "active" | "closed";
+}
+
+// ── License & Licensing (Milestone 8) ──────────────────────────
+export type LicenseTier = "starter" | "growth" | "enterprise";
+export type LicenseStatus = "active" | "expired" | "suspended";
+
+export interface License {
+  id: string;
+  schoolId: string;
+  key: string;
+  tier: LicenseTier;
+  enabledModules: string[];
+  maxStudents: number;
+  status: LicenseStatus;
+  issuedAt: Date;
+  expiresAt: Date;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface LicenseEvent {
+  id: string;
+  schoolId: string;
+  licenseId: string;
+  eventType: "issued" | "renewed" | "upgraded" | "downgraded" | "expired";
+  details?: Record<string, any> | null;
+  performedBy?: string | null;
+  createdAt: Date;
 }
 
 // ── Student Score & Academics ─────────────────────────────────

@@ -1,5 +1,5 @@
-import { db, schools, classes, students, terms, studentAttendance, studentScores, subjects } from "../index";
-import { computeClassRankings } from "./ranking";
+import { db, schools, classes, students, terms, studentAttendance, studentScores, subjects } from "../index.js";
+import { computeClassRankings } from "./ranking.js";
 
 export interface LoadTestMetrics {
   totalRequests: number;

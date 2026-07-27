@@ -1,4 +1,4 @@
-import { db, students, classes, sections } from "../index";
+import { db, students, classes, sections } from "../index.js";
 import { eq } from "drizzle-orm";
 
 export interface StudentCsvRow {

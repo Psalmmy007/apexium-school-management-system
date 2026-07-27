@@ -500,6 +500,50 @@ export const studentTermReports = pgTable(
   })
 );
 
+// ── Table: licenses (Milestone 8 License Center) ──────────────
+export const licenses = pgTable(
+  "licenses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    key: varchar("key", { length: 100 }).notNull().unique(),
+    tier: varchar("tier", { length: 50 }).notNull().default("starter"), // "starter" | "growth" | "enterprise"
+    enabledModules: json("enabled_modules").notNull(), // Array<string> e.g. ["core_erp", "cbt", "lms"]
+    maxStudents: integer("max_students").notNull().default(250),
+    status: varchar("status", { length: 20 }).notNull().default("active"), // "active" | "expired" | "suspended"
+    issuedAt: timestamp("issued_at", { withTimezone: true }).notNull().defaultNow(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    schoolLicenseIdx: index("school_license_idx").on(table.schoolId),
+  })
+);
+
+// ── Table: license_events (Audit logging for renewals/upgrades) ─
+export const licenseEvents = pgTable("license_events", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  schoolId: uuid("school_id")
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  licenseId: uuid("license_id")
+    .notNull()
+    .references(() => licenses.id, { onDelete: "cascade" }),
+  eventType: varchar("event_type", { length: 50 }).notNull(), // "issued" | "renewed" | "upgraded" | "downgraded" | "expired"
+  details: json("details"),
+  performedBy: uuid("performed_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // ── Relations ─────────────────────────────────────────────────
 export const schoolsRelations = relations(schools, ({ many }) => ({
   users: many(users),

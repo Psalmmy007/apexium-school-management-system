@@ -1,4 +1,4 @@
-import { db, schools, classes, students, subjects, terms, studentScores, studentAttendance } from "../index";
+import { db, schools, classes, students, subjects, terms, studentScores, studentAttendance } from "../index.js";
 import { eq } from "drizzle-orm";
 
 export interface BackupConfig {
