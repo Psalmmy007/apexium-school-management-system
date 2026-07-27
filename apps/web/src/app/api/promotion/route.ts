@@ -12,14 +12,14 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { currentClassId, targetClassId, newSession, studentActions } = body;
 
-    if (!currentClassId || !newSession || !Array.isArray(studentActions)) {
+    if (!currentClassId || !newSession || !studentActions || !Array.isArray(studentActions)) {
       return NextResponse.json(
-        { success: false, error: "Please provide currentClassId, newSession, and studentActions array" },
+        { success: false, error: "Please provide currentClassId, newSession, and studentActions roster" },
         { status: 400 }
       );
     }
 
-    const result = await executeClassPromotion({
+    const results = await executeClassPromotion({
       schoolId: user.schoolId,
       currentClassId,
       targetClassId: targetClassId || null,
@@ -29,11 +29,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: result,
+      data: results,
     });
   } catch (error: any) {
+    console.error("Promotion execute error:", error.message);
     return NextResponse.json(
-      { success: false, error: error.message || "Failed to execute class promotion" },
+      { success: false, error: error.message || "Failed to execute session rollover promotion" },
       { status: 500 }
     );
   }
