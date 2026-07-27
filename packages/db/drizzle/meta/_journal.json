@@ -43,6 +43,13 @@
       "when": 1785067635362,
       "tag": "0005_slim_purifiers",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1785144727563,
+      "tag": "0006_sad_firelord",
+      "breakpoints": true
     }
   ]
 }

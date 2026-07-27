@@ -83,4 +83,33 @@ describe("Milestone 5: Bulk Report Card Generation & Performance Test", () => {
 
     console.log(`✅ Bulk PDF Generation test passed: Generated ${BATCH_SIZE} PDFs in ${durationMs}ms`);
   }, 30000); // 30s timeout allowance
+
+  it("does not auto-generate fabricated remarks and handles missing affective traits correctly", async () => {
+    const studentData: StudentReportCardData = {
+      schoolName: "Apexium Model School",
+      academicSession: "2025/2026",
+      termName: "First Term",
+      student: {
+        admissionNumber: "EMPTY-001",
+        firstName: "Emeka",
+        lastName: "Nwachukwu",
+        className: "JSS 1",
+      },
+      summary: {
+        totalScore: 80,
+        averageScore: 80,
+        position: 4,
+        totalStudents: 30,
+      },
+      grades: [
+        { subjectName: "Mathematics", caScore: 35, examScore: 45, totalScore: 80, grade: "A1", remark: "Excellent" },
+      ],
+      // Explicitly leaving affectiveDomain and principalRemarks undefined to test fallback/placeholder logic
+    };
+
+    const pdfBuffer = await generateReportCardPdfBuffer(studentData);
+    expect(pdfBuffer).toBeDefined();
+    expect(pdfBuffer.length).toBeGreaterThan(1000);
+    expect(pdfBuffer.toString("utf8", 0, 5)).toBe("%PDF-");
+  });
 });

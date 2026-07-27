@@ -9,6 +9,7 @@ import {
   doublePrecision,
   pgEnum,
   uniqueIndex,
+  json,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -447,6 +448,43 @@ export const studentScores = pgTable(
   })
 );
 
+// ── Table: student_term_reports (Affective & psychomotor traits, remarks) ─
+export const studentTermReports = pgTable(
+  "student_term_reports",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => students.id, { onDelete: "cascade" }),
+    termId: uuid("term_id")
+      .notNull()
+      .references(() => terms.id, { onDelete: "cascade" }),
+    principalRemarks: text("principal_remarks"),
+    teacherRemarks: text("teacher_remarks"),
+    affectiveTraits: json("affective_traits"), // stores Array<{ trait: string, rating: number }>
+    psychomotorTraits: json("psychomotor_traits"), // stores Array<{ trait: string, rating: number }>
+    enteredBy: uuid("entered_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    studentTermIdx: uniqueIndex("student_term_idx").on(
+      table.schoolId,
+      table.studentId,
+      table.termId
+    ),
+  })
+);
+
 // ── Relations ─────────────────────────────────────────────────
 export const schoolsRelations = relations(schools, ({ many }) => ({
   users: many(users),
@@ -463,6 +501,7 @@ export const schoolsRelations = relations(schools, ({ many }) => ({
   conflictLogs: many(attendanceConflictLogs),
   timetableEntries: many(timetableEntries),
   studentScores: many(studentScores),
+  studentTermReports: many(studentTermReports),
 }));
 
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -475,6 +514,7 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   staffAttendanceRecords: many(staffAttendance),
   timetableAssigned: many(timetableEntries),
   scoresEntered: many(studentScores),
+  termReportsEntered: many(studentTermReports),
 }));
 
 export const termsRelations = relations(terms, ({ one, many }) => ({
@@ -483,6 +523,7 @@ export const termsRelations = relations(terms, ({ one, many }) => ({
     references: [schools.id],
   }),
   scores: many(studentScores),
+  termReports: many(studentTermReports),
 }));
 
 export const gradingScalesRelations = relations(gradingScales, ({ one }) => ({
@@ -575,6 +616,25 @@ export const studentScoresRelations = relations(studentScores, ({ one }) => ({
   }),
   enteredBy: one(users, {
     fields: [studentScores.enteredBy],
+    references: [users.id],
+  }),
+}));
+
+export const studentTermReportsRelations = relations(studentTermReports, ({ one }) => ({
+  school: one(schools, {
+    fields: [studentTermReports.schoolId],
+    references: [schools.id],
+  }),
+  student: one(students, {
+    fields: [studentTermReports.studentId],
+    references: [students.id],
+  }),
+  term: one(terms, {
+    fields: [studentTermReports.termId],
+    references: [terms.id],
+  }),
+  enteredUser: one(users, {
+    fields: [studentTermReports.enteredBy],
     references: [users.id],
   }),
 }));

@@ -138,6 +138,21 @@ export interface StudentScore {
   termName?: string;
 }
 
+// ── Student Term Report (Behavioral & Remarks) ────────────────
+export interface StudentTermReport {
+  id: string;
+  schoolId: string;
+  studentId: string;
+  termId: string;
+  principalRemarks: string | null;
+  teacherRemarks: string | null;
+  affectiveTraits: Array<{ trait: string; rating: number }> | null;
+  psychomotorTraits: Array<{ trait: string; rating: number }> | null;
+  enteredBy: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 // ── Timetable Entry ───────────────────────────────────────────
 export interface TimetableEntry {
   id: string;

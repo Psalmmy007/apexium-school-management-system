@@ -235,7 +235,7 @@ export default function ReportCardsPage() {
                 </svg>
                 <p className="font-medium text-slate-600">No active report generation job</p>
                 <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
-                  Select a class and click "Launch Bulk PDF Generation" to start generating report cards in the background.
+                  Select a class and click &quot;Launch Bulk PDF Generation&quot; to start generating report cards in the background.
                 </p>
               </div>
             ) : (

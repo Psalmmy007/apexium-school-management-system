@@ -145,6 +145,58 @@ export default function LoginPage() {
         </button>
       </form>
 
+      {/* Demo Credentials Quick Fill Section */}
+      <div className="mt-8 pt-6 border-t border-slate-200">
+        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 text-center">
+          Demo Portals Quick Fill
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            type="button"
+            onClick={() => {
+              setEmail("admin@apexium.edu");
+              setPassword("DemoAdmin123!");
+            }}
+            className="px-3 py-2 text-xs font-semibold rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition-colors"
+          >
+            🛡️ Demo Admin
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setEmail("teacher@apexium.edu");
+              setPassword("DemoTeacher123!");
+            }}
+            className="px-3 py-2 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors"
+          >
+            👨‍🏫 Demo Teacher
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setEmail("parent@apexium.edu");
+              setPassword("DemoParent123!");
+            }}
+            className="px-3 py-2 text-xs font-semibold rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition-colors"
+          >
+            👨‍👩‍👧 Demo Parent
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setEmail("student@apexium.edu");
+              setPassword("DemoStudent123!");
+            }}
+            className="px-3 py-2 text-xs font-semibold rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 transition-colors"
+          >
+            🎓 Demo Student
+          </button>
+        </div>
+      </div>
+
       <p className="mt-6 text-center text-sm text-slate-500">
         Don&apos;t have an account?{" "}
         <span className="text-brand-600 font-medium">

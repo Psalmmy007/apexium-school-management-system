@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSessionUser } from "@/lib/auth/session";
 import { enqueueReportCardGenerationJob } from "@/lib/reports/report-card-service";
-import { db, students, classes, studentScores, subjects, gradingScales } from "@apexium/db";
+import { db, students, classes, studentScores, subjects, terms, schools, studentTermReports, computeClassRankings } from "@apexium/db";
 import { eq, and } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
@@ -21,13 +21,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Fetch school info
+    const schoolInfo = await db
+      .select()
+      .from(schools)
+      .where(eq(schools.id, user.schoolId))
+      .limit(1);
+
+    const schoolName = schoolInfo[0]?.name || "Apexium School";
+    const schoolAddress = schoolInfo[0]?.address || "";
+
+    // Fetch class info
+    const classInfo = await db
+      .select()
+      .from(classes)
+      .where(and(eq(classes.schoolId, user.schoolId), eq(classes.id, classId)))
+      .limit(1);
+
+    if (classInfo.length === 0) {
+      return NextResponse.json({ success: false, error: "Class not found" }, { status: 400 });
+    }
+
+    const className = classInfo[0].name;
+
     let studentsList: Array<any> = [];
 
     // Support high-volume mock payload for load test verification (e.g., 100+ students)
     if (mockCount && typeof mockCount === "number" && mockCount > 0) {
       studentsList = Array.from({ length: mockCount }).map((_, idx) => ({
-        schoolName: "Apexium Model International School",
-        schoolAddress: "12 Education Avenue, Victoria Island, Lagos",
+        schoolName,
+        schoolAddress,
         academicSession,
         termName,
         student: {
@@ -35,7 +58,7 @@ export async function POST(request: NextRequest) {
           firstName: `Student_${idx + 1}`,
           lastName: `TestRecord`,
           gender: idx % 2 === 0 ? "male" : "female",
-          className: "JSS 3",
+          className,
           sectionName: "Gold",
         },
         summary: {
@@ -49,48 +72,134 @@ export async function POST(request: NextRequest) {
           { subjectName: "English Language", subjectCode: "ENG101", caScore: 28, examScore: 48, totalScore: 76, grade: "B2", remark: "Very Good" },
           { subjectName: "Basic Science", subjectCode: "SCI101", caScore: 30, examScore: 50, totalScore: 80, grade: "A1", remark: "Excellent" },
         ],
-        affectiveDomain: [
-          { trait: "Punctuality", rating: 5 },
-          { trait: "Neatness", rating: 4 },
-          { trait: "Leadership", rating: 5 },
-        ],
+        affectiveDomain: [],
+        principalRemarks: "Not Entered",
       }));
     } else {
-      // Query DB for students in class
-      const classStudents = await db
+      // Find academic term
+      const currentTerm = await db
         .select()
-        .from(students)
-        .where(and(eq(students.schoolId, user.schoolId), eq(students.classId, classId)));
+        .from(terms)
+        .where(
+          and(
+            eq(terms.schoolId, user.schoolId),
+            eq(terms.name, termName),
+            eq(terms.session, academicSession)
+          )
+        )
+        .limit(1);
 
-      if (classStudents.length === 0) {
+      if (currentTerm.length === 0) {
         return NextResponse.json(
-          { success: false, error: "No students found in the selected class" },
+          { success: false, error: "Academic term not found for the selected session and term name" },
           { status: 400 }
         );
       }
 
-      studentsList = classStudents.map((st, idx) => ({
-        schoolName: "Apexium Model International School",
-        schoolAddress: "12 Education Avenue, Victoria Island, Lagos",
-        academicSession,
-        termName,
-        student: {
-          admissionNumber: st.admissionNumber,
-          firstName: st.firstName,
-          lastName: st.lastName,
-          gender: st.gender,
-          className: "Class Roster",
-        },
-        summary: {
-          totalScore: 75,
-          averageScore: 75,
-          position: idx + 1,
-          totalStudents: classStudents.length,
-        },
-        grades: [
-          { subjectName: "Mathematics", subjectCode: "MATH", caScore: 30, examScore: 50, totalScore: 80, grade: "A1", remark: "Excellent" },
-        ],
-      }));
+      const termId = currentTerm[0].id;
+
+      // Compute class rankings dynamically using the Milestone 4 ranking service
+      const rankings = await computeClassRankings(user.schoolId, classId, termId);
+
+      if (rankings.length === 0) {
+        return NextResponse.json(
+          { success: false, error: "No student scores or grades found for this class in the selected term" },
+          { status: 400 }
+        );
+      }
+
+      // Fetch all scores/grades for this class and term
+      const allScores = await db
+        .select({
+          studentId: studentScores.studentId,
+          caScore: studentScores.caScore,
+          examScore: studentScores.examScore,
+          totalScore: studentScores.totalScore,
+          grade: studentScores.grade,
+          remarks: studentScores.remarks,
+          subjectName: subjects.name,
+          subjectCode: subjects.code,
+        })
+        .from(studentScores)
+        .innerJoin(subjects, eq(studentScores.subjectId, subjects.id))
+        .where(
+          and(
+            eq(studentScores.schoolId, user.schoolId),
+            eq(studentScores.classId, classId),
+            eq(studentScores.termId, termId)
+          )
+        );
+
+      // Group scores by studentId
+      const scoresMap = new Map<string, Array<any>>();
+      for (const score of allScores) {
+        const list = scoresMap.get(score.studentId) || [];
+        list.push({
+          subjectName: score.subjectName,
+          subjectCode: score.subjectCode,
+          caScore: score.caScore,
+          examScore: score.examScore,
+          totalScore: score.totalScore,
+          grade: score.grade || "F9",
+          remark: score.remarks || "Fail",
+        });
+        scoresMap.set(score.studentId, list);
+      }
+
+      // Fetch behavioral/affective domain ratings and principal remarks
+      const termReports = await db
+        .select()
+        .from(studentTermReports)
+        .where(
+          and(
+            eq(studentTermReports.schoolId, user.schoolId),
+            eq(studentTermReports.termId, termId)
+          )
+        );
+
+      const reportsMap = new Map<string, typeof termReports[0]>();
+      for (const rep of termReports) {
+        reportsMap.set(rep.studentId, rep);
+      }
+
+      // Build report card data payload
+      studentsList = rankings.map((rank) => {
+        const studentGrades = scoresMap.get(rank.studentId) || [];
+        const studentReport = reportsMap.get(rank.studentId);
+
+        // Safely parse traits from JSON field (array of { trait, rating })
+        let affectiveDomain: Array<any> = [];
+        if (studentReport && studentReport.affectiveTraits) {
+          if (Array.isArray(studentReport.affectiveTraits)) {
+            affectiveDomain = studentReport.affectiveTraits;
+          } else if (typeof studentReport.affectiveTraits === "string") {
+            try { affectiveDomain = JSON.parse(studentReport.affectiveTraits); } catch (_) {}
+          }
+        }
+
+        return {
+          schoolName,
+          schoolAddress,
+          academicSession,
+          termName,
+          student: {
+            admissionNumber: rank.admissionNumber,
+            firstName: rank.firstName,
+            lastName: rank.lastName,
+            gender: "N/A", // or fetch gender if needed
+            className,
+          },
+          summary: {
+            totalScore: rank.totalCumulativeScore,
+            averageScore: rank.averageScore,
+            position: rank.rank,
+            totalStudents: rankings.length,
+          },
+          grades: studentGrades,
+          affectiveDomain,
+          principalRemarks: studentReport?.principalRemarks || "Not Entered",
+        };
+      });
     }
 
     // Enqueue background PDF generation job — returns immediately!

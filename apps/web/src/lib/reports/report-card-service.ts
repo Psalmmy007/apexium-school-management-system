@@ -92,7 +92,7 @@ export async function enqueueReportCardGenerationJob(payload: {
       jobRecord.progress = 10;
       setLocalJob(jobId, { ...jobRecord });
 
-      const { generateReportCardPdfBuffer } = await import("../../../../worker/src/services/report-card-pdf.js");
+      const { generateReportCardPdfBuffer } = await import("./report-card-pdf");
 
       const generatedFiles: Array<{ studentId: string; fileName: string; url: string }> = [];
 
