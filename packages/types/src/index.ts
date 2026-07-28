@@ -295,3 +295,7 @@ export interface PaginatedResult<T> {
   pageSize: number;
   totalPages: number;
 }
+
+// ── CBT Platform Types (Milestone 9) ──────────────────────────
+export * from "./cbt";
+

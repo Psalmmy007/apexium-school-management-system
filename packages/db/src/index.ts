@@ -5,5 +5,6 @@ export * from "./services/grading";
 export * from "./services/ranking";
 export * from "./services/promotion";
 export * from "./services/license";
+export * from "./services/cbt";
 export { db } from "./client";
 export type { Db } from "./client";

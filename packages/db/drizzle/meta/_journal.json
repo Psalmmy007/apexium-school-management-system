@@ -71,6 +71,13 @@
       "when": 1785173755629,
       "tag": "0009_short_victor_mancha",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1785234020305,
+      "tag": "0010_mighty_microchip",
+      "breakpoints": true
     }
   ]
 }

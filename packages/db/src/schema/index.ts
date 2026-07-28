@@ -11,6 +11,7 @@ import {
   uniqueIndex,
   index,
   json,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
@@ -697,3 +698,92 @@ export const studentTermReportsRelations = relations(studentTermReports, ({ one 
     references: [users.id],
   }),
 }));
+
+// ── Milestone 9: Computer-Based Testing (CBT Platform) Tables ───
+
+// Question Bank Table
+export const cbtQuestions = pgTable("cbt_questions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  schoolId: uuid("school_id")
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  subjectId: uuid("subject_id")
+    .notNull()
+    .references(() => subjects.id, { onDelete: "cascade" }),
+  questionText: text("question_text").notNull(),
+  questionType: varchar("question_type", { length: 20 }).notNull().default("mcq"), // mcq, objective, theory
+  options: jsonb("options"), // [{ id: "a", text: "Option A" }, ...]
+  correctAnswer: text("correct_answer").notNull(), // e.g. "a" or exact text
+  explanation: text("explanation"),
+  difficulty: varchar("difficulty", { length: 20 }).notNull().default("medium"), // easy, medium, hard
+  tags: jsonb("tags"), // ["algebra", "equations"]
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Exam Definitions Table
+export const cbtExams = pgTable("cbt_exams", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  schoolId: uuid("school_id")
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  title: varchar("title", { length: 255 }).notNull(),
+  subjectId: uuid("subject_id")
+    .notNull()
+    .references(() => subjects.id, { onDelete: "cascade" }),
+  classId: uuid("class_id")
+    .notNull()
+    .references(() => classes.id, { onDelete: "cascade" }),
+  termId: uuid("term_id")
+    .notNull()
+    .references(() => terms.id, { onDelete: "cascade" }),
+  durationMinutes: integer("duration_minutes").notNull().default(60),
+  totalMarks: integer("total_marks").notNull().default(100),
+  passMarks: integer("pass_marks").notNull().default(50),
+  randomizeQuestions: boolean("randomize_questions").notNull().default(true),
+  randomizeOptions: boolean("randomize_options").notNull().default(true),
+  status: varchar("status", { length: 20 }).notNull().default("draft"), // draft, published, archived
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Exam Questions Link Table
+export const cbtExamQuestions = pgTable("cbt_exam_questions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  schoolId: uuid("school_id")
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  examId: uuid("exam_id")
+    .notNull()
+    .references(() => cbtExams.id, { onDelete: "cascade" }),
+  questionId: uuid("question_id")
+    .notNull()
+    .references(() => cbtQuestions.id, { onDelete: "cascade" }),
+  marks: integer("marks").notNull().default(1),
+  order: integer("order").notNull().default(1),
+});
+
+// Student Exam Sessions Tracking Table
+export const cbtExamSessions = pgTable("cbt_exam_sessions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  schoolId: uuid("school_id")
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  examId: uuid("exam_id")
+    .notNull()
+    .references(() => cbtExams.id, { onDelete: "cascade" }),
+  studentId: uuid("student_id")
+    .notNull()
+    .references(() => students.id, { onDelete: "cascade" }),
+  startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
+  submittedAt: timestamp("submitted_at", { withTimezone: true }),
+  status: varchar("status", { length: 20 }).notNull().default("in_progress"), // in_progress, submitted, timed_out
+  answers: jsonb("answers").notNull().default({}), // { [questionId]: answerValue }
+  seed: varchar("seed", { length: 64 }).notNull(), // deterministic order seed per student session
+  score: integer("score"),
+  percentage: text("percentage"),
+  tabSwitchesCount: integer("tab_switches_count").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
