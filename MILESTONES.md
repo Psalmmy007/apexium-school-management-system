@@ -119,10 +119,10 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 ---
 
-## Milestone 9: CBT Platform — [ ] NOT STARTED
+## Milestone 9: CBT Platform — [ ] IN PROGRESS
 
-- [ ] Question bank schema: subjects, questions (MCQ/theory/objective), options, correct answers, difficulty/tags, `school_id`
-- [ ] Exam schema: exam definition (title, subject, duration, question set, class/term) + student exam session tracking (start time, answers, status)
+- [x] Question bank schema: subjects, questions (MCQ/theory/objective), options, correct answers, difficulty/tags, `school_id`
+- [x] Exam schema: exam definition (title, subject, duration, question set, class/term) + student exam session tracking (start time, answers, status)
 - [ ] Exam-taking UI: timed, with auto-submit on timeout, randomized question/option order per student
 - [ ] Continuous answer auto-save: answers persist locally (RxDB/IndexedDB) as the student progresses and sync continuously to the server — not only at final submission
 - [ ] Auto-grading service for objective/MCQ questions; theory questions flagged for manual grading
