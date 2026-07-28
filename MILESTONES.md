@@ -119,17 +119,17 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 ---
 
-## Milestone 9: CBT Platform — [ ] IN PROGRESS
+## Milestone 9: CBT Platform — [x] COMPLETE
 
 - [x] Question bank schema: subjects, questions (MCQ/theory/objective), options, correct answers, difficulty/tags, `school_id`
 - [x] Exam schema: exam definition (title, subject, duration, question set, class/term) + student exam session tracking (start time, answers, status)
-- [ ] Exam-taking UI: timed, with auto-submit on timeout, randomized question/option order per student
-- [ ] Continuous answer auto-save: answers persist locally (RxDB/IndexedDB) as the student progresses and sync continuously to the server — not only at final submission
-- [ ] Auto-grading service for objective/MCQ questions; theory questions flagged for manual grading
-- [ ] Result analytics: per-question, per-class, per-subject breakdown for teachers/admins
-- [ ] Lockdown/anti-cheat mode: restrict copy-paste and tab/app switching during an exam
-- [ ] Automated test: simulate a browser crash/refresh mid-exam — verify every previously answered question is preserved, the student resumes exactly where they left off, and the timer correctly continues rather than resetting
-- [ ] Automated test: two students taking the same exam receive different (randomized) question/option order and are both graded correctly against their own presented order
+- [x] Exam-taking UI: timed, with auto-submit on timeout, randomized question/option order per student
+- [x] Continuous answer auto-save: answers persist locally (RxDB/IndexedDB) as the student progresses and sync continuously to the server — not only at final submission
+- [x] Auto-grading service for objective/MCQ questions; theory questions flagged for manual grading
+- [x] Result analytics: per-question, per-class, per-subject breakdown for teachers/admins
+- [x] Lockdown/anti-cheat mode: restrict copy-paste and tab/app switching during an exam
+- [x] Automated test: simulate a browser crash/refresh mid-exam — verify every previously answered question is preserved, the student resumes exactly where they left off, and the timer correctly continues rather than resetting
+- [x] Automated test: two students taking the same exam receive different (randomized) question/option order and are both graded correctly against their own presented order
 
 **Definition of Done:** A full exam can be taken including a simulated mid-exam crash with zero answer loss and a correctly continuing timer — this is the single most important guarantee for this module, given real exam-day stakes.
 

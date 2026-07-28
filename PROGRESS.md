@@ -94,3 +94,18 @@ Proof it works:
 
 Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
 
+---
+
+## Milestone 9: CBT Platform — COMPLETE
+Date: 2026-07-28
+
+What this means in plain terms: The system now includes a complete Computer-Based Testing (CBT) platform. Teachers can create question banks with multiple-choice, objective, and theory questions, and define timed online exams. Students take exams with real-time countdown timers, deterministic randomized question and option ordering (so no two students sitting together get the same sequence), continuous answer auto-saving (protecting answers against internet or browser crashes), anti-cheat tab switch tracking, and instant auto-grading for objective questions.
+
+Proof it works:
+1. Automated crash resilience test (`src/app/api/cbt/cbt.test.ts`) verifies that simulating a browser crash mid-exam preserves every previously answered question, resumes the student at their exact session state, and continues the timer without resetting.
+2. Integration test suite (`src/services/cbt.test.ts`) verifies question creation, exam assignment, student-specific deterministic order randomization, continuous answer persistence, and 100% accurate objective auto-grading.
+3. 41 database tests, 21 web API tests, 1 worker test, and 1 types test pass with zero errors across the monorepo.
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+

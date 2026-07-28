@@ -71,6 +71,7 @@ export default async function DashboardLayout({
               <NavItem href="/dashboard/timetable"  id="nav-timetable"  label="Timetable"      icon={<IconTimetable />}  />
               <NavItem href="/dashboard/grades"     id="nav-grades"     label="Grades"         icon={<IconGrades />}     />
               <NavItem href="/dashboard/reports"    id="nav-reports"    label="Report Cards"   icon={<IconReports />}    />
+              <NavItem href="/dashboard/cbt"        id="nav-cbt"        label="CBT Exams"      icon={<IconGrades />}     />
               {user.role === "admin" && (
                 <NavItem href="/dashboard/promotion" id="nav-promotion" label="Session Promotion" icon={<IconPromotion />} />
               )}
