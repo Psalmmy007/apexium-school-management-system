@@ -299,3 +299,7 @@ export interface PaginatedResult<T> {
 // ── CBT Platform Types (Milestone 9) ──────────────────────────
 export * from "./cbt";
 
+// ── Learning Portal (LMS) Types (Milestone 10) ───────────────
+export * from "./lms";
+
+

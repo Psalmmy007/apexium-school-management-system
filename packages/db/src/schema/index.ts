@@ -787,3 +787,99 @@ export const cbtExamSessions = pgTable("cbt_exam_sessions", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
+// ── Milestone 10: Learning Portal (LMS) Tables ─────────────────────────────
+
+// Attachment Metadata Abstraction Table (Supports Local, S3, R2, Supabase)
+export const lmsAttachments = pgTable("lms_attachments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  schoolId: uuid("school_id")
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  originalFileName: varchar("original_file_name", { length: 255 }).notNull(),
+  mimeType: varchar("mime_type", { length: 100 }).notNull(),
+  fileSize: integer("file_size").notNull(),
+  storageProvider: varchar("storage_provider", { length: 50 }).notNull().default("local"), // local, s3, r2, supabase
+  storageKey: text("storage_key").notNull(),
+  uploadedBy: uuid("uploaded_by").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Lesson Notes & Scheme-of-Work Topic Mapping Table
+export const lmsLessons = pgTable("lms_lessons", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  schoolId: uuid("school_id")
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  title: varchar("title", { length: 255 }).notNull(),
+  subjectId: uuid("subject_id")
+    .notNull()
+    .references(() => subjects.id, { onDelete: "cascade" }),
+  classId: uuid("class_id")
+    .notNull()
+    .references(() => classes.id, { onDelete: "cascade" }),
+  termId: uuid("term_id")
+    .notNull()
+    .references(() => terms.id, { onDelete: "cascade" }),
+  topic: varchar("topic", { length: 255 }), // Curriculum/scheme-of-work mapping
+  contentType: varchar("content_type", { length: 50 }).notNull().default("lesson"), // lesson, quiz, resource, scorm
+  contentBody: text("content_body").notNull(),
+  attachmentIds: jsonb("attachment_ids").default([]), // array of lmsAttachments.id strings
+  mediaType: varchar("media_type", { length: 20 }).notNull().default("none"), // none, youtube, vimeo, audio, direct_video
+  mediaUrl: text("media_url"),
+  metadata: jsonb("metadata").default({}), // Extensible metadata for SCORM/quizzes/discussions
+  createdById: uuid("created_by_id").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Assignments Table
+export const lmsAssignments = pgTable("lms_assignments", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  schoolId: uuid("school_id")
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  lessonId: uuid("lesson_id").references(() => lmsLessons.id, { onDelete: "set null" }),
+  title: varchar("title", { length: 255 }).notNull(),
+  description: text("description").notNull(),
+  subjectId: uuid("subject_id")
+    .notNull()
+    .references(() => subjects.id, { onDelete: "cascade" }),
+  classId: uuid("class_id")
+    .notNull()
+    .references(() => classes.id, { onDelete: "cascade" }),
+  termId: uuid("term_id")
+    .notNull()
+    .references(() => terms.id, { onDelete: "cascade" }),
+  dueAt: timestamp("due_at", { withTimezone: true }).notNull(),
+  totalMarks: integer("total_marks").notNull().default(20),
+  weightage: doublePrecision("weightage").notNull().default(10), // Max CA points weight
+  createdById: uuid("created_by_id").references(() => users.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// Student Submissions Table
+export const lmsSubmissions = pgTable("lms_submissions", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  schoolId: uuid("school_id")
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  assignmentId: uuid("assignment_id")
+    .notNull()
+    .references(() => lmsAssignments.id, { onDelete: "cascade" }),
+  studentId: uuid("student_id")
+    .notNull()
+    .references(() => students.id, { onDelete: "cascade" }),
+  submissionText: text("submission_text"),
+  attachmentId: uuid("attachment_id").references(() => lmsAttachments.id, { onDelete: "set null" }),
+  submittedAt: timestamp("submitted_at", { withTimezone: true }).notNull().defaultNow(),
+  score: doublePrecision("score"),
+  feedback: text("feedback"),
+  status: varchar("status", { length: 20 }).notNull().default("submitted"), // submitted, graded
+  gradedById: uuid("graded_by_id").references(() => users.id, { onDelete: "set null" }),
+  gradedAt: timestamp("graded_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+

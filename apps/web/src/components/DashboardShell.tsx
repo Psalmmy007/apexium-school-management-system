@@ -80,6 +80,8 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
               <NavItem href="/dashboard/timetable" id="nav-timetable" label="Timetable" icon={<IconTimetable />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/grades" id="nav-grades" label="Grades" icon={<IconGrades />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/reports" id="nav-reports" label="Report Cards" icon={<IconReports />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/academics/lessons" id="nav-lessons" label="Lessons & Notes" icon={<IconReports />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/academics/assignments" id="nav-assignments" label="Assignments" icon={<IconGrades />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/cbt" id="nav-cbt" label="CBT Exams" icon={<IconGrades />} onClick={() => setIsMobileMenuOpen(false)} />
               {user.role === "admin" && (
                 <NavItem href="/dashboard/promotion" id="nav-promotion" label="Session Promotion" icon={<IconPromotion />} onClick={() => setIsMobileMenuOpen(false)} />
@@ -100,6 +102,8 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
               <p className="nav-group-label mt-4">My Academics</p>
               <NavItem href="/dashboard/grades" id="nav-grades" label="My Grades" icon={<IconGrades />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/reports" id="nav-reports" label="Report Card" icon={<IconReports />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/academics/lessons" id="nav-lessons" label="Lessons & Notes" icon={<IconReports />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/academics/assignments" id="nav-assignments" label="Assignments" icon={<IconGrades />} onClick={() => setIsMobileMenuOpen(false)} />
             </>
           )}
 
