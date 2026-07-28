@@ -183,6 +183,7 @@ export async function saveExamAnswer(sessionId: string, questionId: string, answ
 export async function submitExamSession(sessionId: string) {
   const [session] = await db.select().from(cbtExamSessions).where(eq(cbtExamSessions.id, sessionId));
   if (!session) throw new Error("Exam session not found.");
+  if (session.status !== "in_progress") return session;
 
   // Fetch exam questions and correct answers for auto-grading
   const examQuestionsList = await db

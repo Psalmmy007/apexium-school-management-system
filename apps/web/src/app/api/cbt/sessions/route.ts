@@ -26,6 +26,14 @@ export async function POST(request: NextRequest) {
       if (!sessionId || !questionId) {
         return NextResponse.json({ success: false, error: "Session ID and Question ID required" }, { status: 400 });
       }
+      const details = await getExamSessionDetails(sessionId);
+      if (
+        !details ||
+        details.session.schoolId !== user.schoolId ||
+        (user.role === "student" && details.session.studentId !== user.id)
+      ) {
+        return NextResponse.json({ success: false, error: "Unauthorized access to exam session" }, { status: 403 });
+      }
       const updated = await saveExamAnswer(sessionId, questionId, answer || "");
       return NextResponse.json({ success: true, data: updated });
     }
@@ -33,6 +41,14 @@ export async function POST(request: NextRequest) {
     if (action === "submit") {
       if (!sessionId) {
         return NextResponse.json({ success: false, error: "Session ID is required" }, { status: 400 });
+      }
+      const details = await getExamSessionDetails(sessionId);
+      if (
+        !details ||
+        details.session.schoolId !== user.schoolId ||
+        (user.role === "student" && details.session.studentId !== user.id)
+      ) {
+        return NextResponse.json({ success: false, error: "Unauthorized access to exam session" }, { status: 403 });
       }
       const submitted = await submitExamSession(sessionId);
       return NextResponse.json({ success: true, data: submitted });
@@ -64,6 +80,12 @@ export async function GET(request: NextRequest) {
     const details = await getExamSessionDetails(sessionId);
     if (!details) {
       return NextResponse.json({ success: false, error: "Exam session not found" }, { status: 404 });
+    }
+    if (
+      details.session.schoolId !== user.schoolId ||
+      (user.role === "student" && details.session.studentId !== user.id)
+    ) {
+      return NextResponse.json({ success: false, error: "Unauthorized access to exam session" }, { status: 403 });
     }
     return NextResponse.json({ success: true, data: details });
   } catch (error: any) {

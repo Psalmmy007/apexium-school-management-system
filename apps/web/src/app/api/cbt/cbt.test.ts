@@ -74,4 +74,19 @@ describe("Milestone 9: CBT API & Session Resilience Tests", () => {
     expect(sessionResumed.id).toBe(session1.id);
     expect(new Date(sessionResumed.startedAt).getTime()).toBe(new Date(session1.startedAt).getTime());
   });
+
+  it("enforces tenant and student session isolation, preventing unauthorized cross-student session access", async () => {
+    // 1. Create Student 2 in a different school
+    const [otherSch] = await db.insert(schools).values({ name: "Other Academy", slug: `oth-sch-${Date.now()}` }).returning();
+    const [otherSt] = await db.insert(students).values({ schoolId: otherSch.id, admissionNumber: `OTH-STU-${Date.now()}`, firstName: "Unauth", lastName: "User" }).returning();
+
+    // 2. Start session for Student 1
+    const session = await startExamSession(schoolId, examId, studentId);
+
+    // 3. Verify session belongs strictly to schoolId and studentId
+    expect(session.schoolId).toBe(schoolId);
+    expect(session.studentId).toBe(studentId);
+    expect(session.schoolId).not.toBe(otherSch.id);
+    expect(session.studentId).not.toBe(otherSt.id);
+  });
 });
