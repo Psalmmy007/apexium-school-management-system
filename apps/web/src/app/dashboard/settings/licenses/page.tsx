@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 
 interface LicenseData {
   id: string;
@@ -63,7 +63,7 @@ export default function LicenseSettingsPage() {
     }
   };
 
-  const fetchSuperadminDirectory = async () => {
+  const fetchSuperadminDirectory = useCallback(async () => {
     setSuperadminLoading(true);
     try {
       const params = new URLSearchParams();
@@ -81,7 +81,7 @@ export default function LicenseSettingsPage() {
     } finally {
       setSuperadminLoading(false);
     }
-  };
+  }, [searchQuery, tierFilter, statusFilter]);
 
   useEffect(() => {
     fetchSchoolLicenseData();
@@ -91,7 +91,7 @@ export default function LicenseSettingsPage() {
     if (viewMode === "superadmin") {
       fetchSuperadminDirectory();
     }
-  }, [viewMode, searchQuery, tierFilter, statusFilter]);
+  }, [viewMode, fetchSuperadminDirectory]);
 
   const handleUpgrade = async (targetTier: "starter" | "professional" | "enterprise") => {
     setUpgrading(true);

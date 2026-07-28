@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 
 interface Option {
@@ -53,7 +53,7 @@ export default function TakeExamPage() {
   // Storage key for local offline resilience
   const localStorageKey = `cbt_answers_${sessionId}`;
 
-  const fetchSession = async () => {
+  const fetchSession = useCallback(async () => {
     setLoading(true);
     try {
       const res = await fetch(`/api/cbt/sessions?sessionId=${sessionId}`);
@@ -80,7 +80,6 @@ export default function TakeExamPage() {
 
         // Calculate timer remaining seconds
         const startTime = new Date(json.data.session.startedAt).getTime();
-        const durationMs = (json.data.exam.durationMinutes || 60) * 60 * 1000;
         const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
         const totalSeconds = (json.data.exam.durationMinutes || 60) * 60;
         const rem = Math.max(0, totalSeconds - elapsedSeconds);
@@ -91,11 +90,11 @@ export default function TakeExamPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [sessionId, localStorageKey]);
 
   useEffect(() => {
     if (sessionId) fetchSession();
-  }, [sessionId]);
+  }, [sessionId, fetchSession]);
 
   // Anti-cheat tab switch listener
   useEffect(() => {
@@ -107,6 +106,27 @@ export default function TakeExamPage() {
     document.addEventListener("visibilitychange", handleVisibilityChange);
     return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
   }, []);
+
+  const handleSubmitExam = useCallback(async (isTimeout = false) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const res = await fetch("/api/cbt/sessions", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "submit", sessionId }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        localStorage.removeItem(localStorageKey);
+        setSession(json.data);
+      }
+    } catch (err) {
+      console.error("Exam submission failed", err);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [isSubmitting, sessionId, localStorageKey]);
 
   // Timer Countdown Effect with Auto-submit
   useEffect(() => {
@@ -124,7 +144,7 @@ export default function TakeExamPage() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [session, remainingSeconds]);
+  }, [session, remainingSeconds, handleSubmitExam]);
 
   // Continuous Local Auto-Save + Server Sync
   const handleSelectAnswer = async (questionId: string, answerValue: string) => {
@@ -155,27 +175,6 @@ export default function TakeExamPage() {
       console.warn("Background server sync failed (will retry online)", err);
     } finally {
       setSyncing(false);
-    }
-  };
-
-  const handleSubmitExam = async (isTimeout = false) => {
-    if (isSubmitting) return;
-    setIsSubmitting(true);
-    try {
-      const res = await fetch("/api/cbt/sessions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "submit", sessionId }),
-      });
-      const json = await res.json();
-      if (json.success) {
-        localStorage.removeItem(localStorageKey);
-        setSession(json.data);
-      }
-    } catch (err) {
-      console.error("Exam submission failed", err);
-    } finally {
-      setIsSubmitting(false);
     }
   };
 

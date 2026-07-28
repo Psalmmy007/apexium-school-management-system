@@ -1,5 +1,5 @@
 import { db, licenses, licenseEvents, students, schools } from "../index";
-import { eq, count, and, gte, lte, like, or, sql, desc } from "drizzle-orm";
+import { eq, count, and, gte, lte, like, or, sql, desc, type SQL } from "drizzle-orm";
 import crypto from "crypto";
 
 export interface CreateLicenseInput {
@@ -236,7 +236,7 @@ export async function listAllSchoolLicenses(params?: {
   const pageSize = params?.pageSize ?? 20;
   const offset = (page - 1) * pageSize;
 
-  const conditions: any[] = [];
+  const conditions: SQL[] = [];
   if (params?.tier) {
     conditions.push(eq(licenses.tier, params.tier));
   }
@@ -245,12 +245,8 @@ export async function listAllSchoolLicenses(params?: {
   }
   if (params?.search) {
     const pattern = `%${params.search}%`;
-    conditions.push(
-      or(
-        like(schools.name, pattern),
-        like(licenses.key, pattern)
-      )
-    );
+    const searchCond = or(like(schools.name, pattern), like(licenses.key, pattern));
+    if (searchCond) conditions.push(searchCond);
   }
 
   const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
