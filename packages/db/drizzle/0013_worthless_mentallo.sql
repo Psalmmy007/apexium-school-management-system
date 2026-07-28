@@ -1,0 +1,2 @@
+ALTER TABLE "lms_submissions" ADD COLUMN "graded_at" timestamp with time zone;--> statement-breakpoint
+ALTER TABLE "lms_submissions" ADD COLUMN "created_at" timestamp with time zone DEFAULT now() NOT NULL;

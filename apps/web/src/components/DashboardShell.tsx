@@ -75,6 +75,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
           {(user.role === "admin" || user.role === "teacher") && (
             <>
               <p className="nav-group-label mt-4">Academic</p>
+              <NavItem href="/dashboard/teacher" id="nav-teacher-portal" label="Teacher Workspace" icon={<IconDashboard />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/students" id="nav-students" label="Students" icon={<IconStudents />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/attendance" id="nav-attendance" label="Attendance" icon={<IconAttendance />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/timetable" id="nav-timetable" label="Timetable" icon={<IconTimetable />} onClick={() => setIsMobileMenuOpen(false)} />
@@ -83,6 +84,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
               <NavItem href="/dashboard/academics/lessons" id="nav-lessons" label="Lessons & Notes" icon={<IconReports />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/academics/assignments" id="nav-assignments" label="Assignments" icon={<IconGrades />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/cbt" id="nav-cbt" label="CBT Exams" icon={<IconGrades />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/teacher/messages" id="nav-messages" label="Parent Messaging" icon={<IconReports />} onClick={() => setIsMobileMenuOpen(false)} />
               {user.role === "admin" && (
                 <NavItem href="/dashboard/promotion" id="nav-promotion" label="Session Promotion" icon={<IconPromotion />} onClick={() => setIsMobileMenuOpen(false)} />
               )}

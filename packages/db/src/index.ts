@@ -7,5 +7,6 @@ export * from "./services/promotion";
 export * from "./services/license";
 export * from "./services/cbt";
 export * from "./services/lms";
+export * from "./services/teacher-portal";
 export { db } from "./client";
 export type { Db } from "./client";

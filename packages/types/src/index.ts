@@ -302,4 +302,8 @@ export * from "./cbt";
 // ── Learning Portal (LMS) Types (Milestone 10) ───────────────
 export * from "./lms";
 
+// ── Messaging & Teacher Portal Types (Milestone 11) ───────────
+export * from "./messaging";
+
+
 
