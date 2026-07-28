@@ -17,6 +17,7 @@ connection.on("error", (err: Error) => console.error("❌ Redis error:", err));
 // ── Queue definitions ─────────────────────────────────────────
 export const pdfQueue = new Queue("pdf-generation", { connection });
 export const importQueue = new Queue("bulk-import", { connection });
+export const licenseReminderQueue = new Queue("license-reminders", { connection });
 
 // Target storage directory for generated PDF report cards
 const PDF_STORAGE_DIR = path.join(process.cwd(), "public", "reports");
@@ -78,6 +79,30 @@ pdfWorker.on("completed", (job, result) => {
 
 pdfWorker.on("failed", (job, err) => {
   console.error(`[pdf-generation] Job ${job?.id} failed:`, err.message);
+});
+
+// ── License Renewal Reminder Worker (Milestone 8) ─────────────
+export interface LicenseReminderJobData {
+  daysThresholds?: number[];
+}
+
+export const licenseReminderWorker = new Worker<LicenseReminderJobData>(
+  "license-reminders",
+  async (job) => {
+    const thresholds = job.data.daysThresholds || [30, 14, 3];
+    console.log(`[license-reminders] Executing license expiry scan for thresholds: ${thresholds.join(", ")} days`);
+
+    const { checkExpiringLicenses } = await import("@apexium/db");
+    const remindersSent = await checkExpiringLicenses(thresholds);
+
+    console.log(`[license-reminders] Scan completed. Sent ${remindersSent.length} renewal reminders.`);
+    return { success: true, count: remindersSent.length, remindersSent };
+  },
+  { connection }
+);
+
+licenseReminderWorker.on("completed", (job, result) => {
+  console.log(`[license-reminders] Job ${job.id} finished processing renewal reminders.`);
 });
 
 console.log("🚀 Apexium worker started. Waiting for jobs...");

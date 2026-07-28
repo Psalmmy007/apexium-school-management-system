@@ -1,9 +1,8 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "rootDir": "src",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
     "outDir": "dist",
     "paths": {
       "@apexium/types": ["../../packages/types/src/index.ts"],

@@ -6,6 +6,9 @@ import {
   isModuleEnabled,
   upgradeSchoolLicense,
   generateLicenseKey,
+  listAllSchoolLicenses,
+  checkExpiringLicenses,
+  validateLicenseSnapshotOffline,
 } from "./license";
 import { db, schools, students, licenses, licenseEvents } from "../index";
 import { eq } from "drizzle-orm";
@@ -152,4 +155,61 @@ describe("Milestone 8: License Center Integration Tests", () => {
     expect(existingStu).toBeDefined();
     expect(existingStu.firstName).toBe("Safe");
   });
+
+  it("lists all school licenses for superadmin directory with search and filters", async () => {
+    const result = await listAllSchoolLicenses({ search: "Licensing Test" });
+    expect(result.items.length).toBeGreaterThan(0);
+    expect(result.items.some((item) => item.schoolId === schoolId)).toBe(true);
+  });
+
+  it("scans expiring licenses and logs automated renewal reminder events", async () => {
+    const [remSch] = await db
+      .insert(schools)
+      .values({
+        name: "Reminder Test School",
+        slug: `rem-sch-${Date.now()}`,
+      })
+      .returning();
+
+    // License expiring in 14 days
+    const in14Days = new Date(Date.now() + 14 * 86400 * 1000 - 1000);
+    await db.insert(licenses).values({
+      schoolId: remSch.id,
+      key: generateLicenseKey(),
+      tier: "starter",
+      enabledModules: ["core_erp"],
+      maxStudents: 250,
+      status: "active",
+      expiresAt: in14Days,
+    });
+
+    const reminders = await checkExpiringLicenses([14]);
+    expect(reminders.some((r) => r.schoolId === remSch.id)).toBe(true);
+  });
+
+  it("validates license snapshot in offline cached mode within grace period", () => {
+    const snapshot = {
+      schoolId,
+      tier: "starter",
+      status: "active",
+      maxStudents: 250,
+      enabledModules: ["core_erp"],
+      expiresAt: new Date(Date.now() + 30 * 86400 * 1000).toISOString(),
+      cachedAt: Date.now() - 3600 * 1000, // cached 1 hour ago
+      gracePeriodMs: 24 * 3600 * 1000, // 24 hours
+    };
+
+    const offlineCheck = validateLicenseSnapshotOffline(snapshot, 100);
+    expect(offlineCheck.valid).toBe(true);
+
+    // Stale snapshot beyond grace period
+    const staleSnapshot = {
+      ...snapshot,
+      cachedAt: Date.now() - 48 * 3600 * 1000, // 48 hours ago
+    };
+    const staleCheck = validateLicenseSnapshotOffline(staleSnapshot, 100);
+    expect(staleCheck.valid).toBe(false);
+    expect(staleCheck.reason).toContain("Offline license cache validation expired");
+  });
 });
+

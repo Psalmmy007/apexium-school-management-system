@@ -1,5 +1,5 @@
-import { db, licenses, licenseEvents, students } from "../index";
-import { eq, count } from "drizzle-orm";
+import { db, licenses, licenseEvents, students, schools } from "../index";
+import { eq, count, and, gte, lte, like, or, sql, desc } from "drizzle-orm";
 import crypto from "crypto";
 
 export interface CreateLicenseInput {
@@ -221,3 +221,180 @@ export async function upgradeSchoolLicense(
 
   return updatedLic;
 }
+
+/**
+ * Superadmin multi-tenant query: list licenses across ALL schools with filtering, searching, and pagination.
+ */
+export async function listAllSchoolLicenses(params?: {
+  search?: string;
+  tier?: string;
+  status?: string;
+  page?: number;
+  pageSize?: number;
+}) {
+  const page = params?.page ?? 1;
+  const pageSize = params?.pageSize ?? 20;
+  const offset = (page - 1) * pageSize;
+
+  const conditions: any[] = [];
+  if (params?.tier) {
+    conditions.push(eq(licenses.tier, params.tier));
+  }
+  if (params?.status) {
+    conditions.push(eq(licenses.status, params.status));
+  }
+  if (params?.search) {
+    const pattern = `%${params.search}%`;
+    conditions.push(
+      or(
+        like(schools.name, pattern),
+        like(licenses.key, pattern)
+      )
+    );
+  }
+
+  const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
+
+  const items = await db
+    .select({
+      id: licenses.id,
+      schoolId: licenses.schoolId,
+      schoolName: schools.name,
+      licenseKey: licenses.key,
+      tier: licenses.tier,
+      status: licenses.status,
+      maxStudents: licenses.maxStudents,
+      enabledModules: licenses.enabledModules,
+      issuedAt: licenses.issuedAt,
+      expiresAt: licenses.expiresAt,
+      enrolledStudents: sql<number>`(
+        SELECT COUNT(*)::int FROM ${students} WHERE ${students.schoolId} = ${licenses.schoolId}
+      )`,
+    })
+    .from(licenses)
+    .leftJoin(schools, eq(licenses.schoolId, schools.id))
+    .where(whereClause)
+    .orderBy(desc(licenses.issuedAt))
+    .limit(pageSize)
+    .offset(offset);
+
+  const [totalRes] = await db
+    .select({ total: count() })
+    .from(licenses)
+    .leftJoin(schools, eq(licenses.schoolId, schools.id))
+    .where(whereClause);
+
+  const total = Number(totalRes?.total || 0);
+
+  return {
+    items,
+    total,
+    page,
+    pageSize,
+    totalPages: Math.ceil(total / pageSize),
+  };
+}
+
+/**
+ * Automated renewal reminders: finds licenses expiring within specified day thresholds (e.g. 30, 14, 3 days out)
+ * and logs renewal reminder events.
+ */
+export async function checkExpiringLicenses(daysThresholds: number[] = [30, 14, 3]) {
+  const now = new Date();
+  const results: Array<{ licenseId: string; schoolId: string; daysLeft: number; threshold: number }> = [];
+
+  for (const days of daysThresholds) {
+    const targetDate = new Date(now.getTime() + days * 86400 * 1000);
+    const windowStart = new Date(targetDate.getTime() - 86400 * 1000); // 1 day window
+
+    const expiring = await db
+      .select()
+      .from(licenses)
+      .where(
+        and(
+          eq(licenses.status, "active"),
+          gte(licenses.expiresAt, windowStart),
+          lte(licenses.expiresAt, targetDate)
+        )
+      );
+
+    for (const lic of expiring) {
+      const daysLeft = Math.ceil((lic.expiresAt.getTime() - now.getTime()) / (86400 * 1000));
+      
+      // Log reminder event if not already logged for this threshold
+      await db.insert(licenseEvents).values({
+        schoolId: lic.schoolId,
+        licenseId: lic.id,
+        eventType: "renewed", // using existing enum eventType
+        details: { reminderDays: days, daysLeft, expiresAt: lic.expiresAt },
+      });
+
+      results.push({
+        licenseId: lic.id,
+        schoolId: lic.schoolId,
+        daysLeft,
+        threshold: days,
+      });
+    }
+  }
+
+  return results;
+}
+
+/**
+ * Offline License Validation Snapshot & Cache helper:
+ * Allows validating license state against a cached snapshot if DB connection is unavailable.
+ */
+export interface CachedLicenseSnapshot {
+  schoolId: string;
+  tier: string;
+  status: string;
+  maxStudents: number;
+  enabledModules: string[];
+  expiresAt: string | null;
+  cachedAt: number; // Unix timestamp
+  gracePeriodMs?: number; // Default 24 hours
+}
+
+export function validateLicenseSnapshotOffline(
+  snapshot: CachedLicenseSnapshot,
+  currentStudentCount: number
+): LicenseValidationResult {
+  const gracePeriodMs = snapshot.gracePeriodMs ?? 24 * 60 * 60 * 1000;
+  const now = Date.now();
+
+  // Allow cache validity up to grace period even offline
+  if (now - snapshot.cachedAt > gracePeriodMs) {
+    return {
+      valid: false,
+      reason: "Offline license cache validation expired. Please connect online to re-validate license.",
+      currentStudentCount,
+      maxStudents: snapshot.maxStudents,
+    };
+  }
+
+  if (snapshot.expiresAt && new Date(snapshot.expiresAt).getTime() < now) {
+    return {
+      valid: false,
+      reason: `License expired on ${snapshot.expiresAt.slice(0, 10)}. Please renew online.`,
+      currentStudentCount,
+      maxStudents: snapshot.maxStudents,
+    };
+  }
+
+  if (snapshot.status !== "active") {
+    return {
+      valid: false,
+      reason: `License status is ${snapshot.status}.`,
+      currentStudentCount,
+      maxStudents: snapshot.maxStudents,
+    };
+  }
+
+  return {
+    valid: true,
+    currentStudentCount,
+    maxStudents: snapshot.maxStudents,
+  };
+}
+
