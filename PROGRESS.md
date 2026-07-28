@@ -108,4 +108,20 @@ Proof it works:
 
 Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
 
+---
+
+## Milestone 10: Learning Portal (LMS) — COMPLETE
+Date: 2026-07-28
+
+What this means in plain terms: Teachers can now publish scheme-of-work lesson notes with low-bandwidth video/audio embeds and create assignments. Students can view lessons (with text-first loading to save mobile data), submit assignments, and view teacher feedback. When a teacher grades an assignment, the score automatically syncs directly into the core academic gradebook, seamlessly updating student term scores and report card grades without double-counting or data duplication.
+
+Proof it works:
+1. End-to-end integration test (`src/app/api/lms/lms.test.ts`) verifies full cycle: teacher creates lesson + assignment, student submits response, teacher grades, and the resulting score is verifiably the exact same record read by the core Academics gradebook module (`studentScores`).
+2. Gradebook safety integration test (`src/services/lms.test.ts`) proves idempotent score synchronization: re-grading a submission updates the student's CA score accurately without double-counting.
+3. 44 database tests, 23 web API tests, 1 worker test, and 1 types test pass with zero errors across the monorepo.
+4. Next.js production build (`pnpm --filter @apexium/web build`) completed with 42 static & dynamic pages compiled successfully and live Vercel production deployment (`READY`).
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+
 

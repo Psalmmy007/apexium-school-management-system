@@ -135,16 +135,16 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 ---
 
-## Milestone 10: Learning Portal (LMS) — [ ] NOT STARTED
+## Milestone 10: Learning Portal (LMS) — [x] COMPLETE
 
-- [ ] Lesson schema: lessons (title, subject, class, term, content body, attachments), curriculum/scheme-of-work topic mapping, `school_id`
-- [ ] Assignment schema: definition, due date, submission records (student, file/text, submitted_at, grade, feedback)
-- [ ] Teacher UI: create lesson notes with attachments, create assignments
-- [ ] Student UI: view lessons, submit assignments (file upload via Cloudflare R2), see feedback/grades
-- [ ] Video/audio content: support external embeds (YouTube/Vimeo links) as the default path — avoids hosting cost and bandwidth strain — with an optional low-resolution direct upload path
-- [ ] Low-bandwidth mode: content defaults to text/compressed-first with an explicit "load media" action rather than auto-loading heavy content
-- [ ] Gradebook integration: assignment grades write into the same score structure used by the Milestone 4 Academics module — not a separate, disconnected gradebook
-- [ ] Automated test: full cycle — teacher creates lesson + assignment, student submits, teacher grades — and the resulting grade is verifiably the same data the core Academics module reads, proving the shared data model wasn't broken
+- [x] Lesson schema: lessons (title, subject, class, term, content body, attachments), curriculum/scheme-of-work topic mapping, `school_id`
+- [x] Assignment schema: definition, due date, submission records (student, file/text, submitted_at, grade, feedback)
+- [x] Teacher UI: create lesson notes with attachments, create assignments
+- [x] Student UI: view lessons, submit assignments (file upload via Cloudflare R2), see feedback/grades
+- [x] Video/audio content: support external embeds (YouTube/Vimeo links) as the default path — avoids hosting cost and bandwidth strain — with an optional low-resolution direct upload path
+- [x] Low-bandwidth mode: content defaults to text/compressed-first with an explicit "load media" action rather than auto-loading heavy content
+- [x] Gradebook integration: assignment grades write into the same score structure used by the Milestone 4 Academics module — not a separate, disconnected gradebook
+- [x] Automated test: full cycle — teacher creates lesson + assignment, student submits, teacher grades — and the resulting grade is verifiably the same data the core Academics module reads, proving the shared data model wasn't broken
 
 **Definition of Done:** A full lesson-to-graded-assignment cycle works end to end, and the grade is provably the same underlying record the core gradebook sees.
 
