@@ -233,3 +233,96 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 - [x] Automated test: allocate students until capacity is reached, verify over-allocation is rejected, perform transfers, verify occupancy statistics remain correct, and confirm tenant isolation across multiple schools
 
 **Definition of Done:** Students can be allocated, transferred, tracked, and billed for hostel accommodation with strict capacity enforcement and complete historical integrity verified by automated testing.
+
+## Milestone 16: Transport Management System — [ ] NOT STARTED
+
+- [ ] Transport schema: vehicles, drivers, routes, route stops, transport assignments, daily trips, transport attendance, maintenance records, fuel logs, transport fee plans, and `school_id`
+- [ ] Vehicle management: administrators can create, edit, archive, and manage school buses and transport vehicles including registration numbers, capacities, insurance, inspection dates, and operational status
+- [ ] Driver management: maintain driver and transport staff records including licence information, contact details, employment status, assigned vehicles, and assignment history
+- [ ] Route management: create transport routes with pickup points, drop-off points, stop sequences, estimated arrival times, and assigned vehicles
+- [ ] Student transport allocation: assign students to transport routes while enforcing vehicle capacity limits and preventing duplicate route assignments
+- [ ] Daily transport operations: record departure times, arrival times, trip status, assigned drivers, and route completion history
+- [ ] Transport attendance: record students boarding and alighting vehicles for every trip with complete attendance history
+- [ ] Parent Portal integration: allow parents to view transport routes, pickup times, assigned vehicles, and transport status from Milestone 12
+- [ ] Finance integration: connect transport subscriptions and transport fees with the Finance module for automated billing and payment tracking
+- [ ] Vehicle maintenance: schedule servicing, inspections, repairs, insurance renewals, and automatically flag overdue maintenance activities
+- [ ] Reports: transport allocation reports, vehicle utilisation reports, transport attendance reports, maintenance reports, fuel consumption reports, and transport fee summaries
+- [ ] Automated test: create two schools, multiple vehicles, drivers, routes, and transport assignments while verifying vehicle capacity enforcement, transport attendance, maintenance scheduling, fee integration, and complete tenant isolation
+
+**Definition of Done:** Schools can manage vehicles, routes, drivers, transport assignments, attendance, maintenance, and transport billing with complete tenant isolation and automated verification across multiple schools.
+
+---
+
+## Milestone 17: Human Resources & Payroll — [ ] NOT STARTED
+
+- [ ] Human Resources schema: employees, departments, positions, salary structures, payroll records, allowances, deductions, leave requests, employment history, contracts, tax records, pension records, and `school_id`
+- [ ] Employee management: administrators can create, edit, archive, and manage teaching and non-teaching staff records with complete employment history
+- [ ] Department management: organise staff into departments, positions, reporting structures, and employment categories
+- [ ] Leave management: staff can submit leave requests while administrators approve, reject, and track annual leave, sick leave, maternity leave, study leave, and unpaid leave
+- [ ] Salary structure management: configure salary grades, allowances, bonuses, deductions, taxes, pensions, and statutory contributions per school
+- [ ] Payroll processing: generate monthly payroll automatically using salary structures, attendance records, approved leave, allowances, and deductions
+- [ ] Staff attendance integration: reuse staff attendance records from Milestone 2 when calculating payroll and attendance summaries
+- [ ] Payslip generation: generate downloadable PDF payslips showing complete salary breakdowns, deductions, taxes, and net salary
+- [ ] Employee self-service: staff can securely access their profiles, attendance summaries, leave balances, payroll history, and payslips
+- [ ] Reports: payroll summaries, departmental salary reports, leave reports, attendance reports, tax reports, pension reports, and employee statistics
+- [ ] Audit logging: record every payroll generation, salary adjustment, leave approval, and employment change with immutable audit history
+- [ ] Automated test: create two schools with multiple employees, process payroll, approve leave requests, generate payslips, verify attendance integration, and confirm complete tenant isolation
+
+**Definition of Done:** Schools can manage employees, leave, payroll, statutory deductions, and staff self-service while maintaining complete payroll accuracy and tenant isolation verified through automated tests.
+
+---
+
+## Milestone 18: Finance & Accounting — [ ] NOT STARTED
+
+- [ ] Finance schema: chart of accounts, journal entries, ledgers, invoices, receipts, expenses, bank accounts, budgets, vendors, assets, liabilities, audit logs, and `school_id`
+- [ ] Chart of accounts: administrators can configure accounting structures suitable for each school's financial requirements
+- [ ] Double-entry accounting engine: every financial transaction automatically creates balanced debit and credit journal entries
+- [ ] General ledger: maintain complete accounting records with immutable financial history and audit trails
+- [ ] Revenue management: consolidate school fees, hostel fees, transport fees, library fines, and all other income into a unified accounting system
+- [ ] Expense management: record operational expenses, vendor payments, purchase approvals, and expense categories
+- [ ] Budget management: create annual and departmental budgets while monitoring expenditure against approved budgets
+- [ ] Bank reconciliation: reconcile bank transactions, cash balances, transfers, deposits, and withdrawals
+- [ ] Financial statements: generate trial balance, income statement, balance sheet, cash flow statement, and general ledger reports
+- [ ] Dashboard analytics: display revenue trends, expenditure trends, outstanding receivables, budget utilisation, and financial performance indicators
+- [ ] Audit logging: record every accounting transaction, financial adjustment, approval, and reconciliation with complete historical integrity
+- [ ] Automated test: create two schools, process income and expense transactions, verify balanced journal entries, generate financial statements, confirm audit integrity, and prove complete tenant isolation
+
+**Definition of Done:** Schools can operate a complete double-entry accounting system with accurate financial reporting, audit trails, and seamless integration with every revenue-generating module while maintaining complete tenant isolation.
+
+---
+
+## Milestone 19: Communication & Notification Centre — [ ] NOT STARTED
+
+- [ ] Communication schema: announcements, notification templates, email queue, SMS queue, push notifications, recipients, delivery logs, notification preferences, schedules, and `school_id`
+- [ ] Notification engine: provide a unified communication system supporting in-app notifications, email, SMS, and push notifications
+- [ ] Announcement management: administrators can publish school-wide, class-specific, department-specific, teacher, parent, and student announcements
+- [ ] Notification templates: configurable templates supporting placeholders for names, classes, fees, examinations, attendance, assignments, and report cards
+- [ ] Scheduled notifications: automatically send reminders for school fees, assignments, examinations, attendance, library returns, hostel payments, and transport subscriptions
+- [ ] Parent communication integration: integrate notifications with the Parent Portal developed in Milestone 12
+- [ ] Student communication integration: integrate notifications with the Student Portal developed in Milestone 13
+- [ ] Teacher communication integration: integrate notifications with the Teacher Portal developed in Milestone 11
+- [ ] User notification preferences: allow every user to configure preferred notification channels and notification categories
+- [ ] Delivery tracking: monitor queued, delivered, failed, read, and pending notifications across every communication channel
+- [ ] Reports: communication history, delivery statistics, failed notifications, engagement summaries, and notification analytics
+- [ ] Automated test: create two schools, send announcements through every communication channel, verify scheduled reminders, delivery tracking, user preferences, and complete tenant isolation
+
+**Definition of Done:** Schools can communicate with students, parents, teachers, and staff through a unified notification platform supporting multiple delivery channels, scheduling, delivery tracking, and complete tenant isolation.
+
+---
+
+## Milestone 20: Analytics & Executive Dashboard — [ ] NOT STARTED
+
+- [ ] Analytics schema: dashboard widgets, KPI snapshots, trend history, cached reports, predictive indicators, executive summaries, and `school_id`
+- [ ] Executive dashboard: display institution-wide KPIs covering enrolment, attendance, academics, finance, staffing, hostel occupancy, transport operations, and library utilisation
+- [ ] Academic analytics: analyse examination performance, subject performance, teacher effectiveness, class rankings, student progress, and historical academic trends
+- [ ] Attendance analytics: identify absenteeism trends, punctuality statistics, attendance percentages, and department-level attendance performance
+- [ ] Financial analytics: display revenue trends, expenditure trends, outstanding school fees, budget performance, and financial growth indicators
+- [ ] Operational analytics: analyse hostel occupancy, transport utilisation, library borrowing activity, CBT participation, LMS engagement, and overall ERP usage
+- [ ] Predictive analytics: identify students at academic risk, attendance risk, fee default risk, and examination risk using configurable scoring rules
+- [ ] Interactive dashboards: allow filtering by session, term, class, department, teacher, student, and date range
+- [ ] Export capabilities: export dashboards, reports, charts, and analytics to PDF, Excel, and CSV formats
+- [ ] Performance optimisation: cache dashboard queries and generate large analytical reports in the background without affecting system responsiveness
+- [ ] Audit analytics: display system activity logs, user actions, security events, and operational metrics for administrators
+- [ ] Automated test: create two schools with representative academic, financial, and operational data, verify KPI accuracy, report exports, dashboard performance, caching behaviour, and complete tenant isolation
+
+**Definition of Done:** School administrators can monitor every operational, academic, and financial aspect of their institution through real-time executive dashboards, predictive analytics, and exportable reports with complete tenant isolation verified through automated tests.

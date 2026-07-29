@@ -2,7 +2,7 @@ import Link from "next/link";
 import { getSessionUser } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 import { db, students, classes, sections } from "@apexium/db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
@@ -18,25 +18,45 @@ export default async function StudentsListPage() {
     redirect("/dashboard");
   }
 
-  // Fetch all students for the user's school
-  const studentList = await db
-    .select({
-      id: students.id,
-      admissionNumber: students.admissionNumber,
-      firstName: students.firstName,
-      lastName: students.lastName,
-      middleName: students.middleName,
-      gender: students.gender,
-      photoUrl: students.photoUrl,
-      status: students.status,
-      className: classes.name,
-      sectionName: sections.name,
-    })
-    .from(students)
-    .leftJoin(classes, eq(students.classId, classes.id))
-    .leftJoin(sections, eq(students.sectionId, sections.id))
-    .where(eq(students.schoolId, user.schoolId))
-    .orderBy(desc(students.createdAt));
+  // Fetch all students for the user's school safely
+  let studentList: Array<{
+    id: string;
+    admissionNumber: string;
+    firstName: string;
+    lastName: string;
+    middleName: string | null;
+    gender: string | null;
+    photoUrl: string | null;
+    status: string;
+    className: string | null;
+    sectionName: string | null;
+  }> = [];
+
+  try {
+    if (user.schoolId && user.schoolId.trim() !== "") {
+      studentList = await db
+        .select({
+          id: students.id,
+          admissionNumber: students.admissionNumber,
+          firstName: students.firstName,
+          lastName: students.lastName,
+          middleName: students.middleName,
+          gender: students.gender,
+          photoUrl: students.photoUrl,
+          status: students.status,
+          className: classes.name,
+          sectionName: sections.name,
+        })
+        .from(students)
+        .leftJoin(classes, eq(students.classId, classes.id))
+        .leftJoin(sections, eq(students.sectionId, sections.id))
+        .where(eq(students.schoolId, user.schoolId))
+        .orderBy(desc(students.createdAt));
+    }
+  } catch (error) {
+    console.error("Failed fetching students roster:", error);
+    studentList = [];
+  }
 
   return (
     <div className="animate-fade-in space-y-6">
