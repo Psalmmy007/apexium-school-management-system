@@ -11,5 +11,6 @@ export * from "./services/teacher-portal";
 export * from "./services/parent-portal";
 export * from "./services/student-portal";
 export * from "./services/library";
+export * from "./services/hostel";
 export { db } from "./client";
 export type { Db } from "./client";

@@ -1171,6 +1171,159 @@ export const libraryReservations = pgTable(
   })
 );
 
+// ── Milestone 15: Hostel Management System Schema ───────────────────────────
+
+export const hostels = pgTable(
+  "hostels",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    schoolId: uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 150 }).notNull(),
+    code: varchar("code", { length: 50 }),
+    genderType: varchar("gender_type", { length: 20 }).notNull().default("mixed"), // boys, girls, mixed
+    capacity: integer("capacity").notNull().default(100),
+    address: text("address"),
+    wardenUserId: uuid("warden_user_id").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    hostelSchoolIdx: index("hostel_school_idx").on(table.schoolId),
+  })
+);
+
+export const hostelBlocks = pgTable(
+  "hostel_blocks",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    schoolId: uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }),
+    hostelId: uuid("hostel_id").notNull().references(() => hostels.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 100 }).notNull(),
+    code: varchar("code", { length: 50 }),
+    capacity: integer("capacity").notNull().default(50),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    blockSchoolHostelIdx: index("block_school_hostel_idx").on(table.schoolId, table.hostelId),
+  })
+);
+
+export const hostelRooms = pgTable(
+  "hostel_rooms",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    schoolId: uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }),
+    hostelId: uuid("hostel_id").notNull().references(() => hostels.id, { onDelete: "cascade" }),
+    blockId: uuid("block_id").references(() => hostelBlocks.id, { onDelete: "set null" }),
+    roomNumber: varchar("room_number", { length: 50 }).notNull(),
+    floor: varchar("floor", { length: 50 }),
+    capacity: integer("capacity").notNull().default(4), // Number of beds
+    status: varchar("status", { length: 20 }).notNull().default("available"), // available, full, maintenance
+    feePerTerm: doublePrecision("fee_per_term").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    roomSchoolHostelIdx: index("room_school_hostel_idx").on(table.schoolId, table.hostelId, table.status),
+  })
+);
+
+export const hostelBeds = pgTable(
+  "hostel_beds",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    schoolId: uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }),
+    roomId: uuid("room_id").notNull().references(() => hostelRooms.id, { onDelete: "cascade" }),
+    bedNumber: varchar("bed_number", { length: 50 }).notNull(),
+    status: varchar("status", { length: 20 }).notNull().default("available"), // available, occupied, maintenance, reserved
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    bedSchoolRoomIdx: index("bed_school_room_idx").on(table.schoolId, table.roomId, table.status),
+  })
+);
+
+export const hostelAllocations = pgTable(
+  "hostel_allocations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    schoolId: uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }),
+    studentId: uuid("student_id").notNull().references(() => students.id, { onDelete: "cascade" }),
+    hostelId: uuid("hostel_id").notNull().references(() => hostels.id, { onDelete: "cascade" }),
+    roomId: uuid("room_id").notNull().references(() => hostelRooms.id, { onDelete: "cascade" }),
+    bedId: uuid("bed_id").notNull().references(() => hostelBeds.id, { onDelete: "cascade" }),
+    allocatedAt: timestamp("allocated_at", { withTimezone: true }).notNull().defaultNow(),
+    vacatedAt: timestamp("vacated_at", { withTimezone: true }),
+    status: varchar("status", { length: 20 }).notNull().default("active"), // active, transferred, vacated
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    allocSchoolStudentIdx: index("alloc_school_student_idx").on(table.schoolId, table.studentId, table.status),
+  })
+);
+
+export const hostelTransfers = pgTable(
+  "hostel_transfers",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    schoolId: uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }),
+    studentId: uuid("student_id").notNull().references(() => students.id, { onDelete: "cascade" }),
+    allocationId: uuid("allocation_id").notNull().references(() => hostelAllocations.id, { onDelete: "cascade" }),
+    fromRoomId: uuid("from_room_id").notNull().references(() => hostelRooms.id, { onDelete: "cascade" }),
+    fromBedId: uuid("from_bed_id").notNull().references(() => hostelBeds.id, { onDelete: "cascade" }),
+    toRoomId: uuid("to_room_id").notNull().references(() => hostelRooms.id, { onDelete: "cascade" }),
+    toBedId: uuid("to_bed_id").notNull().references(() => hostelBeds.id, { onDelete: "cascade" }),
+    transferredAt: timestamp("transferred_at", { withTimezone: true }).notNull().defaultNow(),
+    reason: text("reason"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    transferSchoolStudentIdx: index("transfer_school_student_idx").on(table.schoolId, table.studentId),
+  })
+);
+
+export const hostelAttendance = pgTable(
+  "hostel_attendance",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    schoolId: uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }),
+    hostelId: uuid("hostel_id").notNull().references(() => hostels.id, { onDelete: "cascade" }),
+    studentId: uuid("student_id").notNull().references(() => students.id, { onDelete: "cascade" }),
+    date: varchar("date", { length: 10 }).notNull(), // YYYY-MM-DD
+    status: varchar("status", { length: 20 }).notNull().default("present"), // present, absent, late, leave
+    remarks: text("remarks"),
+    markedById: uuid("marked_by_id").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    hostelAttIdx: index("hostel_att_idx").on(table.schoolId, table.hostelId, table.date),
+  })
+);
+
+export const hostelMaintenance = pgTable(
+  "hostel_maintenance",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    schoolId: uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }),
+    hostelId: uuid("hostel_id").notNull().references(() => hostels.id, { onDelete: "cascade" }),
+    roomId: uuid("room_id").references(() => hostelRooms.id, { onDelete: "set null" }),
+    bedId: uuid("bed_id").references(() => hostelBeds.id, { onDelete: "set null" }),
+    issueDescription: text("issue_description").notNull(),
+    status: varchar("status", { length: 20 }).notNull().default("reported"), // reported, in_progress, resolved
+    reportedAt: timestamp("reported_at", { withTimezone: true }).notNull().defaultNow(),
+    resolvedAt: timestamp("resolved_at", { withTimezone: true }),
+    cost: doublePrecision("cost").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    maintSchoolHostelIdx: index("maint_school_hostel_idx").on(table.schoolId, table.hostelId, table.status),
+  })
+);
+
+
 
 
 
