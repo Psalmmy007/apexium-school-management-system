@@ -179,6 +179,57 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 ---
 
-## STOP after Milestone 12
+## Milestone 13: Student Portal — [x] COMPLETE
 
-Do not begin any further module (Student Portal, Library, Hostel, Transport, Inventory, Payroll, Finance, or anything else) unless explicitly instructed with a new milestone spec. Wait for the human.
+- [x] Student account linkage: login tied to the existing student record from Milestone 1, ensuring every student can only access their own data within their `school_id`
+- [x] Student dashboard: personalized overview displaying today's timetable, attendance summary, upcoming assignments, CBT exams, announcements, and recent academic performance
+- [x] Timetable view: reuse Milestone 3 timetable data, presented in a mobile-friendly weekly schedule
+- [x] Attendance history: display attendance records from Milestone 2 with daily, weekly, term, and yearly summaries
+- [x] Academic results: display subject scores, Continuous Assessment (CA), examination scores, grades, rankings, and cumulative averages from Milestone 4
+- [x] Report card downloads: reuse Milestone 5 PDF generation to allow students to download their own report cards
+- [x] CBT integration: display available exams, completed exams, scores, corrections (where permitted), and examination history from Milestone 9
+- [x] Learning Portal integration: display enrolled lessons, assignments, submission history, teacher feedback, and grades from Milestone 10
+- [x] Announcements & calendar: display school announcements, class-specific notices, events, examination schedules, and assignment deadlines
+- [x] Student profile management: allow updating profile photo, password, notification preferences, and limited personal information without compromising SIS records
+- [x] Notification centre: display unread announcements, assignment reminders, CBT reminders, fee reminders, and teacher messages
+- [x] Offline-first capability: previously viewed lessons, timetable, assignments, and announcements remain accessible when internet connectivity is unavailable
+- [x] Automated test: create two schools, multiple students, and verify every student can access only their own academic records, lessons, CBT sessions, attendance, report cards, and announcements while remaining completely isolated from students belonging to another school
+
+**Definition of Done:** A student can log in and securely access every academic resource relevant to them—including timetable, attendance, grades, CBT, LMS, announcements, and report cards—with complete tenant isolation proven by automated tests.
+
+---
+
+## Milestone 14: Library Management System — [ ] NOT STARTED
+
+- [ ] Library schema: books, categories, authors, publishers, ISBN, editions, copies, barcodes, shelves, borrowing history, reservations, fines, and `school_id`
+- [ ] Book catalogue management: librarians can create, edit, archive, and search books
+- [ ] Multiple copy management: support multiple physical copies of the same title while tracking each copy independently
+- [ ] Barcode support: automatically generate and print barcodes for book copies
+- [ ] Borrowing workflow: librarians issue books to students and staff while enforcing borrowing limits configured per school
+- [ ] Book returns: calculate overdue periods, fines, and automatically update inventory availability
+- [ ] Reservation system: students and teachers may reserve unavailable books and receive notifications when available
+- [ ] Fine management: configurable overdue fine rules stored per school rather than hardcoded
+- [ ] Search engine: fast searching by title, author, subject, ISBN, barcode, category, or keyword
+- [ ] Inventory auditing: identify missing books, damaged books, archived books, and total library stock
+- [ ] Reports: borrowing statistics, overdue reports, popular books, inactive books, outstanding fines, and inventory summaries
+- [ ] Automated test: borrow, renew, reserve, return, and fine calculation workflow executed across multiple schools proving complete tenant isolation and accurate inventory tracking
+
+**Definition of Done:** Books can be catalogued, borrowed, reserved, renewed, returned, audited, and reported on accurately while maintaining complete inventory integrity and tenant isolation.
+
+---
+
+## Milestone 15: Hostel Management System — [ ] NOT STARTED
+
+- [ ] Hostel schema: hostels, blocks, rooms, beds, allocations, occupancy records, transfers, hostel staff, maintenance records, and `school_id`
+- [ ] Room allocation engine: allocate students to available beds while preventing over-allocation
+- [ ] Capacity enforcement: room and hostel capacities enforced at the service layer rather than only through UI validation
+- [ ] Hostel transfer workflow: transfer students between rooms or hostels while preserving allocation history
+- [ ] Occupancy dashboard: real-time occupancy statistics showing available beds, occupied beds, maintenance blocks, and reserved rooms
+- [ ] Hostel attendance integration: optional hostel roll-call linked with the attendance module
+- [ ] Hostel fee integration: connect hostel allocations with the Finance module for automatic hostel billing
+- [ ] Maintenance management: record damaged rooms, unavailable beds, repairs, inspections, and maintenance schedules
+- [ ] Student hostel profile: display hostel assignment, roommates, room details, and hostel rules
+- [ ] Reports: occupancy reports, vacancy reports, maintenance reports, allocation history, and hostel fee summaries
+- [ ] Automated test: allocate students until capacity is reached, verify over-allocation is rejected, perform transfers, verify occupancy statistics remain correct, and confirm tenant isolation across multiple schools
+
+**Definition of Done:** Students can be allocated, transferred, tracked, and billed for hostel accommodation with strict capacity enforcement and complete historical integrity verified by automated testing.

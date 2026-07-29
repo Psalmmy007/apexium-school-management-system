@@ -217,6 +217,10 @@ export const students = pgTable(
     sectionId: uuid("section_id").references(() => sections.id, {
       onDelete: "set null",
     }),
+    userId: uuid("user_id").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    notificationPreferences: jsonb("notification_preferences"),
     status: studentStatusEnum("status").notNull().default("active"),
     createdAt: timestamp("created_at", { withTimezone: true })
       .notNull()
@@ -1031,6 +1035,25 @@ export const announcements = pgTable(
     announcementSchoolIdx: index("announcement_school_idx").on(table.schoolId, table.publishedAt),
   })
 );
+
+export const studentNotifications = pgTable(
+  "student_notifications",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    schoolId: uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }),
+    studentId: uuid("student_id").notNull().references(() => students.id, { onDelete: "cascade" }),
+    title: varchar("title", { length: 255 }).notNull(),
+    message: text("message").notNull(),
+    type: varchar("type", { length: 50 }).notNull().default("general"), // announcement, assignment, cbt, fee, message
+    isRead: boolean("is_read").notNull().default(false),
+    link: text("link"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    studentNotifyIdx: index("student_notify_idx").on(table.schoolId, table.studentId, table.isRead),
+  })
+);
+
 
 
 

@@ -152,6 +152,22 @@ Proof it works:
 
 Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
 
+---
+
+## Milestone 13: Student Portal — COMPLETE
+Date: 2026-07-29
+
+What this means in plain terms: Students can log into a personalized Student Portal to view their daily timetable, attendance register history, academic grades, report cards, assigned CBT exams, LMS lessons & homework, notifications, and profile settings. Complete multi-tenant isolation ensures student data cannot leak across schools or between students.
+
+Proof it works:
+1. Automated integration test (`packages/db/src/services/student-portal.test.ts`) creates two schools (School A & School B) and multiple students, proving that student A1 can access only their own academic records, lessons, CBT sessions, attendance, report cards, and announcements, while remaining completely isolated from students in School B.
+2. API contract tests (`apps/web/src/app/api/student/student.test.ts`) verify all 8 student workspace endpoints (`/api/student/dashboard`, `/api/student/timetable`, `/api/student/attendance`, `/api/student/academics`, `/api/student/cbt`, `/api/student/lms`, `/api/student/notifications`, `/api/student/profile`).
+3. 55 database tests, 26 web API tests, 1 worker test, and 1 types test (83 total tests) pass with 100% success across the monorepo.
+4. Next.js production build (`pnpm --filter @apexium/web build`) completed with 69 pages generated cleanly.
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+
 
 
 

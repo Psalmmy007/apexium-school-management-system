@@ -102,11 +102,15 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
 
           {user.role === "student" && (
             <>
-              <p className="nav-group-label mt-4">My Academics</p>
-              <NavItem href="/dashboard/grades" id="nav-grades" label="My Grades" icon={<IconGrades />} onClick={() => setIsMobileMenuOpen(false)} />
-              <NavItem href="/dashboard/reports" id="nav-reports" label="Report Card" icon={<IconReports />} onClick={() => setIsMobileMenuOpen(false)} />
-              <NavItem href="/dashboard/academics/lessons" id="nav-lessons" label="Lessons & Notes" icon={<IconReports />} onClick={() => setIsMobileMenuOpen(false)} />
-              <NavItem href="/dashboard/academics/assignments" id="nav-assignments" label="Assignments" icon={<IconGrades />} onClick={() => setIsMobileMenuOpen(false)} />
+              <p className="nav-group-label mt-4">Student Workspace</p>
+              <NavItem href="/dashboard/student" id="nav-student-dashboard" label="Student Portal" icon={<IconDashboard />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/student/timetable" id="nav-student-timetable" label="My Timetable" icon={<IconTimetable />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/student/attendance" id="nav-student-attendance" label="Attendance History" icon={<IconAttendance />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/student/academics" id="nav-student-academics" label="Academic Results" icon={<IconGrades />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/student/cbt" id="nav-student-cbt" label="CBT Exams" icon={<IconGrades />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/student/lms" id="nav-student-lms" label="Lessons & Homework" icon={<IconReports />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/student/notifications" id="nav-student-notifications" label="Notification Centre" icon={<IconReports />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/student/profile" id="nav-student-profile" label="Profile Settings" icon={<IconSettings />} onClick={() => setIsMobileMenuOpen(false)} />
             </>
           )}
 

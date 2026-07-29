@@ -9,5 +9,6 @@ export * from "./services/cbt";
 export * from "./services/lms";
 export * from "./services/teacher-portal";
 export * from "./services/parent-portal";
+export * from "./services/student-portal";
 export { db } from "./client";
 export type { Db } from "./client";
