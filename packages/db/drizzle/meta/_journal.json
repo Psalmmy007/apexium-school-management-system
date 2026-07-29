@@ -99,6 +99,13 @@
       "when": 1785239300714,
       "tag": "0013_worthless_mentallo",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1785240872553,
+      "tag": "0014_plain_jackpot",
+      "breakpoints": true
     }
   ]
 }

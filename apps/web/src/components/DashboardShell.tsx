@@ -93,9 +93,10 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
 
           {user.role === "parent" && (
             <>
-              <p className="nav-group-label mt-4">My Children</p>
-              <NavItem href="/dashboard/children" id="nav-children" label="My Children" icon={<IconStudents />} onClick={() => setIsMobileMenuOpen(false)} />
-              <NavItem href="/dashboard/attendance" id="nav-attendance" label="Attendance" icon={<IconAttendance />} onClick={() => setIsMobileMenuOpen(false)} />
+              <p className="nav-group-label mt-4">Parent Workspace</p>
+              <NavItem href="/dashboard/parent" id="nav-parent-portal" label="Parent Portal" icon={<IconDashboard />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/parent/fees" id="nav-parent-fees" label="Fee Invoices" icon={<IconGrades />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/teacher/messages" id="nav-parent-messages" label="Messaging Inbox" icon={<IconReports />} onClick={() => setIsMobileMenuOpen(false)} />
             </>
           )}
 

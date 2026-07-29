@@ -8,5 +8,6 @@ export * from "./services/license";
 export * from "./services/cbt";
 export * from "./services/lms";
 export * from "./services/teacher-portal";
+export * from "./services/parent-portal";
 export { db } from "./client";
 export type { Db } from "./client";

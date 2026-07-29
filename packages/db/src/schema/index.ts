@@ -935,5 +935,103 @@ export const messages = pgTable(
   })
 );
 
+// ── Milestone 12: Parent Portal — Fee & Announcement Schema ────────────────
+
+export const feeStructures = pgTable(
+  "fee_structures",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    schoolId: uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }),
+    classId: uuid("class_id").references(() => classes.id, { onDelete: "set null" }),
+    termId: uuid("term_id").notNull().references(() => terms.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 255 }).notNull(), // e.g. "First Term School Fees"
+    description: text("description"),
+    totalAmount: doublePrecision("total_amount").notNull(),
+    currency: varchar("currency", { length: 10 }).notNull().default("NGN"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    schoolTermIdx: index("fee_school_term_idx").on(table.schoolId, table.termId),
+  })
+);
+
+export const feeInstallments = pgTable(
+  "fee_installments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    schoolId: uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }),
+    feeStructureId: uuid("fee_structure_id").notNull().references(() => feeStructures.id, { onDelete: "cascade" }),
+    label: varchar("label", { length: 100 }).notNull(), // e.g. "Installment 1"
+    amount: doublePrecision("amount").notNull(),
+    dueDate: timestamp("due_date", { withTimezone: true }).notNull(),
+    sortOrder: integer("sort_order").notNull().default(1),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    feeInstallmentIdx: index("fee_installment_idx").on(table.schoolId, table.feeStructureId),
+  })
+);
+
+export const feeInvoices = pgTable(
+  "fee_invoices",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    schoolId: uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }),
+    studentId: uuid("student_id").notNull().references(() => students.id, { onDelete: "cascade" }),
+    feeStructureId: uuid("fee_structure_id").notNull().references(() => feeStructures.id, { onDelete: "cascade" }),
+    totalAmount: doublePrecision("total_amount").notNull(),
+    amountPaid: doublePrecision("amount_paid").notNull().default(0),
+    outstandingBalance: doublePrecision("outstanding_balance").notNull(),
+    status: varchar("status", { length: 20 }).notNull().default("unpaid"), // unpaid, partial, paid
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    invoiceStudentIdx: index("invoice_student_idx").on(table.schoolId, table.studentId),
+    invoiceUniqueIdx: uniqueIndex("invoice_unique_idx").on(table.schoolId, table.studentId, table.feeStructureId),
+  })
+);
+
+export const feePayments = pgTable(
+  "fee_payments",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    schoolId: uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }),
+    invoiceId: uuid("invoice_id").notNull().references(() => feeInvoices.id, { onDelete: "cascade" }),
+    installmentId: uuid("installment_id").references(() => feeInstallments.id, { onDelete: "set null" }),
+    paystackReference: varchar("paystack_reference", { length: 255 }).notNull().unique(), // idempotency key
+    amount: doublePrecision("amount").notNull(),
+    channel: varchar("channel", { length: 50 }), // card, bank, ussd
+    paidAt: timestamp("paid_at", { withTimezone: true }).notNull(),
+    webhookVerified: boolean("webhook_verified").notNull().default(false), // ONLY true when Paystack webhook confirms
+    webhookPayload: jsonb("webhook_payload"), // raw webhook body stored for audit
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    paymentInvoiceIdx: index("payment_invoice_idx").on(table.schoolId, table.invoiceId),
+  })
+);
+
+export const announcements = pgTable(
+  "announcements",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    schoolId: uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }),
+    classId: uuid("class_id").references(() => classes.id, { onDelete: "set null" }), // null = school-wide
+    title: varchar("title", { length: 255 }).notNull(),
+    body: text("body").notNull(),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    createdById: uuid("created_by_id").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    announcementSchoolIdx: index("announcement_school_idx").on(table.schoolId, table.publishedAt),
+  })
+);
+
+
 
 

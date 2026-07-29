@@ -123,5 +123,35 @@ Proof it works:
 
 Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
 
+---
+
+## Milestone 11: Teacher Portal — COMPLETE
+Date: 2026-07-28
+
+What this means in plain terms: Teachers have a dedicated workspace dashboard aggregating their daily timetable, assigned classes, pending CBT/LMS grading tasks, and direct parent messaging threads. Teachers can communicate securely with parents of their assigned students, with strict relationship validation and multi-tenant isolation preventing unauthorized communication.
+
+Proof it works: 
+1. Database service integration tests (`src/services/teacher-portal.test.ts`) and API route test (`src/app/api/teacher/teacher-portal.test.ts`) verify overview aggregations, authorization checks, and thread-based parent messaging.
+2. 47 database tests, 24 web API tests, 1 worker test, and 1 types test pass with 100% success across the monorepo.
+3. Next.js production build (`pnpm --filter @apexium/web build`) completed with 47 pages generated and live Vercel production deployment (`READY`).
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+---
+
+## Milestone 12: Parent Portal — COMPLETE
+Date: 2026-07-29
+
+What this means in plain terms: Parents can log into a multi-child dashboard to view attendance, grades, report cards, fee invoices, installment schedules, announcements, and direct messaging threads. Online fee payments via Paystack are verified strictly through the server-to-server webhook — preventing client-side tampering or optimistic UI spoofing — with automated balance updates and installment due date reminders.
+
+Proof it works:
+1. Automated integration test (`packages/db/src/services/parent-portal.test.ts`) verifies creating a fee structure with 3 installments, generating invoices, processing a simulated HMAC-SHA512 signed Paystack webhook, confirming balance updates to ₦50,000, checking next unpaid installment, rejecting invalid signatures, and enforcing 2-child parent isolation.
+2. API contract tests (`apps/web/src/app/api/parent/parent.test.ts`) verify all parent workspace endpoints (`/api/parent/children`, `/api/parent/fees`, `/api/parent/announcements`, `/api/paystack/webhook`).
+3. 50 database tests, 25 web API tests, 1 worker test, and 1 types test (77 total tests) pass with zero errors across the monorepo.
+4. Next.js production build (`pnpm --filter @apexium/web build`) completed with 53 pages generated cleanly.
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+
 
 

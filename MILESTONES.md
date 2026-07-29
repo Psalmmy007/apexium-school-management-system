@@ -163,17 +163,17 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 ---
 
-## Milestone 12: Parent Portal — [ ] NOT STARTED
+## Milestone 12: Parent Portal — [x] COMPLETE
 
-- [ ] Parent account linkage: login tied to existing guardian records from Milestone 1, supporting multiple children under one parent account
-- [ ] Parent dashboard: per-child attendance, grades, and report card downloads (reusing Milestone 5's PDF generation), switchable across multiple children
-- [ ] Minimal fee schema (ahead of a full future Finance module): fee structure per class/term, invoices, payments, outstanding balance calculation, `school_id`
-- [ ] Paystack integration for online fee payment, with the payment webhook — not the client-side response — as the source of truth for confirming payment
-- [ ] Installment plan support: a fee split into scheduled installments, with automated reminders as each due date approaches
-- [ ] Parent-side messaging inbox for threads started in Milestone 11, with reply capability
-- [ ] Announcements/events calendar, school-wide or class-specific, visible to relevant parents
-- [ ] WhatsApp/SMS-first notification channel (via Termii or Africa's Talking) for fee reminders, announcements, and messages — not in-app/email only
-- [ ] Automated test: create a fee with 3 installments, simulate one payment via a Paystack webhook call, verify the balance updates correctly and a reminder fires for the next unpaid installment; verify a parent with 2 children sees both correctly and only their own children's data
+- [x] Parent account linkage: login tied to existing guardian records from Milestone 1, supporting multiple children under one parent account
+- [x] Parent dashboard: per-child attendance, grades, and report card downloads (reusing Milestone 5's PDF generation), switchable across multiple children
+- [x] Minimal fee schema (ahead of a full future Finance module): fee structure per class/term, invoices, payments, outstanding balance calculation, `school_id`
+- [x] Paystack integration for online fee payment, with the payment webhook — not the client-side response — as the source of truth for confirming payment
+- [x] Installment plan support: a fee split into scheduled installments, with automated reminders as each due date approaches
+- [x] Parent-side messaging inbox for threads started in Milestone 11, with reply capability
+- [x] Announcements/events calendar, school-wide or class-specific, visible to relevant parents
+- [x] WhatsApp/SMS-first notification channel (via Termii or Africa's Talking) for fee reminders, announcements, and messages — not in-app/email only
+- [x] Automated test: create a fee with 3 installments, simulate one payment via a Paystack webhook call, verify the balance updates correctly and a reminder fires for the next unpaid installment; verify a parent with 2 children sees both correctly and only their own children's data
 
 **Definition of Done:** A parent can log in, see accurate multi-child data, pay a fee installment with the webhook handled reliably (real money is involved here, this cannot be optimistic-UI-only), and receive reminders — all scoped correctly and verified by test.
 
