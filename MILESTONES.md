@@ -199,20 +199,20 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 ---
 
-## Milestone 14: Library Management System — [ ] NOT STARTED
+## Milestone 14: Library Management System — [x] COMPLETE
 
-- [ ] Library schema: books, categories, authors, publishers, ISBN, editions, copies, barcodes, shelves, borrowing history, reservations, fines, and `school_id`
-- [ ] Book catalogue management: librarians can create, edit, archive, and search books
-- [ ] Multiple copy management: support multiple physical copies of the same title while tracking each copy independently
-- [ ] Barcode support: automatically generate and print barcodes for book copies
-- [ ] Borrowing workflow: librarians issue books to students and staff while enforcing borrowing limits configured per school
-- [ ] Book returns: calculate overdue periods, fines, and automatically update inventory availability
-- [ ] Reservation system: students and teachers may reserve unavailable books and receive notifications when available
-- [ ] Fine management: configurable overdue fine rules stored per school rather than hardcoded
-- [ ] Search engine: fast searching by title, author, subject, ISBN, barcode, category, or keyword
-- [ ] Inventory auditing: identify missing books, damaged books, archived books, and total library stock
-- [ ] Reports: borrowing statistics, overdue reports, popular books, inactive books, outstanding fines, and inventory summaries
-- [ ] Automated test: borrow, renew, reserve, return, and fine calculation workflow executed across multiple schools proving complete tenant isolation and accurate inventory tracking
+- [x] Library schema: books, categories, authors, publishers, ISBN, editions, copies, barcodes, shelves, borrowing history, reservations, fines, and `school_id`
+- [x] Book catalogue management: librarians can create, edit, archive, and search books
+- [x] Multiple copy management: support multiple physical copies of the same title while tracking each copy independently
+- [x] Barcode support: automatically generate and print barcodes for book copies
+- [x] Borrowing workflow: librarians issue books to students and staff while enforcing borrowing limits configured per school
+- [x] Book returns: calculate overdue periods, fines, and automatically update inventory availability
+- [x] Reservation system: students and teachers may reserve unavailable books and receive notifications when available
+- [x] Fine management: configurable overdue fine rules stored per school rather than hardcoded
+- [x] Search engine: fast searching by title, author, subject, ISBN, barcode, category, or keyword
+- [x] Inventory auditing: identify missing books, damaged books, archived books, and total library stock
+- [x] Reports: borrowing statistics, overdue reports, popular books, inactive books, outstanding fines, and inventory summaries
+- [x] Automated test: borrow, renew, reserve, return, and fine calculation workflow executed across multiple schools proving complete tenant isolation and accurate inventory tracking
 
 **Definition of Done:** Books can be catalogued, borrowed, reserved, renewed, returned, audited, and reported on accurately while maintaining complete inventory integrity and tenant isolation.
 

@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 interface UserInfo {
   firstName: string;
@@ -13,8 +15,31 @@ interface DashboardShellProps {
   children: React.ReactNode;
 }
 
+function IconSignOut({ className = "w-5 h-5" }: { className?: string }) {
+  return (
+    <svg className={className} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15m3 0l3-3m0 0l-3-3m3 3H9" />
+    </svg>
+  );
+}
+
 export function DashboardShell({ user, children }: DashboardShellProps) {
+  const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
+
+  const handleSignOut = async () => {
+    setIsSigningOut(true);
+    try {
+      const supabase = createSupabaseBrowserClient();
+      await supabase.auth.signOut();
+    } catch (err) {
+      console.error("Error signing out:", err);
+    } finally {
+      router.push("/auth/login");
+      router.refresh();
+    }
+  };
 
   const roleBadgeClass: Record<string, string> = {
     admin:   "badge-admin",
@@ -117,6 +142,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
           {user.role === "admin" && (
             <>
               <p className="nav-group-label mt-4">System</p>
+              <NavItem href="/dashboard/library" id="nav-library" label="Library System" icon={<IconReports />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/settings/licenses" id="nav-licenses" label="License Center" icon={<IconLicense />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/settings" id="nav-settings" label="Settings" icon={<IconSettings />} onClick={() => setIsMobileMenuOpen(false)} />
             </>
@@ -125,20 +151,33 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
 
         {/* User Profile Footer */}
         <div className="border-t border-sidebar-border px-4 py-4 mt-auto">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center flex-shrink-0">
-              <span className="text-sm font-bold text-indigo-300">
-                {user.firstName.charAt(0)}{user.lastName.charAt(0)}
-              </span>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-xl bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center flex-shrink-0">
+                <span className="text-sm font-bold text-indigo-300">
+                  {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                </span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-white truncate leading-none mb-0.5">
+                  {user.firstName} {user.lastName}
+                </p>
+                <span className={`text-xs capitalize ${roleBadgeClass[user.role] ?? "badge-neutral"}`}>
+                  {user.role}
+                </span>
+              </div>
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-white truncate leading-none mb-0.5">
-                {user.firstName} {user.lastName}
-              </p>
-              <span className={`text-xs capitalize ${roleBadgeClass[user.role] ?? "badge-neutral"}`}>
-                {user.role}
-              </span>
-            </div>
+
+            <button
+              id="sidebar-signout-btn"
+              onClick={handleSignOut}
+              disabled={isSigningOut}
+              title="Sign Out"
+              aria-label="Sign Out"
+              className="p-2 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800 transition-colors cursor-pointer flex-shrink-0 disabled:opacity-50"
+            >
+              <IconSignOut className="w-5 h-5" />
+            </button>
           </div>
         </div>
       </aside>
@@ -174,7 +213,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
               </div>
             </div>
 
-            {/* Right: Notifications & User Avatar */}
+            {/* Right: Notifications, User Avatar & Sign Out Button */}
             <div className="flex items-center gap-2 sm:gap-3">
               <button
                 id="notifications-btn"
@@ -187,10 +226,23 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
                 <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-600 ring-2 ring-white" />
               </button>
 
-              <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center cursor-pointer hover:bg-indigo-200 transition-colors border border-indigo-200 shadow-xs">
-                <span className="text-sm font-bold text-indigo-700">
-                  {user.firstName.charAt(0)}{user.lastName.charAt(0)}
-                </span>
+              <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
+                <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center border border-indigo-200 shadow-xs">
+                  <span className="text-sm font-bold text-indigo-700">
+                    {user.firstName.charAt(0)}{user.lastName.charAt(0)}
+                  </span>
+                </div>
+
+                <button
+                  id="topbar-signout-btn"
+                  onClick={handleSignOut}
+                  disabled={isSigningOut}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-red-600 hover:bg-red-50 border border-slate-200 hover:border-red-200 transition-all cursor-pointer disabled:opacity-50"
+                  aria-label="Sign Out"
+                >
+                  <IconSignOut className="w-4 h-4 text-slate-500 hover:text-red-600" />
+                  <span className="hidden sm:inline">{isSigningOut ? "Signing Out..." : "Sign Out"}</span>
+                </button>
               </div>
             </div>
 

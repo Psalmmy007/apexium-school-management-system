@@ -10,5 +10,6 @@ export * from "./services/lms";
 export * from "./services/teacher-portal";
 export * from "./services/parent-portal";
 export * from "./services/student-portal";
+export * from "./services/library";
 export { db } from "./client";
 export type { Db } from "./client";

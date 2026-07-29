@@ -1054,6 +1054,124 @@ export const studentNotifications = pgTable(
   })
 );
 
+// ── Milestone 14: Library Management System Schema ──────────────────────────
+
+export const libraryCategories = pgTable(
+  "library_categories",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    schoolId: uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 100 }).notNull(),
+    code: varchar("code", { length: 50 }),
+    description: text("description"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    categorySchoolIdx: index("lib_cat_school_idx").on(table.schoolId),
+  })
+);
+
+export const libraryBooks = pgTable(
+  "library_books",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    schoolId: uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }),
+    title: varchar("title", { length: 255 }).notNull(),
+    author: varchar("author", { length: 255 }).notNull(),
+    publisher: varchar("publisher", { length: 255 }),
+    isbn: varchar("isbn", { length: 50 }),
+    edition: varchar("edition", { length: 50 }),
+    categoryId: uuid("category_id").references(() => libraryCategories.id, { onDelete: "set null" }),
+    shelfLocation: varchar("shelf_location", { length: 100 }),
+    subject: varchar("subject", { length: 100 }),
+    description: text("description"),
+    coverUrl: text("cover_url"),
+    status: varchar("status", { length: 20 }).notNull().default("active"), // active, archived
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    bookSchoolIdx: index("lib_book_school_idx").on(table.schoolId, table.title),
+  })
+);
+
+export const libraryBookCopies = pgTable(
+  "library_book_copies",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    schoolId: uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }),
+    bookId: uuid("book_id").notNull().references(() => libraryBooks.id, { onDelete: "cascade" }),
+    copyNumber: integer("copy_number").notNull().default(1),
+    barcode: varchar("barcode", { length: 100 }).notNull().unique(),
+    status: varchar("status", { length: 20 }).notNull().default("available"), // available, borrowed, reserved, damaged, lost, archived
+    condition: varchar("condition", { length: 20 }).notNull().default("good"), // new, good, fair, damaged
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    copySchoolBookIdx: index("lib_copy_school_book_idx").on(table.schoolId, table.bookId, table.status),
+  })
+);
+
+export const librarySettings = pgTable(
+  "library_settings",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    schoolId: uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }).unique(),
+    maxBooksPerStudent: integer("max_books_per_student").notNull().default(3),
+    maxBooksPerStaff: integer("max_books_per_staff").notNull().default(5),
+    borrowingPeriodDays: integer("borrowing_period_days").notNull().default(14),
+    finePerDay: doublePrecision("fine_per_day").notNull().default(50.0), // NGN per day overdue
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  }
+);
+
+export const libraryLoans = pgTable(
+  "library_loans",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    schoolId: uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }),
+    copyId: uuid("copy_id").notNull().references(() => libraryBookCopies.id, { onDelete: "cascade" }),
+    bookId: uuid("book_id").notNull().references(() => libraryBooks.id, { onDelete: "cascade" }),
+    borrowerId: uuid("borrower_id").notNull(), // userId or studentId
+    borrowerType: varchar("borrower_type", { length: 20 }).notNull().default("student"), // student, staff
+    issuedById: uuid("issued_by_id").references(() => users.id, { onDelete: "set null" }),
+    issuedAt: timestamp("issued_at", { withTimezone: true }).notNull().defaultNow(),
+    dueDate: timestamp("due_date", { withTimezone: true }).notNull(),
+    returnedAt: timestamp("returned_at", { withTimezone: true }),
+    status: varchar("status", { length: 20 }).notNull().default("active"), // active, returned, overdue, lost
+    fineAmount: doublePrecision("fine_amount").notNull().default(0),
+    finePaid: boolean("fine_paid").notNull().default(false),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    loanSchoolBorrowerIdx: index("lib_loan_school_borrower_idx").on(table.schoolId, table.borrowerId, table.status),
+  })
+);
+
+export const libraryReservations = pgTable(
+  "library_reservations",
+  {
+    id: uuid("id").defaultRandom().primaryKey(),
+    schoolId: uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }),
+    bookId: uuid("book_id").notNull().references(() => libraryBooks.id, { onDelete: "cascade" }),
+    reserverId: uuid("reserver_id").notNull(),
+    reserverType: varchar("reserver_type", { length: 20 }).notNull().default("student"), // student, staff
+    reservedAt: timestamp("reserved_at", { withTimezone: true }).notNull().defaultNow(),
+    status: varchar("status", { length: 20 }).notNull().default("pending"), // pending, fulfilled, cancelled, expired
+    fulfilledCopyId: uuid("fulfilled_copy_id").references(() => libraryBookCopies.id, { onDelete: "set null" }),
+    notifiedAt: timestamp("notified_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    resSchoolBookIdx: index("lib_res_school_book_idx").on(table.schoolId, table.bookId, table.status),
+  })
+);
+
+
 
 
 
