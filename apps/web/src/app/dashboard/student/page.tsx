@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DashboardShell } from "@/components/DashboardShell";
 
 interface DashboardData {
   student: {
@@ -46,8 +45,7 @@ export default function StudentDashboardPage() {
   }, []);
 
   return (
-    <DashboardShell user={{ firstName: data?.student.firstName ?? "Student", lastName: data?.student.lastName ?? "User", role: "student" }}>
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
         <div className="border-b border-gray-200 pb-4">
           <h1 className="text-2xl font-bold text-gray-900">Student Portal</h1>
           <p className="text-sm text-gray-500">Welcome back, {data?.student.firstName ?? "Student"}. Here is your academic summary.</p>
@@ -196,6 +194,5 @@ export default function StudentDashboardPage() {
           </div>
         )}
       </div>
-    </DashboardShell>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { DashboardShell } from "@/components/DashboardShell";
 
 interface Child {
   id: string;
@@ -89,8 +88,7 @@ export default function ParentDashboardPage() {
   const selectedChild = children.find((c) => c.id === selectedChildId);
 
   return (
-    <DashboardShell user={{ firstName: "Parent", lastName: "User", role: "parent" }}>
-      <div className="p-6 max-w-7xl mx-auto space-y-6">
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 pb-4">
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Parent Portal</h1>
@@ -233,6 +231,5 @@ export default function ParentDashboardPage() {
           </div>
         )}
       </div>
-    </DashboardShell>
   );
 }
