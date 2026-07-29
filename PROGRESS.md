@@ -195,6 +195,18 @@ Proof it works:
 3. 66 database tests, 29 web API tests, 1 worker test, and 1 types test (97 total tests) pass with 100% success across the monorepo.
 4. Next.js production build (`pnpm --filter @apexium/web build`) completed with 87 static & serverless pages generated cleanly.
 
+## Milestone 16: Student Registration, Academic Structure & Production Hardening — COMPLETE
+Date: 2026-07-29
+
+What this means in plain terms: The Student Information System (SIS) has been expanded into a production-grade workflow. It includes a 5-step guided student registration wizard with passport image uploads stored via clean URL paths, complete demographic fields (state of origin, LGA, nationality, religion, blood group, genotype, allergies, medical history), reusable guardian entities (allowing a single parent to be linked to multiple children), academic structure management (academic sections, classes, stream arms, capacity, class teacher assignments), a guided 1-click school setup wizard, and full-height viewport canvas layout without white strips below the sidebar.
+
+Proof it works:
+1. Automated integration test (`packages/db/src/services/academic-structure.test.ts`) verifies creating academic sections, classes, stream arms, retrieving hierarchy with student occupancy counts, creating reusable guardian records, searching guardians, and linking student-guardian relationships with 100% tenant isolation across schools.
+2. Drizzle migration (`0018_illegal_the_enforcers.sql`) generated and applied to PostgreSQL, creating `academic_sections`, `guardians`, and extending `classes`, `sections`, and `students` tables.
+3. 69 database tests, 29 web API tests, 1 worker test, and 1 types test (100 total tests) pass with 100% success across the monorepo.
+4. Next.js production build (`pnpm --filter @apexium/web build`) completed cleanly with 93 routes generated.
+5. Deployed live to Vercel production (`https://apexium-school-management-system.vercel.app`) with status `READY`.
+
 Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
 
 
