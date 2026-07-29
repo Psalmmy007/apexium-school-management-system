@@ -310,43 +310,70 @@ export default function NewStudentPage() {
               </h2>
 
               {/* Passport Photo Upload & Preview */}
-              <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-slate-50 rounded-2xl border border-slate-200">
-                <div className="w-28 h-32 rounded-xl bg-white border-2 border-dashed border-slate-300 flex flex-col items-center justify-center overflow-hidden relative shadow-xs flex-shrink-0">
+              <div className="flex flex-col sm:flex-row items-center gap-6 p-5 bg-white rounded-2xl border border-slate-200 shadow-xs">
+                <div className="w-32 h-40 rounded-2xl bg-slate-100 border-2 border-indigo-100 flex flex-col items-center justify-center overflow-hidden relative shadow-sm flex-shrink-0">
                   {passportPreview || passportUrl ? (
-                    <img src={passportPreview || passportUrl} alt="Passport Preview" className="w-full h-full object-cover" />
+                    <img
+                      src={passportPreview || passportUrl}
+                      alt="Student Passport"
+                      className="w-full h-full object-cover object-top"
+                    />
                   ) : (
-                    <div className="text-center p-2 text-slate-400 text-xs">
-                      <svg className="w-8 h-8 mx-auto mb-1 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0c-.693.047-1.33.435-1.736 1.039l-.821 1.316z" />
-                      </svg>
-                      No Passport
+                    <div className="text-center p-3 text-slate-400 text-xs flex flex-col items-center">
+                      <div className="w-10 h-10 rounded-full bg-slate-200/60 flex items-center justify-center mb-1 text-slate-400">
+                        <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+                        </svg>
+                      </div>
+                      <span className="font-semibold text-[11px]">No Photo</span>
                     </div>
                   )}
                 </div>
 
-                <div className="space-y-2 flex-1">
-                  <label className="label">Upload Student Passport Photo</label>
-                  <input
-                    type="file"
-                    accept="image/*"
-                    onChange={handlePassportUpload}
-                    disabled={uploadingPassport}
-                    className="file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 text-xs text-slate-500 cursor-pointer"
-                  />
-                  <p className="text-xs text-slate-400">
-                    Supports JPEG/PNG formats under 5MB. Stored cleanly as URL path ({passportUrl || "Not uploaded"}).
-                  </p>
-                  {(passportPreview || passportUrl) && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setPassportUrl("");
-                        setPassportPreview("");
-                      }}
-                      className="text-xs text-red-600 font-semibold hover:underline"
-                    >
-                      Remove Photo
-                    </button>
+                <div className="space-y-3 flex-1 text-center sm:text-left">
+                  <div>
+                    <h3 className="text-sm font-bold text-slate-900">Student Passport Photograph</h3>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      Upload a clear front-facing portrait photo of the student (JPEG or PNG, max 5MB).
+                    </p>
+                  </div>
+
+                  <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
+                    <label className="btn-secondary btn-sm cursor-pointer flex items-center gap-2">
+                      <svg className="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                      </svg>
+                      <span>{uploadingPassport ? "Uploading Image..." : "Choose Passport Image"}</span>
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handlePassportUpload}
+                        disabled={uploadingPassport}
+                        className="hidden"
+                      />
+                    </label>
+
+                    {(passportPreview || passportUrl) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPassportUrl("");
+                          setPassportPreview("");
+                        }}
+                        className="text-xs text-red-600 font-semibold hover:underline"
+                      >
+                        Remove Photo
+                      </button>
+                    )}
+                  </div>
+
+                  {passportUrl && (
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-semibold text-emerald-700">
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                      </svg>
+                      <span>Passport photo verified & attached</span>
+                    </div>
                   )}
                 </div>
               </div>

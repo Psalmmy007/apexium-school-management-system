@@ -121,9 +121,9 @@ export default function StudentProfileManagementPage() {
       {/* Hero Banner Card */}
       <div className="card flex flex-col md:flex-row items-center md:items-start gap-6 bg-gradient-to-r from-slate-900 to-indigo-950 text-white border-0 shadow-lg">
         {/* Passport Photo */}
-        <div className="w-28 h-32 rounded-xl bg-white/10 border-2 border-white/20 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-md">
+        <div className="w-32 h-40 rounded-2xl bg-white/10 border-2 border-white/20 flex items-center justify-center overflow-hidden flex-shrink-0 shadow-md">
           {student.passportUrl || student.photoUrl ? (
-            <img src={student.passportUrl || student.photoUrl} alt={student.firstName} className="w-full h-full object-cover" />
+            <img src={student.passportUrl || student.photoUrl} alt={student.firstName} className="w-full h-full object-cover object-top" />
           ) : (
             <span className="text-3xl font-extrabold text-indigo-200">
               {student.firstName.charAt(0)}{student.lastName.charAt(0)}
