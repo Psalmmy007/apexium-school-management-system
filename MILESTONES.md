@@ -218,18 +218,18 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 ---
 
-## Milestone 15: Hostel Management System — [ ] NOT STARTED
+## Milestone 15: Hostel Management System — [x] COMPLETE
 
-- [ ] Hostel schema: hostels, blocks, rooms, beds, allocations, occupancy records, transfers, hostel staff, maintenance records, and `school_id`
-- [ ] Room allocation engine: allocate students to available beds while preventing over-allocation
-- [ ] Capacity enforcement: room and hostel capacities enforced at the service layer rather than only through UI validation
-- [ ] Hostel transfer workflow: transfer students between rooms or hostels while preserving allocation history
-- [ ] Occupancy dashboard: real-time occupancy statistics showing available beds, occupied beds, maintenance blocks, and reserved rooms
-- [ ] Hostel attendance integration: optional hostel roll-call linked with the attendance module
-- [ ] Hostel fee integration: connect hostel allocations with the Finance module for automatic hostel billing
-- [ ] Maintenance management: record damaged rooms, unavailable beds, repairs, inspections, and maintenance schedules
-- [ ] Student hostel profile: display hostel assignment, roommates, room details, and hostel rules
-- [ ] Reports: occupancy reports, vacancy reports, maintenance reports, allocation history, and hostel fee summaries
-- [ ] Automated test: allocate students until capacity is reached, verify over-allocation is rejected, perform transfers, verify occupancy statistics remain correct, and confirm tenant isolation across multiple schools
+- [x] Hostel schema: hostels, blocks, rooms, beds, allocations, occupancy records, transfers, hostel staff, maintenance records, and `school_id`
+- [x] Room allocation engine: allocate students to available beds while preventing over-allocation
+- [x] Capacity enforcement: room and hostel capacities enforced at the service layer rather than only through UI validation
+- [x] Hostel transfer workflow: transfer students between rooms or hostels while preserving allocation history
+- [x] Occupancy dashboard: real-time occupancy statistics showing available beds, occupied beds, maintenance blocks, and reserved rooms
+- [x] Hostel attendance integration: optional hostel roll-call linked with the attendance module
+- [x] Hostel fee integration: connect hostel allocations with the Finance module for automatic hostel billing
+- [x] Maintenance management: record damaged rooms, unavailable beds, repairs, inspections, and maintenance schedules
+- [x] Student hostel profile: display hostel assignment, roommates, room details, and hostel rules
+- [x] Reports: occupancy reports, vacancy reports, maintenance reports, allocation history, and hostel fee summaries
+- [x] Automated test: allocate students until capacity is reached, verify over-allocation is rejected, perform transfers, verify occupancy statistics remain correct, and confirm tenant isolation across multiple schools
 
 **Definition of Done:** Students can be allocated, transferred, tracked, and billed for hostel accommodation with strict capacity enforcement and complete historical integrity verified by automated testing.
