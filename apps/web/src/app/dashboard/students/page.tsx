@@ -11,6 +11,9 @@ export const metadata: Metadata = {
 
 export default async function StudentsListPage() {
   const user = await getSessionUser();
+  if (user?.role === "student") {
+    redirect("/dashboard/student");
+  }
   if (!user || (user.role !== "admin" && user.role !== "teacher")) {
     redirect("/dashboard");
   }

@@ -1,11 +1,11 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getSessionUser } from "@/lib/auth/session";
+import { getStudentSessionUser } from "@/lib/auth/session";
 import { getStudentProfileByUserId, getStudentDashboardOverview } from "@apexium/db";
 
 // GET /api/student/dashboard — personalized student dashboard
 export async function GET(request: NextRequest) {
-  const user = await getSessionUser();
-  if (!user || user.role !== "student") {
+  const user = await getStudentSessionUser();
+  if (!user) {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 

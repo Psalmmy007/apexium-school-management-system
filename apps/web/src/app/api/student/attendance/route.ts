@@ -1,24 +1,26 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getSessionUser } from "@/lib/auth/session";
+import { getStudentSessionUser } from "@/lib/auth/session";
 import { getStudentProfileByUserId, getStudentAttendanceHistory } from "@apexium/db";
 
-// GET /api/student/attendance — student attendance register history & stats
 export async function GET(request: NextRequest) {
-  const user = await getSessionUser();
-  if (!user || user.role !== "student") {
+  const user = await getStudentSessionUser();
+  if (!user) {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const student = await getStudentProfileByUserId(user.schoolId, user.id);
     if (!student) {
-      return NextResponse.json({ success: false, error: "Student profile not found" }, { status: 404 });
+      return NextResponse.json({
+        success: true,
+        data: { total: 0, present: 0, absent: 0, late: 0, excused: 0, percentage: 100, records: [] },
+      });
     }
 
-    const attendance = await getStudentAttendanceHistory(user.schoolId, student.id);
-    return NextResponse.json({ success: true, data: attendance });
+    const data = await getStudentAttendanceHistory(user.schoolId, student.id);
+    return NextResponse.json({ success: true, data });
   } catch (error: unknown) {
-    const msg = error instanceof Error ? error.message : "Failed to fetch attendance";
+    const msg = error instanceof Error ? error.message : "Failed to fetch student attendance";
     return NextResponse.json({ success: false, error: msg }, { status: 500 });
   }
 }
