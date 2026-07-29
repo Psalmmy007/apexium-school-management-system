@@ -49,7 +49,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
   };
 
   return (
-    <div className="min-h-screen flex bg-surface relative overflow-x-hidden">
+    <div className="h-screen max-h-screen overflow-hidden flex bg-surface relative w-full">
 
       {/* ── Mobile Overlay Backdrop ──────────────────────── */}
       {isMobileMenuOpen && (
@@ -63,7 +63,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
       {/* ── Dark Sidebar Drawer ───────────────────────────── */}
       <aside
         id="sidebar"
-        className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-sidebar flex flex-col flex-shrink-0 h-screen overflow-y-auto scrollbar-thin transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-sidebar flex flex-col flex-shrink-0 h-full overflow-y-auto scrollbar-thin transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
           isMobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
         }`}
       >
@@ -102,9 +102,12 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
               <p className="nav-group-label mt-4">Academic</p>
               <NavItem href="/dashboard/teacher" id="nav-teacher-portal" label="Teacher Workspace" icon={<IconDashboard />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/students" id="nav-students" label="Students" icon={<IconStudents />} onClick={() => setIsMobileMenuOpen(false)} />
+              {user.role === "admin" && (
+                <NavItem href="/dashboard/academics/structure" id="nav-academic-structure" label="Academic Structure" icon={<IconTimetable />} onClick={() => setIsMobileMenuOpen(false)} />
+              )}
               <NavItem href="/dashboard/attendance" id="nav-attendance" label="Attendance" icon={<IconAttendance />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/timetable" id="nav-timetable" label="Timetable" icon={<IconTimetable />} onClick={() => setIsMobileMenuOpen(false)} />
-              <NavItem href="/dashboard/grades" id="nav-grades" label="Grades" icon={<IconGrades />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/academics/scores" id="nav-grades" label="Grades" icon={<IconGrades />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/reports" id="nav-reports" label="Report Cards" icon={<IconReports />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/academics/lessons" id="nav-lessons" label="Lessons & Notes" icon={<IconReports />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/academics/assignments" id="nav-assignments" label="Assignments" icon={<IconGrades />} onClick={() => setIsMobileMenuOpen(false)} />
@@ -142,6 +145,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
           {user.role === "admin" && (
             <>
               <p className="nav-group-label mt-4">System</p>
+              <NavItem href="/dashboard/setup" id="nav-setup-wizard" label="School Setup Wizard" icon={<IconPromotion />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/library" id="nav-library" label="Library System" icon={<IconReports />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/hostel" id="nav-hostel" label="Hostel System" icon={<IconAttendance />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/settings/licenses" id="nav-licenses" label="License Center" icon={<IconLicense />} onClick={() => setIsMobileMenuOpen(false)} />
@@ -251,7 +255,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
         </header>
 
         {/* Page Content Canvas */}
-        <main id="main-content" className="flex-1 p-3 sm:p-6 lg:p-8 overflow-x-hidden animate-fade-in">
+        <main id="main-content" className="flex-1 h-full overflow-y-auto overflow-x-hidden p-3 sm:p-6 lg:p-8 animate-fade-in">
           {children}
         </main>
       </div>

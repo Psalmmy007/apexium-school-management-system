@@ -1,9 +1,8 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSessionUser } from "@/lib/auth/session";
-import { db, students, classes, sections, studentGuardians, users } from "@apexium/db";
+import { db, students, classes, sections, getStudentGuardians, linkStudentGuardian } from "@apexium/db";
 import { eq, and } from "drizzle-orm";
 
-// ── GET /api/students/[id] — View student details ──────────────
 export async function GET(
   request: NextRequest,
   { params }: { params: { id: string } }
@@ -14,9 +13,6 @@ export async function GET(
   }
 
   try {
-    const studentId = params.id;
-
-    // Fetch student with class and section details, strictly filtered by user's schoolId
     const [student] = await db
       .select({
         id: students.id,
@@ -27,10 +23,24 @@ export async function GET(
         middleName: students.middleName,
         gender: students.gender,
         dateOfBirth: students.dateOfBirth,
+        admissionDate: students.admissionDate,
+        stateOfOrigin: students.stateOfOrigin,
+        lga: students.lga,
+        nationality: students.nationality,
+        religion: students.religion,
+        bloodGroup: students.bloodGroup,
+        genotype: students.genotype,
         address: students.address,
         photoUrl: students.photoUrl,
+        passportUrl: students.passportUrl,
         classId: students.classId,
         sectionId: students.sectionId,
+        emergencyContactName: students.emergencyContactName,
+        emergencyContactPhone: students.emergencyContactPhone,
+        emergencyContactRelationship: students.emergencyContactRelationship,
+        previousSchool: students.previousSchool,
+        medicalConditions: students.medicalConditions,
+        allergies: students.allergies,
         status: students.status,
         createdAt: students.createdAt,
         updatedAt: students.updatedAt,
@@ -40,49 +50,28 @@ export async function GET(
       .from(students)
       .leftJoin(classes, eq(students.classId, classes.id))
       .leftJoin(sections, eq(students.sectionId, sections.id))
-      .where(and(eq(students.id, studentId), eq(students.schoolId, user.schoolId)));
+      .where(and(eq(students.id, params.id), eq(students.schoolId, user.schoolId)))
+      .limit(1);
 
     if (!student) {
       return NextResponse.json({ success: false, error: "Student not found" }, { status: 404 });
     }
 
-    // Fetch guardians/parents
-    const guardians = await db
-      .select({
-        id: studentGuardians.id,
-        relationship: studentGuardians.relationship,
-        isPrimary: studentGuardians.isPrimary,
-        parentId: studentGuardians.parentId,
-        parentFirstName: users.firstName,
-        parentLastName: users.lastName,
-        parentEmail: users.email,
-      })
-      .from(studentGuardians)
-      .leftJoin(users, eq(studentGuardians.parentId, users.id))
-      .where(
-        and(
-          eq(studentGuardians.studentId, studentId),
-          eq(studentGuardians.schoolId, user.schoolId)
-        )
-      );
+    const guardiansList = await getStudentGuardians(user.schoolId, student.id);
 
     return NextResponse.json({
       success: true,
       data: {
         ...student,
-        guardians,
+        guardians: guardiansList,
       },
     });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to fetch student details" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
 
-// ── PUT /api/students/[id] — Update student ────────────────────
-export async function PUT(
+export async function PATCH(
   request: NextRequest,
   { params }: { params: { id: string } }
 ) {
@@ -92,108 +81,44 @@ export async function PUT(
   }
 
   try {
-    const studentId = params.id;
     const body = await request.json();
+    const { guardianId, guardianRelationship, ...updates } = body;
 
-    const {
-      admissionNumber,
-      firstName,
-      lastName,
-      middleName,
-      gender,
-      dateOfBirth,
-      address,
-      photoUrl,
-      classId,
-      sectionId,
-      status,
-    } = body;
-
-    // Verify student exists and belongs to school
-    const [existing] = await db
-      .select()
-      .from(students)
-      .where(and(eq(students.id, studentId), eq(students.schoolId, user.schoolId)));
-
-    if (!existing) {
-      return NextResponse.json({ success: false, error: "Student not found" }, { status: 404 });
-    }
-
-    // Check duplicate admission number if changing
-    if (admissionNumber && admissionNumber !== existing.admissionNumber) {
-      const duplicate = await db
-        .select()
-        .from(students)
-        .where(
-          and(
-            eq(students.schoolId, user.schoolId),
-            eq(students.admissionNumber, admissionNumber)
-          )
-        );
-
-      if (duplicate.length > 0) {
-        return NextResponse.json(
-          { success: false, error: "A student with this admission number already exists in your school." },
-          { status: 400 }
-        );
-      }
-    }
-
-    const [updatedStudent] = await db
+    const [updated] = await db
       .update(students)
       .set({
-        admissionNumber: admissionNumber ?? existing.admissionNumber,
-        firstName: firstName ?? existing.firstName,
-        lastName: lastName ?? existing.lastName,
-        middleName: middleName !== undefined ? middleName : existing.middleName,
-        gender: gender !== undefined ? gender : existing.gender,
-        dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : existing.dateOfBirth,
-        address: address !== undefined ? address : existing.address,
-        photoUrl: photoUrl !== undefined ? photoUrl : existing.photoUrl,
-        classId: classId !== undefined ? classId : existing.classId,
-        sectionId: sectionId !== undefined ? sectionId : existing.sectionId,
-        status: status ?? existing.status,
+        ...(updates.firstName && { firstName: updates.firstName.trim() }),
+        ...(updates.lastName && { lastName: updates.lastName.trim() }),
+        ...(updates.middleName !== undefined && { middleName: updates.middleName }),
+        ...(updates.gender !== undefined && { gender: updates.gender }),
+        ...(updates.dateOfBirth && { dateOfBirth: new Date(updates.dateOfBirth) }),
+        ...(updates.admissionDate && { admissionDate: new Date(updates.admissionDate) }),
+        ...(updates.stateOfOrigin !== undefined && { stateOfOrigin: updates.stateOfOrigin }),
+        ...(updates.lga !== undefined && { lga: updates.lga }),
+        ...(updates.nationality !== undefined && { nationality: updates.nationality }),
+        ...(updates.religion !== undefined && { religion: updates.religion }),
+        ...(updates.bloodGroup !== undefined && { bloodGroup: updates.bloodGroup }),
+        ...(updates.genotype !== undefined && { genotype: updates.genotype }),
+        ...(updates.address !== undefined && { address: updates.address }),
+        ...(updates.passportUrl !== undefined && { passportUrl: updates.passportUrl }),
+        ...(updates.classId !== undefined && { classId: updates.classId }),
+        ...(updates.sectionId !== undefined && { sectionId: updates.sectionId }),
+        ...(updates.status && { status: updates.status }),
+        ...(updates.emergencyContactName !== undefined && { emergencyContactName: updates.emergencyContactName }),
+        ...(updates.emergencyContactPhone !== undefined && { emergencyContactPhone: updates.emergencyContactPhone }),
+        ...(updates.medicalConditions !== undefined && { medicalConditions: updates.medicalConditions }),
+        ...(updates.allergies !== undefined && { allergies: updates.allergies }),
         updatedAt: new Date(),
       })
-      .where(and(eq(students.id, studentId), eq(students.schoolId, user.schoolId)))
+      .where(and(eq(students.id, params.id), eq(students.schoolId, user.schoolId)))
       .returning();
 
-    return NextResponse.json({ success: true, data: updatedStudent });
-  } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to update student" },
-      { status: 500 }
-    );
-  }
-}
-
-// ── DELETE /api/students/[id] — Delete student ─────────────────
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) {
-  const user = await getSessionUser();
-  if (!user || user.role !== "admin") {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-  }
-
-  try {
-    const studentId = params.id;
-
-    const [deleted] = await db
-      .delete(students)
-      .where(and(eq(students.id, studentId), eq(students.schoolId, user.schoolId)))
-      .returning();
-
-    if (!deleted) {
-      return NextResponse.json({ success: false, error: "Student not found" }, { status: 404 });
+    if (guardianId) {
+      await linkStudentGuardian(user.schoolId, params.id, guardianId, guardianRelationship || "Father", true);
     }
 
-    return NextResponse.json({ success: true, message: "Student deleted successfully" });
+    return NextResponse.json({ success: true, data: updated });
   } catch (error: any) {
-    return NextResponse.json(
-      { success: false, error: error.message || "Failed to delete student" },
-      { status: 500 }
-    );
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }

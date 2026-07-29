@@ -87,14 +87,41 @@ export const users = pgTable("users", {
     .defaultNow(),
 });
 
+// ── Table: academic_sections ──────────────────────────────────
+export const academicSections = pgTable("academic_sections", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  schoolId: uuid("school_id")
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 100 }).notNull(),
+  code: varchar("code", { length: 50 }),
+  displayOrder: integer("display_order").notNull().default(1),
+  status: varchar("status", { length: 20 }).notNull().default("active"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // ── Table: classes ────────────────────────────────────────────
 export const classes = pgTable("classes", {
   id: uuid("id").primaryKey().defaultRandom(),
   schoolId: uuid("school_id")
     .notNull()
     .references(() => schools.id, { onDelete: "cascade" }),
+  sectionId: uuid("section_id").references(() => academicSections.id, {
+    onDelete: "set null",
+  }),
   name: varchar("name", { length: 100 }).notNull(), // e.g. "JSS 1", "Grade 10"
   code: varchar("code", { length: 50 }),
+  classTeacherId: uuid("class_teacher_id").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  capacity: integer("capacity"),
+  displayOrder: integer("display_order").notNull().default(1),
+  status: varchar("status", { length: 20 }).notNull().default("active"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -113,6 +140,12 @@ export const sections = pgTable("sections", {
     .notNull()
     .references(() => classes.id, { onDelete: "cascade" }),
   name: varchar("name", { length: 100 }).notNull(), // e.g. "A", "Gold"
+  capacity: integer("capacity"),
+  classTeacherId: uuid("class_teacher_id").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  displayOrder: integer("display_order").notNull().default(1),
+  status: varchar("status", { length: 20 }).notNull().default("active"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
@@ -209,8 +242,16 @@ export const students = pgTable(
     middleName: varchar("middle_name", { length: 100 }),
     gender: genderEnum("gender"),
     dateOfBirth: timestamp("date_of_birth", { withTimezone: true }),
+    admissionDate: timestamp("admission_date", { withTimezone: true }),
+    stateOfOrigin: varchar("state_of_origin", { length: 100 }),
+    lga: varchar("lga", { length: 100 }),
+    nationality: varchar("nationality", { length: 100 }),
+    religion: varchar("religion", { length: 100 }),
+    bloodGroup: varchar("blood_group", { length: 10 }),
+    genotype: varchar("genotype", { length: 10 }),
     address: text("address"),
     photoUrl: text("photo_url"),
+    passportUrl: text("passport_url"),
     classId: uuid("class_id").references(() => classes.id, {
       onDelete: "set null",
     }),
@@ -220,6 +261,14 @@ export const students = pgTable(
     userId: uuid("user_id").references(() => users.id, {
       onDelete: "set null",
     }),
+    emergencyContactName: varchar("emergency_contact_name", { length: 200 }),
+    emergencyContactPhone: varchar("emergency_contact_phone", { length: 50 }),
+    emergencyContactRelationship: varchar("emergency_contact_relationship", { length: 100 }),
+    previousSchool: text("previous_school"),
+    medicalConditions: text("medical_conditions"),
+    allergies: text("allergies"),
+    hostelRoomId: uuid("hostel_room_id"),
+    hostelBedId: uuid("hostel_bed_id"),
     notificationPreferences: jsonb("notification_preferences"),
     status: studentStatusEnum("status").notNull().default("active"),
     createdAt: timestamp("created_at", { withTimezone: true })
@@ -241,6 +290,29 @@ export const students = pgTable(
   })
 );
 
+// ── Table: guardians ──────────────────────────────────────────
+export const guardians = pgTable("guardians", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  schoolId: uuid("school_id")
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  firstName: varchar("first_name", { length: 100 }).notNull(),
+  lastName: varchar("last_name", { length: 100 }).notNull(),
+  phone: varchar("phone", { length: 50 }).notNull(),
+  email: varchar("email", { length: 255 }),
+  occupation: varchar("occupation", { length: 100 }),
+  address: text("address"),
+  userId: uuid("user_id").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+});
+
 // ── Table: student_guardians ──────────────────────────────────
 export const studentGuardians = pgTable("student_guardians", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -250,9 +322,12 @@ export const studentGuardians = pgTable("student_guardians", {
   studentId: uuid("student_id")
     .notNull()
     .references(() => students.id, { onDelete: "cascade" }),
-  parentId: uuid("parent_id")
-    .notNull()
-    .references(() => users.id, { onDelete: "cascade" }),
+  guardianId: uuid("guardian_id").references(() => guardians.id, {
+    onDelete: "cascade",
+  }),
+  parentId: uuid("parent_id").references(() => users.id, {
+    onDelete: "cascade",
+  }),
   relationship: varchar("relationship", { length: 50 }).notNull(),
   isPrimary: boolean("is_primary").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true })

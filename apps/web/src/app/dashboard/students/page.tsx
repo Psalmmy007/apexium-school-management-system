@@ -158,10 +158,18 @@ export default async function StudentsListPage() {
                 <tr key={student.id} id={`student-row-${student.id}`}>
                   <td>
                     <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center font-bold text-indigo-700 text-sm flex-shrink-0">
-                        {student.firstName.charAt(0)}
-                        {student.lastName.charAt(0)}
-                      </div>
+                      {student.photoUrl ? (
+                        <img
+                          src={student.photoUrl}
+                          alt={`${student.firstName} ${student.lastName}`}
+                          className="w-9 h-9 rounded-full object-cover border border-slate-200 flex-shrink-0"
+                        />
+                      ) : (
+                        <div className="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center font-bold text-indigo-700 text-sm flex-shrink-0">
+                          {student.firstName.charAt(0)}
+                          {student.lastName.charAt(0)}
+                        </div>
+                      )}
                       <div>
                         <p className="font-semibold text-slate-900 leading-none">
                           {student.lastName}, {student.firstName}{" "}

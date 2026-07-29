@@ -95,7 +95,7 @@ export default function EditStudentPage() {
 
     try {
       const res = await fetch(`/api/students/${studentId}`, {
-        method: "PUT",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           admissionNumber,

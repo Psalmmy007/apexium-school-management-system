@@ -234,7 +234,33 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 **Definition of Done:** Students can be allocated, transferred, tracked, and billed for hostel accommodation with strict capacity enforcement and complete historical integrity verified by automated testing.
 
-## Milestone 16: Transport Management System — [ ] NOT STARTED
+## Milestone 16: Student Information System (SIS) Production Hardening — [ ] NOT STARTED
+
+- [ ] Student registration redesign: replace the current single-page registration form with a guided multi-step admission wizard
+- [ ] Passport upload: implement secure passport photo upload via `/api/upload/passport` with image validation, preview, replacement, and URL-based storage
+- [ ] Reusable guardians: introduce dedicated `guardians` and `student_guardians` tables so one guardian can be linked to multiple students while preserving relationship types (Father, Mother, Sponsor, Legal Guardian)
+- [ ] Guardian search: allow searching existing guardians by phone number, email, or name before creating new guardian records to eliminate duplicate parent records
+- [ ] Extended student biodata: capture admission date, nationality, state of origin, LGA, religion, blood group, genotype, previous school, medical conditions, allergies, emergency contacts, and other production-grade SIS fields
+- [ ] Student document management: upload and manage admission documents including passport photographs, birth certificates, transfer letters, previous academic records, and medical reports
+- [ ] Academic Structure module: implement Academic Sections, Classes, Arms/Streams, Class Teachers, display ordering, capacity management, archive, and restore functionality
+- [ ] Academic assignment: assign students to Sections, Classes, and Arms using the Academic Structure module with capacity validation
+- [ ] Student profile page: build a comprehensive profile displaying passport, biodata, academic assignment, attendance, academic performance, guardian information, hostel assignment, and uploaded documents
+- [ ] Student status management: support Active, Suspended, Withdrawn, Graduated, Alumni, and Expelled statuses while maintaining complete historical records
+- [ ] Student activity timeline: maintain an audit history for admissions, transfers, promotions, guardian updates, document uploads, hostel allocations, and status changes
+- [ ] Admission number generation: configurable admission number formats with automatic sequential generation for each school
+- [ ] Duplicate detection: prevent duplicate admissions by checking admission numbers, guardian information, student biodata, and configurable matching rules
+- [ ] First-Time School Setup Wizard: create a guided setup process covering school profile, academic session, terms, academic structure, subjects, and administrator configuration with a one-click Nigerian K–12 template
+- [ ] Contextual empty states: replace empty tables, dropdowns, and dashboards with reusable empty-state components containing clear descriptions and direct action buttons
+- [ ] Dashboard layout hardening: eliminate duplicate rendering, sidebar height inconsistencies, scrolling glitches, viewport issues, and white-space layout bugs across all dashboards
+- [ ] Performance optimisation: optimise student management pages using pagination, search, filtering, lazy loading, and efficient data fetching
+- [ ] Offline support: ensure previously viewed student records, academic structure, and profile information remain accessible through the existing offline architecture
+- [ ] Automated integration test: create multiple schools with hundreds of students, reusable guardians, academic structures, uploaded documents, and profile updates while verifying admission workflow, duplicate prevention, status transitions, school setup, document management, tenant isolation, and complete production readiness
+
+**Definition of Done:** Apexium provides a fully production-ready Student Information System featuring enterprise-grade admissions, guardian management, academic structure, document management, profile management, school onboarding, operational hardening, and complete tenant isolation verified through comprehensive automated integration tests.
+
+---
+
+## Milestone 17: Transport Management System — [ ] NOT STARTED
 
 - [ ] Transport schema: vehicles, drivers, routes, route stops, transport assignments, daily trips, transport attendance, maintenance records, fuel logs, transport fee plans, and `school_id`
 - [ ] Vehicle management: administrators can create, edit, archive, and manage school buses and transport vehicles including registration numbers, capacities, insurance, inspection dates, and operational status
@@ -253,7 +279,7 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 ---
 
-## Milestone 17: Human Resources & Payroll — [ ] NOT STARTED
+## Milestone 18: Human Resources & Payroll — [ ] NOT STARTED
 
 - [ ] Human Resources schema: employees, departments, positions, salary structures, payroll records, allowances, deductions, leave requests, employment history, contracts, tax records, pension records, and `school_id`
 - [ ] Employee management: administrators can create, edit, archive, and manage teaching and non-teaching staff records with complete employment history
@@ -272,7 +298,7 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 ---
 
-## Milestone 18: Finance & Accounting — [ ] NOT STARTED
+## Milestone 19: Finance & Accounting — [ ] NOT STARTED
 
 - [ ] Finance schema: chart of accounts, journal entries, ledgers, invoices, receipts, expenses, bank accounts, budgets, vendors, assets, liabilities, audit logs, and `school_id`
 - [ ] Chart of accounts: administrators can configure accounting structures suitable for each school's financial requirements
@@ -291,7 +317,7 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 ---
 
-## Milestone 19: Communication & Notification Centre — [ ] NOT STARTED
+## Milestone 20: Communication & Notification Centre — [ ] NOT STARTED
 
 - [ ] Communication schema: announcements, notification templates, email queue, SMS queue, push notifications, recipients, delivery logs, notification preferences, schedules, and `school_id`
 - [ ] Notification engine: provide a unified communication system supporting in-app notifications, email, SMS, and push notifications
@@ -310,7 +336,7 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 ---
 
-## Milestone 20: Analytics & Executive Dashboard — [ ] NOT STARTED
+## Milestone 21: Analytics & Executive Dashboard — [ ] NOT STARTED
 
 - [ ] Analytics schema: dashboard widgets, KPI snapshots, trend history, cached reports, predictive indicators, executive summaries, and `school_id`
 - [ ] Executive dashboard: display institution-wide KPIs covering enrolment, attendance, academics, finance, staffing, hostel occupancy, transport operations, and library utilisation

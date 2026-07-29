@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSessionUser } from "@/lib/auth/session";
-import { db, students, classes, sections, enforceStudentCap } from "@apexium/db";
+import { db, students, classes, sections, enforceStudentCap, linkStudentGuardian } from "@apexium/db";
 import { eq, and, like, or, sql } from "drizzle-orm";
 
 // ── GET /api/students — List students with filtering ──────────
@@ -14,6 +14,7 @@ export async function GET(request: NextRequest) {
   const query = searchParams.get("query") || "";
   const classId = searchParams.get("classId");
   const sectionId = searchParams.get("sectionId");
+  const status = searchParams.get("status");
   const page = parseInt(searchParams.get("page") || "1", 10);
   const pageSize = parseInt(searchParams.get("pageSize") || "20", 10);
 
@@ -25,6 +26,9 @@ export async function GET(request: NextRequest) {
     }
     if (sectionId) {
       conditions.push(eq(students.sectionId, sectionId));
+    }
+    if (status) {
+      conditions.push(eq(students.status, status as any));
     }
     if (query) {
       const searchPattern = `%${query}%`;
@@ -39,7 +43,6 @@ export async function GET(request: NextRequest) {
 
     const whereClause = and(...conditions);
 
-    // Query students with class and section names
     const items = await db
       .select({
         id: students.id,
@@ -50,8 +53,16 @@ export async function GET(request: NextRequest) {
         middleName: students.middleName,
         gender: students.gender,
         dateOfBirth: students.dateOfBirth,
+        admissionDate: students.admissionDate,
+        stateOfOrigin: students.stateOfOrigin,
+        lga: students.lga,
+        nationality: students.nationality,
+        religion: students.religion,
+        bloodGroup: students.bloodGroup,
+        genotype: students.genotype,
         address: students.address,
         photoUrl: students.photoUrl,
+        passportUrl: students.passportUrl,
         classId: students.classId,
         sectionId: students.sectionId,
         status: students.status,
@@ -67,7 +78,6 @@ export async function GET(request: NextRequest) {
       .limit(pageSize)
       .offset((page - 1) * pageSize);
 
-    // Total count
     const [countResult] = await db
       .select({ count: sql<number>`count(*)` })
       .from(students)
@@ -93,7 +103,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// ── POST /api/students — Create student ────────────────────────
+// ── POST /api/students — Create student with full SIS fields ─
 export async function POST(request: NextRequest) {
   const user = await getSessionUser();
   if (!user || user.role !== "admin") {
@@ -109,11 +119,29 @@ export async function POST(request: NextRequest) {
       middleName,
       gender,
       dateOfBirth,
+      admissionDate,
+      stateOfOrigin,
+      lga,
+      nationality,
+      religion,
+      bloodGroup,
+      genotype,
       address,
+      passportUrl,
       photoUrl,
       classId,
       sectionId,
+      emergencyContactName,
+      emergencyContactPhone,
+      emergencyContactRelationship,
+      previousSchool,
+      medicalConditions,
+      allergies,
+      hostelRoomId,
+      hostelBedId,
       status,
+      guardianId,
+      guardianRelationship,
     } = body;
 
     if (!admissionNumber || !firstName || !lastName) {
@@ -155,19 +183,40 @@ export async function POST(request: NextRequest) {
       .insert(students)
       .values({
         schoolId: user.schoolId,
-        admissionNumber,
-        firstName,
-        lastName,
-        middleName: middleName || null,
+        admissionNumber: admissionNumber.trim(),
+        firstName: firstName.trim(),
+        lastName: lastName.trim(),
+        middleName: middleName ? middleName.trim() : null,
         gender: gender || null,
         dateOfBirth: dateOfBirth ? new Date(dateOfBirth) : null,
-        address: address || null,
-        photoUrl: photoUrl || null,
+        admissionDate: admissionDate ? new Date(admissionDate) : new Date(),
+        stateOfOrigin: stateOfOrigin ? stateOfOrigin.trim() : null,
+        lga: lga ? lga.trim() : null,
+        nationality: nationality ? nationality.trim() : "Nigerian",
+        religion: religion ? religion.trim() : null,
+        bloodGroup: bloodGroup || null,
+        genotype: genotype || null,
+        address: address ? address.trim() : null,
+        photoUrl: photoUrl || passportUrl || null,
+        passportUrl: passportUrl || photoUrl || null,
         classId: classId || null,
         sectionId: sectionId || null,
+        emergencyContactName: emergencyContactName ? emergencyContactName.trim() : null,
+        emergencyContactPhone: emergencyContactPhone ? emergencyContactPhone.trim() : null,
+        emergencyContactRelationship: emergencyContactRelationship ? emergencyContactRelationship.trim() : null,
+        previousSchool: previousSchool ? previousSchool.trim() : null,
+        medicalConditions: medicalConditions ? medicalConditions.trim() : null,
+        allergies: allergies ? allergies.trim() : null,
+        hostelRoomId: hostelRoomId || null,
+        hostelBedId: hostelBedId || null,
         status: status || "active",
       })
       .returning();
+
+    // Link guardian if provided
+    if (guardianId) {
+      await linkStudentGuardian(user.schoolId, newStudent.id, guardianId, guardianRelationship || "Father", true);
+    }
 
     return NextResponse.json({ success: true, data: newStudent }, { status: 201 });
   } catch (error: any) {

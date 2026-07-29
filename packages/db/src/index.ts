@@ -12,5 +12,7 @@ export * from "./services/parent-portal";
 export * from "./services/student-portal";
 export * from "./services/library";
 export * from "./services/hostel";
+export * from "./services/academic-structure";
+export * from "./services/guardians";
 export { db } from "./client";
 export type { Db } from "./client";
