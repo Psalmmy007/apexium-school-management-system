@@ -30,6 +30,9 @@ export default function EditStudentPage() {
   const [classId, setClassId] = useState("");
   const [sectionId, setSectionId] = useState("");
   const [status, setStatus] = useState("active");
+  const [passportUrl, setPassportUrl] = useState("");
+  const [passportPreview, setPassportPreview] = useState("");
+  const [uploadingPassport, setUploadingPassport] = useState(false);
 
   const [classList, setClassList] = useState<ClassItem[]>([]);
   const [sectionList, setSectionList] = useState<SectionItem[]>([]);
@@ -69,6 +72,8 @@ export default function EditStudentPage() {
           setClassId(st.classId || "");
           setSectionId(st.sectionId || "");
           setStatus(st.status || "active");
+          setPassportUrl(st.passportUrl || st.photoUrl || "");
+          setPassportPreview(st.passportUrl || st.photoUrl || "");
         } else {
           setError(studentJson.error || "Failed to load student details");
         }
@@ -88,6 +93,53 @@ export default function EditStudentPage() {
     (sec) => sec.classId === classId
   );
 
+  const handlePassportUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setError("Please select a valid image file (JPEG/PNG/WebP).");
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image file size must be less than 5MB.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setPassportPreview(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+
+    setUploadingPassport(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/upload/passport", {
+        method: "POST",
+        body: formData,
+      });
+
+      const json = await res.json();
+      if (json.success) {
+        setPassportUrl(json.url);
+        setPassportPreview(json.url);
+      } else {
+        setError(json.error || "Failed uploading passport image.");
+      }
+    } catch (err: any) {
+      setError(err.message || "Error uploading passport photo.");
+    } finally {
+      setUploadingPassport(false);
+    }
+  };
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -105,6 +157,7 @@ export default function EditStudentPage() {
           gender,
           dateOfBirth,
           address,
+          passportUrl,
           classId: classId || null,
           sectionId: sectionId || null,
           status,
@@ -197,6 +250,47 @@ export default function EditStudentPage() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Passport Photo Upload & Preview */}
+          <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+            <div className="w-28 h-32 rounded-xl bg-white border-2 border-dashed border-slate-300 flex flex-col items-center justify-center overflow-hidden relative shadow-xs flex-shrink-0">
+              {passportPreview || passportUrl ? (
+                <img src={passportPreview || passportUrl} alt="Passport Preview" className="w-full h-full object-cover" />
+              ) : (
+                <div className="text-center p-2 text-slate-400 text-xs">
+                  <svg className="w-8 h-8 mx-auto mb-1 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0c-.693.047-1.33.435-1.736 1.039l-.821 1.316z" />
+                  </svg>
+                  No Passport
+                </div>
+              )}
+            </div>
+
+            <div className="space-y-2 flex-1">
+              <label className="label">Update Student Passport Photo</label>
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handlePassportUpload}
+                disabled={uploadingPassport}
+                className="file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-indigo-50 file:text-indigo-700 hover:file:bg-indigo-100 text-xs text-slate-500 cursor-pointer"
+              />
+              <p className="text-xs text-slate-400">
+                Supports JPEG/PNG formats under 5MB.
+              </p>
+              {(passportPreview || passportUrl) && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setPassportUrl("");
+                    setPassportPreview("");
+                  }}
+                  className="text-xs text-red-600 font-semibold hover:underline"
+                >
+                  Remove Photo
+                </button>
+              )}
+            </div>
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
               <label className="label">Admission Number *</label>

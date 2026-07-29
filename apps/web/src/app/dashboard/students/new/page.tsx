@@ -138,7 +138,9 @@ export default function NewStudentPage() {
     }
   };
 
-  // Handle Passport Photo Upload (stores clean URL path)
+  const [passportPreview, setPassportPreview] = useState("");
+
+  // Handle Passport Photo Upload (stores clean Data URL path)
   const handlePassportUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -151,6 +153,15 @@ export default function NewStudentPage() {
       setError("Image file size must be less than 5MB.");
       return;
     }
+
+    // Instant local browser preview
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        setPassportPreview(reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
 
     setUploadingPassport(true);
     setError(null);
@@ -167,6 +178,7 @@ export default function NewStudentPage() {
       const json = await res.json();
       if (json.success) {
         setPassportUrl(json.url);
+        setPassportPreview(json.url);
       } else {
         setError(json.error || "Failed uploading passport image.");
       }
@@ -300,8 +312,8 @@ export default function NewStudentPage() {
               {/* Passport Photo Upload & Preview */}
               <div className="flex flex-col sm:flex-row items-center gap-6 p-4 bg-slate-50 rounded-2xl border border-slate-200">
                 <div className="w-28 h-32 rounded-xl bg-white border-2 border-dashed border-slate-300 flex flex-col items-center justify-center overflow-hidden relative shadow-xs flex-shrink-0">
-                  {passportUrl ? (
-                    <img src={passportUrl} alt="Passport Preview" className="w-full h-full object-cover" />
+                  {passportPreview || passportUrl ? (
+                    <img src={passportPreview || passportUrl} alt="Passport Preview" className="w-full h-full object-cover" />
                   ) : (
                     <div className="text-center p-2 text-slate-400 text-xs">
                       <svg className="w-8 h-8 mx-auto mb-1 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -324,10 +336,13 @@ export default function NewStudentPage() {
                   <p className="text-xs text-slate-400">
                     Supports JPEG/PNG formats under 5MB. Stored cleanly as URL path ({passportUrl || "Not uploaded"}).
                   </p>
-                  {passportUrl && (
+                  {(passportPreview || passportUrl) && (
                     <button
                       type="button"
-                      onClick={() => setPassportUrl("")}
+                      onClick={() => {
+                        setPassportUrl("");
+                        setPassportPreview("");
+                      }}
                       className="text-xs text-red-600 font-semibold hover:underline"
                     >
                       Remove Photo

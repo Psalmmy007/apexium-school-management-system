@@ -1,7 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSessionUser } from "@/lib/auth/session";
-import { writeFile, mkdir } from "fs/promises";
-import path from "path";
 
 export async function POST(request: NextRequest) {
   const user = await getSessionUser();
@@ -27,17 +25,10 @@ export async function POST(request: NextRequest) {
 
     const bytes = await file.arrayBuffer();
     const buffer = Buffer.from(bytes);
+    const mimeType = file.type || "image/jpeg";
+    const dataUrl = `data:${mimeType};base64,${buffer.toString("base64")}`;
 
-    const ext = path.extname(file.name) || ".jpg";
-    const filename = `passport_${user.schoolId}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}${ext}`;
-    const uploadDir = path.join(process.cwd(), "public", "uploads", "passports");
-
-    await mkdir(uploadDir, { recursive: true });
-    await writeFile(path.join(uploadDir, filename), buffer);
-
-    const url = `/uploads/passports/${filename}`;
-
-    return NextResponse.json({ success: true, url }, { status: 201 });
+    return NextResponse.json({ success: true, url: dataUrl }, { status: 201 });
   } catch (error: any) {
     return NextResponse.json(
       { success: false, error: error.message || "Failed uploading passport image." },
