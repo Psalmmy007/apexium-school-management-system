@@ -115,6 +115,11 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({ success: true, message: "First-time school setup completed successfully!" });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error("Setup API Error:", error);
+    let message = error.message || "Failed running school setup";
+    if (error.code === "ECONNREFUSED" || message.includes("ECONNREFUSED")) {
+      message = "Database connection refused. Please ensure the DATABASE_URL environment variable is configured in your Vercel project settings.";
+    }
+    return NextResponse.json({ success: false, error: message }, { status: 500 });
   }
 }
