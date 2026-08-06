@@ -194,24 +194,17 @@ Proof it works:
 2. API contract tests (`apps/web/src/app/api/hostel/hostel.test.ts`) verify all 8 hostel API endpoints (`/api/hostel`, `/api/hostel/rooms`, `/api/hostel/allocate`, `/api/hostel/transfer`, `/api/hostel/attendance`, `/api/hostel/maintenance`, `/api/hostel/occupancy`, `/api/hostel/student`).
 3. 66 database tests, 29 web API tests, 1 worker test, and 1 types test (97 total tests) pass with 100% success across the monorepo.
 4. Next.js production build (`pnpm --filter @apexium/web build`) completed with 87 static & serverless pages generated cleanly.
+---
 
-## Milestone 16: Student Registration, Academic Structure & Production Hardening — COMPLETE
-Date: 2026-07-29
+## Milestone 16: Student Information System (SIS) Production Hardening — COMPLETE
+Date: 2026-08-07
 
-What this means in plain terms: The Student Information System (SIS) has been expanded into a production-grade workflow. It includes a 5-step guided student registration wizard with passport image uploads stored via clean URL paths, complete demographic fields (state of origin, LGA, nationality, religion, blood group, genotype, allergies, medical history), reusable guardian entities (allowing a single parent to be linked to multiple children), academic structure management (academic sections, classes, stream arms, capacity, class teacher assignments), a guided 1-click school setup wizard, and full-height viewport canvas layout without white strips below the sidebar.
+What this means in plain terms: The Student Information System (SIS) has been hardened into an enterprise production-grade system. It includes a 5-step guided student registration wizard with passport photo upload, extended biodata (nationality, state of origin, LGA, religion, blood group, genotype, medical conditions, allergies, emergency contacts), reusable parent/guardian entities linked across siblings, admission document attachment management (birth certificates, transfer letters, academic transcripts, medical reports), auto-generated sequential admission numbers, multi-status student management (Active, Suspended, Withdrawn, Expelled, Graduated, Transferred, Alumni) requiring a typed audit reason, an immutable Student Activity Timeline audit log, guided school setup wizard, contextual empty states, and responsive full-height viewport canvas styling across all dashboards.
 
 Proof it works:
-1. Automated integration test (`packages/db/src/services/academic-structure.test.ts`) verifies creating academic sections, classes, stream arms, retrieving hierarchy with student occupancy counts, creating reusable guardian records, searching guardians, and linking student-guardian relationships with 100% tenant isolation across schools.
-2. Drizzle migration (`0018_illegal_the_enforcers.sql`) generated and applied to PostgreSQL, creating `academic_sections`, `guardians`, and extending `classes`, `sections`, and `students` tables.
-3. 69 database tests, 29 web API tests, 1 worker test, and 1 types test (100 total tests) pass with 100% success across the monorepo.
-4. Next.js production build (`pnpm --filter @apexium/web build`) completed cleanly with 93 routes generated.
-5. Deployed live to Vercel production (`https://apexium-school-management-system.vercel.app`) with status `READY`.
+1. Automated integration test (`packages/db/src/services/sis-hardening.test.ts`) verifies 11 comprehensive test scenarios: multi-step admission biodata, activity timeline logging, duplicate admission number rejection, biodata duplicate detection (name + DOB), all 8 student status state transitions, reusable guardian sibling linking, sequential admission number auto-generation, document attachments, and strict 100% multi-tenant isolation between separate schools.
+2. Direct SQL migrations applied to Supabase database for `student_status` enum expansion, `student_activity_timeline` table, and `student_documents` table with performance indexes.
+3. 20 Vitest test files containing 80 automated unit & integration tests pass with 100% success across the codebase.
+4. Next.js TypeScript type checking (`tsc --noEmit`) passes cleanly with zero errors.
 
 Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
-
-
-
-
-
-
-

@@ -49,7 +49,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
   };
 
   return (
-    <div className="h-screen max-h-screen overflow-hidden flex bg-surface relative w-full">
+    <div className="flex min-h-screen bg-surface relative w-full">
 
       {/* ── Mobile Overlay Backdrop ──────────────────────── */}
       {isMobileMenuOpen && (
@@ -63,7 +63,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
       {/* ── Dark Sidebar Drawer ───────────────────────────── */}
       <aside
         id="sidebar"
-        className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-sidebar flex flex-col flex-shrink-0 h-full overflow-y-auto scrollbar-thin transition-transform duration-300 ease-in-out lg:static lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-[260px] bg-sidebar flex flex-col flex-shrink-0 overflow-y-auto scrollbar-thin transition-transform duration-300 ease-in-out lg:sticky lg:top-0 lg:h-screen lg:translate-x-0 ${
           isMobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
         }`}
       >
@@ -187,13 +187,13 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
         </div>
       </aside>
 
-      {/* ── Main Area ────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0 w-full">
+      {/* ── Main Area ────────────────────────────────── */}
+      <div className="flex-1 flex flex-col min-w-0 min-h-screen lg:min-h-0 lg:h-screen">
 
         {/* Responsive Top Bar */}
         <header
           id="topbar"
-          className="bg-white border-b border-slate-100 shadow-elevation-1 px-4 sm:px-6 sticky top-0 z-30"
+          className="bg-white border-b border-slate-100 shadow-elevation-1 px-4 sm:px-6 sticky top-0 z-30 flex-shrink-0"
           style={{ height: "var(--topbar-height)" }}
         >
           <div className="flex items-center justify-between h-full">
@@ -255,7 +255,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
         </header>
 
         {/* Page Content Canvas */}
-        <main id="main-content" className="flex-1 h-full overflow-y-auto overflow-x-hidden p-3 sm:p-6 lg:p-8 animate-fade-in">
+        <main id="main-content" className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 lg:p-8 animate-fade-in">
           {children}
         </main>
       </div>

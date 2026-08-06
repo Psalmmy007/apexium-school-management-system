@@ -55,6 +55,30 @@ async function main() {
   `);
   console.log("✓ Created indexes");
 
+  // 4. Create student_documents table
+  await sql.unsafe(`
+    CREATE TABLE IF NOT EXISTS student_documents (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      school_id UUID NOT NULL REFERENCES schools(id) ON DELETE CASCADE,
+      student_id UUID NOT NULL REFERENCES students(id) ON DELETE CASCADE,
+      document_type VARCHAR(50) NOT NULL,
+      title VARCHAR(255) NOT NULL,
+      file_url TEXT NOT NULL,
+      file_size INT,
+      mime_type VARCHAR(100),
+      uploaded_by UUID REFERENCES users(id) ON DELETE SET NULL,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+  `);
+  console.log("✓ Created student_documents table");
+
+  await sql.unsafe(`
+    CREATE INDEX IF NOT EXISTS student_doc_idx 
+    ON student_documents(school_id, student_id)
+  `);
+  console.log("✓ Created student_doc_idx index");
+
   await sql.end();
   console.log("Migration complete!");
 }

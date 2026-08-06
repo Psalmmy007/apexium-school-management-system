@@ -73,14 +73,33 @@ const EVENT_ICONS: Record<string, string> = {
   default: "📋",
 };
 
+interface StudentDocumentItem {
+  id: string;
+  documentType: string;
+  title: string;
+  fileUrl: string;
+  fileSize?: number;
+  mimeType?: string;
+  createdAt: string;
+}
+
 export default function StudentProfilePage() {
   const params = useParams();
   const studentId = params.id as string;
 
   const [student, setStudent] = useState<StudentDetail | null>(null);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
+  const [documents, setDocuments] = useState<StudentDocumentItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"biodata" | "academic" | "guardians" | "medical" | "timeline" | "status">("biodata");
+  const [activeTab, setActiveTab] = useState<"biodata" | "academic" | "guardians" | "medical" | "documents" | "timeline" | "status">("biodata");
+
+  // Document upload state
+  const [showDocModal, setShowDocModal] = useState(false);
+  const [docType, setDocType] = useState("birth_certificate");
+  const [docTitle, setDocTitle] = useState("");
+  const [docFile, setDocFile] = useState<File | null>(null);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [docError, setDocError] = useState<string | null>(null);
 
   // Status change modal state
   const [showStatusModal, setShowStatusModal] = useState(false);
@@ -92,21 +111,25 @@ export default function StudentProfilePage() {
   const loadStudent = useCallback(async () => {
     try {
       setLoading(true);
-      const [studentRes, timelineRes] = await Promise.all([
+      const [studentRes, timelineRes, docsRes] = await Promise.all([
         fetch(`/api/students/${studentId}`),
         fetch(`/api/students/${studentId}/status`),
+        fetch(`/api/students/${studentId}/documents`),
       ]);
       const studentJson = await studentRes.json();
       const timelineJson = await timelineRes.json();
+      const docsJson = await docsRes.json();
 
       if (studentJson.success) setStudent(studentJson.data);
       if (timelineJson.success) setTimeline(timelineJson.data.timeline || []);
+      if (docsJson.success) setDocuments(docsJson.data || []);
     } catch (err) {
       console.error("Failed loading student profile", err);
     } finally {
       setLoading(false);
     }
   }, [studentId]);
+
 
   useEffect(() => {
     if (studentId) loadStudent();
@@ -148,6 +171,58 @@ export default function StudentProfilePage() {
       setStatusError(err.message || "An error occurred.");
     } finally {
       setSavingStatus(false);
+    }
+  };
+
+  const handleUploadDocument = async () => {
+    if (!docTitle.trim() || !docFile) {
+      setDocError("Document title and file are required.");
+      return;
+    }
+    setUploadingDoc(true);
+    setDocError(null);
+    try {
+      const formData = new FormData();
+      formData.append("file", docFile);
+      const uploadRes = await fetch("/api/upload/document", {
+        method: "POST",
+        body: formData,
+      });
+      const uploadJson = await uploadRes.json();
+      if (!uploadJson.success) {
+        setDocError(uploadJson.error || "File upload failed.");
+        setUploadingDoc(false);
+        return;
+      }
+
+      const saveRes = await fetch(`/api/students/${studentId}/documents`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          documentType: docType,
+          title: docTitle.trim(),
+          fileUrl: uploadJson.url,
+          fileSize: uploadJson.fileSize,
+          mimeType: uploadJson.mimeType,
+        }),
+      });
+      const saveJson = await saveRes.json();
+      if (saveJson.success) {
+        setDocuments((prev) => [saveJson.data, ...prev]);
+        setShowDocModal(false);
+        setDocTitle("");
+        setDocFile(null);
+        // Refresh timeline
+        const timelineRes = await fetch(`/api/students/${studentId}/status`);
+        const timelineJson = await timelineRes.json();
+        if (timelineJson.success) setTimeline(timelineJson.data.timeline || []);
+      } else {
+        setDocError(saveJson.error || "Failed to attach document.");
+      }
+    } catch (err: any) {
+      setDocError(err.message || "An error occurred.");
+    } finally {
+      setUploadingDoc(false);
     }
   };
 
@@ -258,6 +333,7 @@ export default function StudentProfilePage() {
           { id: "academic",  label: "Academic" },
           { id: "guardians", label: "Guardians" },
           { id: "medical",   label: "Medical" },
+          { id: "documents", label: `Documents (${documents.length})` },
           { id: "timeline",  label: `Timeline (${timeline.length})` },
           { id: "status",    label: "Manage Status" },
         ].map((t) => (
@@ -385,6 +461,67 @@ export default function StudentProfilePage() {
                 </p>
               </div>
             ))}
+          </div>
+        )}
+
+        {/* DOCUMENTS */}
+        {activeTab === "documents" && (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">Student Document Management</h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Admission documents, birth certificates, transfer letters, academic transcripts, and medical reports.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setDocError(null);
+                  setDocTitle("");
+                  setDocFile(null);
+                  setShowDocModal(true);
+                }}
+                className="btn-primary btn-sm text-xs"
+              >
+                + Upload Document
+              </button>
+            </div>
+
+            {documents.length === 0 ? (
+              <div className="py-8 text-center bg-slate-50 rounded-xl border border-slate-100">
+                <div className="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center mx-auto mb-2 text-2xl">📄</div>
+                <p className="text-sm font-semibold text-slate-700">No documents attached</p>
+                <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
+                  Upload birth certificates, previous academic records, transfer letters, or medical records for this student.
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {documents.map((doc) => (
+                  <div key={doc.id} className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex items-start justify-between gap-3">
+                    <div className="space-y-1 flex-1 min-w-0">
+                      <span className="inline-flex px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 text-[10px] font-bold uppercase">
+                        {doc.documentType.replace(/_/g, " ")}
+                      </span>
+                      <h4 className="font-bold text-sm text-slate-900 truncate">{doc.title}</h4>
+                      <p className="text-[11px] text-slate-400">
+                        Uploaded: {new Date(doc.createdAt).toLocaleDateString("en-NG")}
+                        {doc.fileSize ? ` • ${(doc.fileSize / 1024).toFixed(0)} KB` : ""}
+                      </p>
+                    </div>
+                    <a
+                      href={doc.fileUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn-secondary btn-xs text-xs whitespace-nowrap"
+                    >
+                      View / Download
+                    </a>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -543,6 +680,83 @@ export default function StudentProfilePage() {
           </div>
         </div>
       )}
+
+      {/* Document Upload Modal */}
+      {showDocModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-5 animate-slide-up">
+            <div>
+              <h3 className="text-base font-bold text-slate-900">Upload Student Document</h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Attach an official document (PDF, Word, JPEG, PNG, max 10MB) to <strong>{student.firstName} {student.lastName}</strong>'s file.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="label">Document Category *</label>
+                <select
+                  value={docType}
+                  onChange={(e) => setDocType(e.target.value)}
+                  className="input"
+                >
+                  <option value="birth_certificate">Birth Certificate</option>
+                  <option value="transfer_letter">Transfer / Leaving Certificate</option>
+                  <option value="academic_record">Previous Academic Transcript / Report</option>
+                  <option value="medical_report">Medical Report / Immunisation Record</option>
+                  <option value="passport">Passport Photograph Copy</option>
+                  <option value="other">Other Official Document</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="label">Document Title / Description *</label>
+                <input
+                  type="text"
+                  placeholder="e.g. Primary School Testimonial 2025"
+                  value={docTitle}
+                  onChange={(e) => setDocTitle(e.target.value)}
+                  className="input"
+                />
+              </div>
+
+              <div>
+                <label className="label">Select File *</label>
+                <input
+                  type="file"
+                  accept=".pdf,.doc,.docx,.png,.jpg,.jpeg,.webp"
+                  onChange={(e) => setDocFile(e.target.files?.[0] || null)}
+                  className="input text-xs"
+                />
+              </div>
+
+              {docError && (
+                <p className="text-xs text-red-600 font-semibold">{docError}</p>
+              )}
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowDocModal(false)}
+                className="btn-ghost btn-sm"
+                disabled={uploadingDoc}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleUploadDocument}
+                disabled={uploadingDoc || !docTitle.trim() || !docFile}
+                className="btn-primary btn-sm"
+              >
+                {uploadingDoc ? "Uploading..." : "Save Document"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+

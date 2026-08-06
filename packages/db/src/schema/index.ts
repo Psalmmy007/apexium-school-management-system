@@ -1463,3 +1463,57 @@ export const studentActivityTimelineRelations = relations(
     }),
   })
 );
+
+// ── Table: student_documents ─────────────────────────────────
+export const studentDocuments = pgTable(
+  "student_documents",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => students.id, { onDelete: "cascade" }),
+    documentType: varchar("document_type", { length: 50 }).notNull(),
+    // e.g., "passport", "birth_certificate", "transfer_letter", "academic_record", "medical_report", "other"
+    title: varchar("title", { length: 255 }).notNull(),
+    fileUrl: text("file_url").notNull(),
+    fileSize: integer("file_size"),
+    mimeType: varchar("mime_type", { length: 100 }),
+    uploadedBy: uuid("uploaded_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    studentDocIdx: index("student_doc_idx").on(
+      table.schoolId,
+      table.studentId
+    ),
+  })
+);
+
+export const studentDocumentsRelations = relations(
+  studentDocuments,
+  ({ one }) => ({
+    school: one(schools, {
+      fields: [studentDocuments.schoolId],
+      references: [schools.id],
+    }),
+    student: one(students, {
+      fields: [studentDocuments.studentId],
+      references: [students.id],
+    }),
+    uploadedByUser: one(users, {
+      fields: [studentDocuments.uploadedBy],
+      references: [users.id],
+    }),
+  })
+);
+

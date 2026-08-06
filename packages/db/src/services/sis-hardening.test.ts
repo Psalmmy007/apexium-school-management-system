@@ -19,9 +19,11 @@ import {
   guardians,
   studentGuardians,
   studentActivityTimeline,
+  studentDocuments,
   users,
 } from "@apexium/db";
 import { eq, and } from "drizzle-orm";
+
 
 // ── Test fixtures ───────────────────────────────────────────────
 let schoolAId: string;
@@ -407,4 +409,39 @@ describe("Milestone 16 — SIS Production Hardening", () => {
     expect((event as any).updatedAt).toBeUndefined();
     expect(event.createdAt).toBeDefined();
   });
+
+  // ── 11. Student document management & timeline event ──────────
+  it("attaches admission documents to student profile and logs timeline event", async () => {
+    const [doc] = await db
+      .insert(studentDocuments)
+      .values({
+        schoolId: schoolAId,
+        studentId: studentA1Id,
+        documentType: "birth_certificate",
+        title: "National Birth Certificate",
+        fileUrl: "data:application/pdf;base64,JVBERi0xLjQK%",
+        fileSize: 10240,
+        mimeType: "application/pdf",
+        uploadedBy: adminAId,
+      })
+      .returning();
+
+    expect(doc.id).toBeDefined();
+    expect(doc.documentType).toBe("birth_certificate");
+
+    // Retrieve documents for studentA1Id
+    const docs = await db
+      .select()
+      .from(studentDocuments)
+      .where(
+        and(
+          eq(studentDocuments.studentId, studentA1Id),
+          eq(studentDocuments.schoolId, schoolAId)
+        )
+      );
+
+    expect(docs.length).toBe(1);
+    expect(docs[0].title).toBe("National Birth Certificate");
+  });
 });
+
