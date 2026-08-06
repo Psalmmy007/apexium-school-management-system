@@ -1,6 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSessionUser } from "@/lib/auth/session";
-import { db, students, classes, sections, enforceStudentCap, linkStudentGuardian } from "@apexium/db";
+import { db, students, classes, sections, enforceStudentCap, linkStudentGuardian, studentActivityTimeline } from "@apexium/db";
 import { eq, and, like, or, sql } from "drizzle-orm";
 
 // ── GET /api/students — List students with filtering ──────────
@@ -179,6 +179,34 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Biodata duplicate detection: check for same name + DOB to prevent duplicates
+    if (firstName && lastName && dateOfBirth) {
+      const bioDuplicate = await db
+        .select({ id: students.id, admissionNumber: students.admissionNumber })
+        .from(students)
+        .where(
+          and(
+            eq(students.schoolId, user.schoolId),
+            eq(students.firstName, firstName.trim()),
+            eq(students.lastName, lastName.trim()),
+            sql`DATE(${students.dateOfBirth}) = DATE(${new Date(dateOfBirth).toISOString()})`
+          )
+        )
+        .limit(1);
+
+      if (bioDuplicate.length > 0) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `A student named "${firstName} ${lastName}" with the same date of birth already exists in your school (Admission No: ${bioDuplicate[0].admissionNumber}). Please verify this is not a duplicate admission.`,
+            isDuplicate: true,
+            existingStudentId: bioDuplicate[0].id,
+          },
+          { status: 409 }
+        );
+      }
+    }
+
     const [newStudent] = await db
       .insert(students)
       .values({
@@ -217,6 +245,22 @@ export async function POST(request: NextRequest) {
     if (guardianId) {
       await linkStudentGuardian(user.schoolId, newStudent.id, guardianId, guardianRelationship || "Father", true);
     }
+
+    // Log admission event to activity timeline
+    await db.insert(studentActivityTimeline).values({
+      schoolId: user.schoolId,
+      studentId: newStudent.id,
+      performedBy: user.id,
+      eventType: "admission",
+      description: `Student admitted: ${newStudent.firstName} ${newStudent.lastName} (${newStudent.admissionNumber})`,
+      metadata: {
+        admissionNumber: newStudent.admissionNumber,
+        classId: newStudent.classId,
+        sectionId: newStudent.sectionId,
+        status: newStudent.status,
+        guardianId: guardianId || null,
+      },
+    });
 
     return NextResponse.json({ success: true, data: newStudent }, { status: 201 });
   } catch (error: any) {

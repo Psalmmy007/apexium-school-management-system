@@ -96,6 +96,19 @@ export default function NewStudentPage() {
 
   const availableSections = sectionList.filter((sec) => sec.classId === classId);
 
+  // Auto-generate next sequential admission number for this school
+  const handleGenerateAdmissionNumber = async () => {
+    try {
+      const res = await fetch("/api/students/admission-number");
+      const json = await res.json();
+      if (json.success && json.data?.admissionNumber) {
+        setAdmissionNumber(json.data.admissionNumber);
+      }
+    } catch (err) {
+      console.error("Failed to generate admission number", err);
+    }
+  };
+
   // Search reusable guardians
   const handleSearchGuardians = async (q: string) => {
     setGuardianSearch(q);
@@ -381,15 +394,25 @@ export default function NewStudentPage() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label htmlFor="admissionNumber" className="label">Admission Number *</label>
-                  <input
-                    id="admissionNumber"
-                    type="text"
-                    required
-                    value={admissionNumber}
-                    onChange={(e) => setAdmissionNumber(e.target.value)}
-                    placeholder="e.g. ADM/2026/001"
-                    className="input"
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      id="admissionNumber"
+                      type="text"
+                      required
+                      value={admissionNumber}
+                      onChange={(e) => setAdmissionNumber(e.target.value)}
+                      placeholder="e.g. ADM/2026/001"
+                      className="input flex-1"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleGenerateAdmissionNumber}
+                      className="btn-secondary btn-sm whitespace-nowrap text-xs"
+                      title="Auto-generate next sequential number"
+                    >
+                      Auto-generate
+                    </button>
+                  </div>
                 </div>
                 <div>
                   <label htmlFor="admissionDate" className="label">Admission Date</label>

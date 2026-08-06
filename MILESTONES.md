@@ -234,23 +234,23 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 **Definition of Done:** Students can be allocated, transferred, tracked, and billed for hostel accommodation with strict capacity enforcement and complete historical integrity verified by automated testing.
 
-## Milestone 16: Student Information System (SIS) Production Hardening — [ ] NOT STARTED
+## Milestone 16: Student Information System (SIS) Production Hardening — [ ] IN PROGRESS
 
-- [ ] Student registration redesign: replace the current single-page registration form with a guided multi-step admission wizard
-- [ ] Passport upload: implement secure passport photo upload via `/api/upload/passport` with image validation, preview, replacement, and URL-based storage
-- [ ] Reusable guardians: introduce dedicated `guardians` and `student_guardians` tables so one guardian can be linked to multiple students while preserving relationship types (Father, Mother, Sponsor, Legal Guardian)
-- [ ] Guardian search: allow searching existing guardians by phone number, email, or name before creating new guardian records to eliminate duplicate parent records
-- [ ] Extended student biodata: capture admission date, nationality, state of origin, LGA, religion, blood group, genotype, previous school, medical conditions, allergies, emergency contacts, and other production-grade SIS fields
+- [x] Student registration redesign: replace the current single-page registration form with a guided multi-step admission wizard
+- [x] Passport upload: implement secure passport photo upload via `/api/upload/passport` with image validation, preview, replacement, and URL-based storage
+- [x] Reusable guardians: introduce dedicated `guardians` and `student_guardians` tables so one guardian can be linked to multiple students while preserving relationship types (Father, Mother, Sponsor, Legal Guardian)
+- [x] Guardian search: allow searching existing guardians by phone number, email, or name before creating new guardian records to eliminate duplicate parent records
+- [x] Extended student biodata: capture admission date, nationality, state of origin, LGA, religion, blood group, genotype, previous school, medical conditions, allergies, emergency contacts, and other production-grade SIS fields
 - [ ] Student document management: upload and manage admission documents including passport photographs, birth certificates, transfer letters, previous academic records, and medical reports
-- [ ] Academic Structure module: implement Academic Sections, Classes, Arms/Streams, Class Teachers, display ordering, capacity management, archive, and restore functionality
-- [ ] Academic assignment: assign students to Sections, Classes, and Arms using the Academic Structure module with capacity validation
-- [ ] Student profile page: build a comprehensive profile displaying passport, biodata, academic assignment, attendance, academic performance, guardian information, hostel assignment, and uploaded documents
-- [ ] Student status management: support Active, Suspended, Withdrawn, Graduated, Alumni, and Expelled statuses while maintaining complete historical records
-- [ ] Student activity timeline: maintain an audit history for admissions, transfers, promotions, guardian updates, document uploads, hostel allocations, and status changes
-- [ ] Admission number generation: configurable admission number formats with automatic sequential generation for each school
-- [ ] Duplicate detection: prevent duplicate admissions by checking admission numbers, guardian information, student biodata, and configurable matching rules
-- [ ] First-Time School Setup Wizard: create a guided setup process covering school profile, academic session, terms, academic structure, subjects, and administrator configuration with a one-click Nigerian K–12 template
-- [ ] Contextual empty states: replace empty tables, dropdowns, and dashboards with reusable empty-state components containing clear descriptions and direct action buttons
+- [x] Academic Structure module: implement Academic Sections, Classes, Arms/Streams, Class Teachers, display ordering, capacity management, archive, and restore functionality
+- [x] Academic assignment: assign students to Sections, Classes, and Arms using the Academic Structure module with capacity validation
+- [x] Student profile page: build a comprehensive profile displaying passport, biodata, academic assignment, attendance, academic performance, guardian information, hostel assignment, and uploaded documents
+- [x] Student status management: support Active, Suspended, Withdrawn, Graduated, Alumni, and Expelled statuses while maintaining complete historical records
+- [x] Student activity timeline: maintain an audit history for admissions, transfers, promotions, guardian updates, document uploads, hostel allocations, and status changes
+- [x] Admission number generation: configurable admission number formats with automatic sequential generation for each school
+- [x] Duplicate detection: prevent duplicate admissions by checking admission numbers, guardian information, student biodata, and configurable matching rules
+- [x] First-Time School Setup Wizard: create a guided setup process covering school profile, academic session, terms, academic structure, subjects, and administrator configuration with a one-click Nigerian K–12 template
+- [x] Contextual empty states: replace empty tables, dropdowns, and dashboards with reusable empty-state components containing clear descriptions and direct action buttons
 - [ ] Dashboard layout hardening: eliminate duplicate rendering, sidebar height inconsistencies, scrolling glitches, viewport issues, and white-space layout bugs across all dashboards
 - [ ] Performance optimisation: optimise student management pages using pagination, search, filtering, lazy loading, and efficient data fetching
 - [ ] Offline support: ensure previously viewed student records, academic structure, and profile information remain accessible through the existing offline architecture

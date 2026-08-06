@@ -30,6 +30,10 @@ export const studentStatusEnum = pgEnum("student_status", [
   "inactive",
   "graduated",
   "transferred",
+  "suspended",
+  "withdrawn",
+  "expelled",
+  "alumni",
 ]);
 
 export const attendanceStatusEnum = pgEnum("attendance_status", [
@@ -1398,9 +1402,64 @@ export const hostelMaintenance = pgTable(
   })
 );
 
+// ── Table: student_activity_timeline ─────────────────────────
+// Immutable audit log for all student lifecycle events.
+// Records every admission, status change, transfer, promotion,
+// guardian update, document upload, and hostel allocation.
+export const studentActivityTimeline = pgTable(
+  "student_activity_timeline",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    studentId: uuid("student_id")
+      .notNull()
+      .references(() => students.id, { onDelete: "cascade" }),
+    // Who performed this action (null = system/automated)
+    performedBy: uuid("performed_by").references(() => users.id, {
+      onDelete: "set null",
+    }),
+    // Category of event for filtering
+    eventType: varchar("event_type", { length: 50 }).notNull(),
+    // e.g. "admission", "status_change", "class_transfer", "promotion",
+    //       "guardian_update", "document_upload", "hostel_allocation"
+    // Human-readable description of the event
+    description: text("description").notNull(),
+    // Optional structured metadata (previous vs new value, etc.)
+    metadata: jsonb("metadata"),
+    // When the event occurred (immutable once inserted)
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => ({
+    studentTimelineIdx: index("student_timeline_idx").on(
+      table.schoolId,
+      table.studentId,
+      table.createdAt
+    ),
+    eventTypeIdx: index("timeline_event_type_idx").on(
+      table.schoolId,
+      table.eventType
+    ),
+  })
+);
 
-
-
-
-
-
+export const studentActivityTimelineRelations = relations(
+  studentActivityTimeline,
+  ({ one }) => ({
+    school: one(schools, {
+      fields: [studentActivityTimeline.schoolId],
+      references: [schools.id],
+    }),
+    student: one(students, {
+      fields: [studentActivityTimeline.studentId],
+      references: [students.id],
+    }),
+    performedByUser: one(users, {
+      fields: [studentActivityTimeline.performedBy],
+      references: [users.id],
+    }),
+  })
+);

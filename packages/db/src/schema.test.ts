@@ -77,6 +77,10 @@ describe("Database Schema — Multi-tenancy Core", () => {
       "inactive",
       "graduated",
       "transferred",
+      "suspended",
+      "withdrawn",
+      "expelled",
+      "alumni",
     ]);
   });
 });
