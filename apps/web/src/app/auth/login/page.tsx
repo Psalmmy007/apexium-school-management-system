@@ -197,11 +197,44 @@ export default function LoginPage() {
         </div>
       </div>
 
+      {/* SaaS Registration & Navigation Links */}
+      <div className="mt-6 p-4 rounded-xl bg-indigo-50/70 border border-indigo-100 space-y-2 text-center text-xs">
+        <p className="font-semibold text-slate-700">Want to create a new school tenant on Apexium SaaS?</p>
+        <div className="flex justify-center space-x-3">
+          <a href="/register" className="font-bold text-indigo-600 hover:text-indigo-800 underline">
+            🚀 Register School Tenant
+          </a>
+          <span className="text-slate-300">•</span>
+          <a href="/pricing" className="font-bold text-indigo-600 hover:text-indigo-800 underline">
+            💳 Subscription Plans
+          </a>
+          <span className="text-slate-300">•</span>
+          <a href="/platform" className="font-bold text-purple-600 hover:text-purple-800 underline">
+            🌐 Platform Admin
+          </a>
+        </div>
+      </div>
+
+      {/* Direct Module Quick Shortcuts for Verification */}
+      <div className="mt-4 pt-4 border-t border-slate-200">
+        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2 text-center">
+          Enterprise ERP Module Quick Access
+        </p>
+        <div className="grid grid-cols-3 gap-1.5 text-center text-xs font-semibold">
+          <a href="/dashboard/inventory" className="p-2 rounded bg-slate-100 hover:bg-slate-200 text-slate-700">
+            📦 Inventory
+          </a>
+          <a href="/dashboard/settings/data-export" className="p-2 rounded bg-slate-100 hover:bg-slate-200 text-slate-700">
+            💾 Data Export
+          </a>
+          <a href="/dashboard/group" className="p-2 rounded bg-slate-100 hover:bg-slate-200 text-slate-700">
+            🏢 Multi-Branch
+          </a>
+        </div>
+      </div>
+
       <p className="mt-6 text-center text-sm text-slate-500">
-        Don&apos;t have an account?{" "}
-        <span className="text-brand-600 font-medium">
-          Contact your school administrator.
-        </span>
+        Already have a school account? Sign in above or contact your school administrator.
       </p>
     </div>
   );

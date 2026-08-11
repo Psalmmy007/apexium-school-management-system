@@ -29,20 +29,46 @@ export default function HomePage() {
           </p>
         </div>
 
-        {/* CTA */}
+        {/* CTA Buttons */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <Link
+            id="register-school-link"
+            href="/register"
+            className="btn-primary bg-indigo-600 hover:bg-indigo-500 text-white shadow-lg shadow-indigo-600/30 px-6 py-3 rounded-xl font-bold transition"
+          >
+            🚀 Register New School
+          </Link>
+
+          <Link
+            id="pricing-link"
+            href="/pricing"
+            className="btn-secondary bg-white/10 hover:bg-white/20 text-white border border-white/20 px-6 py-3 rounded-xl font-semibold backdrop-blur-sm transition"
+          >
+            💳 View Plans & Pricing
+          </Link>
+
           <Link
             id="sign-in-link"
             href="/auth/login"
-            className="btn-primary bg-white text-brand-700 hover:bg-brand-50 shadow-elevation-2"
+            className="btn-primary bg-white text-brand-700 hover:bg-brand-50 px-6 py-3 rounded-xl font-semibold shadow-elevation-2 transition"
           >
-            Sign In to Your School
+            🔑 Sign In to Portal
+          </Link>
+        </div>
+
+        {/* Platform Operator Access */}
+        <div className="mt-6">
+          <Link
+            href="/platform"
+            className="inline-flex items-center space-x-2 text-xs text-brand-200 hover:text-white bg-white/5 border border-white/10 px-4 py-2 rounded-lg backdrop-blur-sm transition"
+          >
+            <span>🌐 SaaS Platform Operator Dashboard</span>
+            <span>→</span>
           </Link>
         </div>
 
         <p className="mt-8 text-brand-300 text-sm">
-          Secure, multi-school platform. Contact your school administrator for
-          access.
+          Apexium Multi-Tenant School ERP & SaaS Platform.
         </p>
       </div>
     </main>

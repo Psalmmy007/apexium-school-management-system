@@ -62,6 +62,9 @@ export const schools = pgTable("schools", {
   phone: varchar("phone", { length: 50 }),
   email: varchar("email", { length: 255 }),
   logoUrl: text("logo_url"),
+  groupId: uuid("group_id"),
+  branchName: varchar("branch_name", { length: 255 }),
+  isGroupHeadquarters: boolean("is_group_headquarters").notNull().default(false),
   isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
@@ -3493,6 +3496,63 @@ export const dataExportsRelations = relations(dataExports, ({ one }) => ({
   school: one(schools, { fields: [dataExports.schoolId], references: [schools.id] }),
   requester: one(users, { fields: [dataExports.requestedBy], references: [users.id] }),
 }));
+
+// ════════════════════════════════════════════════════════════════
+// MILESTONE 32 — Multi-Branch / School Group Support
+// ════════════════════════════════════════════════════════════════
+
+// ── Table: school_groups ────────────────────────────────────────
+export const schoolGroups = pgTable(
+  "school_groups",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: varchar("name", { length: 255 }).notNull(),
+    slug: varchar("slug", { length: 100 }).notNull().unique(),
+    ownerUserId: uuid("owner_user_id").references(() => users.id, { onDelete: "set null" }),
+    subscriptionId: uuid("subscription_id").references(() => saasSchoolSubscriptions.id, { onDelete: "set null" }),
+    maxBranchesLimit: integer("max_branches_limit").notNull().default(5),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    groupSlugIdx: uniqueIndex("idx_group_slug").on(table.slug),
+  })
+);
+
+// ── Table: group_memberships ────────────────────────────────────
+export const groupMemberships = pgTable(
+  "group_memberships",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    groupId: uuid("group_id")
+      .notNull()
+      .references(() => schoolGroups.id, { onDelete: "cascade" }),
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    role: varchar("role", { length: 50 }).notNull().default("group_admin"), // group_admin, group_auditor, group_finance_officer
+    joinedAt: timestamp("joined_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    groupMemberIdx: uniqueIndex("idx_group_member_user").on(table.groupId, table.userId),
+  })
+);
+
+// ── Milestone 32 Relations ─────────────────────────────────────
+export const schoolGroupsRelations = relations(schoolGroups, ({ one, many }) => ({
+  owner: one(users, { fields: [schoolGroups.ownerUserId], references: [users.id] }),
+  subscription: one(saasSchoolSubscriptions, { fields: [schoolGroups.subscriptionId], references: [saasSchoolSubscriptions.id] }),
+  branches: many(schools),
+  memberships: many(groupMemberships),
+}));
+
+export const groupMembershipsRelations = relations(groupMemberships, ({ one }) => ({
+  group: one(schoolGroups, { fields: [groupMemberships.groupId], references: [schoolGroups.id] }),
+  user: one(users, { fields: [groupMemberships.userId], references: [users.id] }),
+}));
+
 
 
 

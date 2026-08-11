@@ -144,6 +144,19 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
 
           {user.role === "admin" && (
             <>
+              <p className="nav-group-label mt-4">Enterprise Operations</p>
+              <NavItem href="/dashboard/finance" id="nav-finance" label="Finance & Accounting" icon={<IconReports />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/hr" id="nav-hr" label="HR & Payroll" icon={<IconStudents />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/transport" id="nav-transport" label="Transport System" icon={<IconAttendance />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/inventory" id="nav-inventory" label="Inventory & Fixed Assets" icon={<IconTimetable />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/communication" id="nav-communication" label="Communication Centre" icon={<IconReports />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/analytics" id="nav-analytics" label="Executive Analytics" icon={<IconDashboard />} onClick={() => setIsMobileMenuOpen(false)} />
+
+              <p className="nav-group-label mt-4">SaaS & Group Governance</p>
+              <NavItem href="/dashboard/group" id="nav-group" label="Multi-Branch School Group" icon={<IconDashboard />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/settings/data-export" id="nav-data-export" label="Data Portability & Export" icon={<IconSettings />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/platform" id="nav-platform" label="SaaS Platform Operator" icon={<IconLicense />} onClick={() => setIsMobileMenuOpen(false)} />
+
               <p className="nav-group-label mt-4">System</p>
               <NavItem href="/dashboard/setup" id="nav-setup-wizard" label="School Setup Wizard" icon={<IconPromotion />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/library" id="nav-library" label="Library System" icon={<IconReports />} onClick={() => setIsMobileMenuOpen(false)} />

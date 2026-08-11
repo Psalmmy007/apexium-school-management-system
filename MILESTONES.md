@@ -500,14 +500,15 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 ---
 
-## Milestone 32: Multi-Branch / School Group Support — [ ] NOT STARTED
+## Milestone 32: Multi-Branch / School Group Support — [x] COMPLETE
 
-- [ ] Multi-Branch Architecture: `school_groups` owning multiple branch schools, each branch keeping full data isolation from every other branch
-- [ ] Subscription Extension: Milestone 28 subscription architecture extended so one subscription covers a whole group
-- [ ] Group RBAC Roles: a group-admin role sees aggregated data across branches; branch staff never see outside their own branch
-- [ ] Automated test: verify a branch admin is confined to their branch and a group admin sees aggregate data, with no ordinary role ever crossing branch lines
+- [x] Multi-Branch Architecture: `school_groups` owning multiple branch schools, each branch keeping full data isolation from every other branch
+- [x] Subscription Extension: Milestone 28 subscription architecture extended so one subscription covers a whole group
+- [x] Group RBAC Roles: a group-admin role sees aggregated data across branches; branch staff never see outside their own branch
+- [x] Automated test: verify a branch admin is confined to their branch and a group admin sees aggregate data, with no ordinary role ever crossing branch lines
 
 **Definition of Done:** A school group can run several campuses from one account with tested, correct visibility boundaries.
+
 
 ---
 
