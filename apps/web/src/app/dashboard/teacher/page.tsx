@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { NotificationBell } from "@/components/NotificationBell";
 
 interface OverviewData {
   todayTimetableCount: number;
@@ -36,14 +37,21 @@ export default function TeacherHomePage() {
     <div className="space-y-6">
       {/* Header Banner */}
       <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 text-white p-8 rounded-3xl shadow-lg border border-indigo-900/50 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div>
-          <span className="px-3 py-1 bg-indigo-500/20 text-indigo-300 font-bold text-xs rounded-full uppercase tracking-wider">
-            Unified Portal
-          </span>
-          <h1 className="text-3xl font-extrabold tracking-tight mt-2">Teacher Workspace</h1>
-          <p className="text-sm text-slate-300 mt-1 max-w-xl">
-            Access today&apos;s timetable, perform fast bulk score & attendance entry, review pending grading, and communicate with parents.
-          </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <span className="px-3 py-1 bg-indigo-500/20 text-indigo-300 font-bold text-xs rounded-full uppercase tracking-wider">
+              Teacher Portal Dashboard
+            </span>
+            <h1 className="text-3xl font-extrabold tracking-tight mt-2 text-white">
+              Welcome back, Teacher
+            </h1>
+            <p className="text-indigo-200 text-sm mt-1">
+              Manage your assigned classes, daily timetable, student assessments, and messages.
+            </p>
+          </div>
+          <div className="bg-white/10 p-1.5 rounded-xl backdrop-blur-sm">
+            <NotificationBell />
+          </div>
         </div>
 
         <div className="flex flex-wrap gap-3">

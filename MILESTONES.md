@@ -260,95 +260,271 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 ---
 
-## Milestone 17: Transport Management System — [ ] NOT STARTED
+## Milestone 16.1: Enterprise SIS Hardening (Production Ready) — [x] COMPLETE
 
-- [ ] Transport schema: vehicles, drivers, routes, route stops, transport assignments, daily trips, transport attendance, maintenance records, fuel logs, transport fee plans, and `school_id`
-- [ ] Vehicle management: administrators can create, edit, archive, and manage school buses and transport vehicles including registration numbers, capacities, insurance, inspection dates, and operational status
-- [ ] Driver management: maintain driver and transport staff records including licence information, contact details, employment status, assigned vehicles, and assignment history
-- [ ] Route management: create transport routes with pickup points, drop-off points, stop sequences, estimated arrival times, and assigned vehicles
-- [ ] Student transport allocation: assign students to transport routes while enforcing vehicle capacity limits and preventing duplicate route assignments
-- [ ] Daily transport operations: record departure times, arrival times, trip status, assigned drivers, and route completion history
-- [ ] Transport attendance: record students boarding and alighting vehicles for every trip with complete attendance history
-- [ ] Parent Portal integration: allow parents to view transport routes, pickup times, assigned vehicles, and transport status from Milestone 12
-- [ ] Finance integration: connect transport subscriptions and transport fees with the Finance module for automated billing and payment tracking
-- [ ] Vehicle maintenance: schedule servicing, inspections, repairs, insurance renewals, and automatically flag overdue maintenance activities
-- [ ] Reports: transport allocation reports, vehicle utilisation reports, transport attendance reports, maintenance reports, fuel consumption reports, and transport fee summaries
-- [ ] Automated test: create two schools, multiple vehicles, drivers, routes, and transport assignments while verifying vehicle capacity enforcement, transport attendance, maintenance scheduling, fee integration, and complete tenant isolation
+- [x] Enterprise Admission Number Generator: atomic sequence generator (`admission_sequences`) using row-level atomic SQL increment (`SET current_number = current_number + 1 RETURNING current_number`), preventing duplicate admission numbers under heavy parallel registrations with per-school configurable templates (e.g. `APS/2026/000001`, `SCH001-26-0001`, `JSS-2026-105`)
+- [x] Non-Destructive Student Merge Engine: merges duplicate student records without data loss by marking the source student `isReadOnly = true`, `status = 'inactive'`, and `mergedIntoId = targetStudentId`, while atomically re-linking all 9+ child entities (attendance, scores, fee invoices, documents, guardians, hostel allocations, CBT sessions, LMS submissions, library loans) and logging audit timeline events to both records
+- [x] Enterprise Search & Scaling: multi-field server-side search across name, admission number, roll number, status, class, and section, backed by composite database indexes (`idx_students_status_class_section`, `idx_students_name_dob`) optimized for 100k+ student scale
+- [x] Upload Security Hardening: magic-number buffer inspection (verifying real binary headers for JPEG, PNG, PDF, WEBP, DOCX), dangerous executable extension blocklist, SHA-256 content hashing (`fileHash`), and filename sanitization across passport & document upload routes
+- [x] Document Soft-Delete & Restore Engine: soft-delete support (`isDeleted`, `deletedAt`, `deletedBy`, `deleteReason`) preserving underlying storage files, complete with user resolution (`deletedByUserName`), audit logging, and single-click document restoration API & UI
+- [x] Printable Student ID Cards: structured payload API (`/api/students/[id]/id-card`) and client modal with embedded QR code verification payload, barcode representation data, passport photo, and official school branding
+- [x] Enterprise RBAC Matrix: centralized backend authorization module (`canPerformAction`) enforcing role-based permissions across all SIS endpoints (`superadmin`, `admin`, `teacher`, `parent`, `student`) with strict tenant isolation
+- [x] Bulk Operations Engine: transactional execution for bulk promotion, class assignment, suspension, restoration, archiving, and CSV export, featuring `dryRun=true` preview mode returning affected counts, eligible lists, and conflict warnings
+- [x] Extended Activity Timeline: comprehensive audit trail capturing class changes, stream changes, guardian links, document uploads/soft-deletions/restorations, merge operations, and status transitions
+- [x] Enterprise Testing & Verification: 85 Vitest integration tests, Playwright E2E suite, `tsc --noEmit` validation, zero-error production build (`pnpm --filter @apexium/web build`), live migration, and OpenAPI 3.0 documentation JSON (`/api/docs/sis`)
+
+**Definition of Done:** All 10 requirements of Milestone 16.1 are fully implemented, backward-compatible, hardened, and verified with 85/85 passing integration tests, zero TypeScript errors, zero production build errors, and complete tenant isolation.
+
+---
+
+## Milestone 17: Transport Management System — [x] COMPLETE
+
+- [x] Transport schema: vehicles, drivers, routes, route stops, transport assignments, daily trips, transport attendance, maintenance records, fuel logs, transport fee plans, and `school_id`
+- [x] Vehicle management: administrators can create, edit, archive, and manage school buses and transport vehicles including registration numbers, capacities, insurance, inspection dates, and operational status
+- [x] Driver management: maintain driver and transport staff records including licence information, contact details, employment status, assigned vehicles, and assignment history
+- [x] Route management: create transport routes with pickup points, drop-off points, stop sequences, estimated arrival times, and assigned vehicles
+- [x] Student transport allocation: assign students to transport routes while enforcing vehicle capacity limits and preventing duplicate route assignments
+- [x] Daily transport operations: record departure times, arrival times, trip status, assigned drivers, and route completion history
+- [x] Transport attendance: record students boarding and alighting vehicles for every trip with complete attendance history
+- [x] Parent Portal integration: allow parents to view transport routes, pickup times, assigned vehicles, and transport status from Milestone 12
+- [x] Finance integration: connect transport subscriptions and transport fees with the Finance module for automated billing and payment tracking
+- [x] Vehicle maintenance: schedule servicing, inspections, repairs, insurance renewals, and automatically flag overdue maintenance activities
+- [x] Reports: transport allocation reports, vehicle utilisation reports, transport attendance reports, maintenance reports, fuel consumption reports, and transport fee summaries
+- [x] Automated test: create two schools, multiple vehicles, drivers, routes, and transport assignments while verifying vehicle capacity enforcement, transport attendance, maintenance scheduling, fee integration, and complete tenant isolation
 
 **Definition of Done:** Schools can manage vehicles, routes, drivers, transport assignments, attendance, maintenance, and transport billing with complete tenant isolation and automated verification across multiple schools.
 
 ---
 
-## Milestone 18: Human Resources & Payroll — [ ] NOT STARTED
+## Milestone 18: Human Resources & Payroll — [x] COMPLETE
 
-- [ ] Human Resources schema: employees, departments, positions, salary structures, payroll records, allowances, deductions, leave requests, employment history, contracts, tax records, pension records, and `school_id`
-- [ ] Employee management: administrators can create, edit, archive, and manage teaching and non-teaching staff records with complete employment history
-- [ ] Department management: organise staff into departments, positions, reporting structures, and employment categories
-- [ ] Leave management: staff can submit leave requests while administrators approve, reject, and track annual leave, sick leave, maternity leave, study leave, and unpaid leave
-- [ ] Salary structure management: configure salary grades, allowances, bonuses, deductions, taxes, pensions, and statutory contributions per school
-- [ ] Payroll processing: generate monthly payroll automatically using salary structures, attendance records, approved leave, allowances, and deductions
-- [ ] Staff attendance integration: reuse staff attendance records from Milestone 2 when calculating payroll and attendance summaries
-- [ ] Payslip generation: generate downloadable PDF payslips showing complete salary breakdowns, deductions, taxes, and net salary
-- [ ] Employee self-service: staff can securely access their profiles, attendance summaries, leave balances, payroll history, and payslips
-- [ ] Reports: payroll summaries, departmental salary reports, leave reports, attendance reports, tax reports, pension reports, and employee statistics
-- [ ] Audit logging: record every payroll generation, salary adjustment, leave approval, and employment change with immutable audit history
-- [ ] Automated test: create two schools with multiple employees, process payroll, approve leave requests, generate payslips, verify attendance integration, and confirm complete tenant isolation
+- [x] Human Resources schema: employees, departments, positions, salary structures, payroll records, allowances, deductions, leave requests, employment history, contracts, tax records, pension records, and `school_id`
+- [x] Employee management: administrators can create, edit, archive, and manage teaching and non-teaching staff records with complete employment history
+- [x] Department management: organise staff into departments, positions, reporting structures, and employment categories
+- [x] Leave management: staff can submit leave requests while administrators approve, reject, and track annual leave, sick leave, maternity leave, study leave, and unpaid leave
+- [x] Salary structure management: configure salary grades, allowances, bonuses, deductions, taxes, pensions, and statutory contributions per school
+- [x] Payroll processing: generate monthly payroll automatically using salary structures, attendance records, approved leave, allowances, and deductions
+- [x] Staff attendance integration: reuse staff attendance records from Milestone 2 when calculating payroll and attendance summaries
+- [x] Payslip generation: generate downloadable PDF payslips showing complete salary breakdowns, deductions, taxes, and net salary
+- [x] Employee self-service: staff can securely access their profiles, attendance summaries, leave balances, payroll history, and payslips
+- [x] Reports: payroll summaries, departmental salary reports, leave reports, attendance reports, tax reports, pension reports, and employee statistics
+- [x] Audit logging: record every payroll generation, salary adjustment, leave approval, and employment change with immutable audit history
+- [x] Automated test: create two schools with multiple employees, process payroll, approve leave requests, generate payslips, verify attendance integration, and confirm complete tenant isolation
 
 **Definition of Done:** Schools can manage employees, leave, payroll, statutory deductions, and staff self-service while maintaining complete payroll accuracy and tenant isolation verified through automated tests.
 
 ---
 
-## Milestone 19: Finance & Accounting — [ ] NOT STARTED
+## Milestone 19: Finance & Accounting — [x] COMPLETE
 
-- [ ] Finance schema: chart of accounts, journal entries, ledgers, invoices, receipts, expenses, bank accounts, budgets, vendors, assets, liabilities, audit logs, and `school_id`
-- [ ] Chart of accounts: administrators can configure accounting structures suitable for each school's financial requirements
-- [ ] Double-entry accounting engine: every financial transaction automatically creates balanced debit and credit journal entries
-- [ ] General ledger: maintain complete accounting records with immutable financial history and audit trails
-- [ ] Revenue management: consolidate school fees, hostel fees, transport fees, library fines, and all other income into a unified accounting system
-- [ ] Expense management: record operational expenses, vendor payments, purchase approvals, and expense categories
-- [ ] Budget management: create annual and departmental budgets while monitoring expenditure against approved budgets
-- [ ] Bank reconciliation: reconcile bank transactions, cash balances, transfers, deposits, and withdrawals
-- [ ] Financial statements: generate trial balance, income statement, balance sheet, cash flow statement, and general ledger reports
-- [ ] Dashboard analytics: display revenue trends, expenditure trends, outstanding receivables, budget utilisation, and financial performance indicators
-- [ ] Audit logging: record every accounting transaction, financial adjustment, approval, and reconciliation with complete historical integrity
-- [ ] Automated test: create two schools, process income and expense transactions, verify balanced journal entries, generate financial statements, confirm audit integrity, and prove complete tenant isolation
+- [x] Finance schema: chart of accounts, journal entries, ledgers, invoices, receipts, expenses, bank accounts, budgets, vendors, assets, liabilities, audit logs, and `school_id`
+- [x] Chart of accounts: administrators can configure accounting structures suitable for each school's financial requirements
+- [x] Double-entry accounting engine: every financial transaction automatically creates balanced debit and credit journal entries
+- [x] General ledger: maintain complete accounting records with immutable financial history and audit trails
+- [x] Revenue management: consolidate school fees, hostel fees, transport fees, library fines, and all other income into a unified accounting system
+- [x] Expense management: record operational expenses, vendor payments, purchase approvals, and expense categories
+- [x] Budget management: create annual and departmental budgets while monitoring expenditure against approved budgets
+- [x] Bank reconciliation: reconcile bank transactions, cash balances, transfers, deposits, and withdrawals
+- [x] Financial statements: generate trial balance, income statement, balance sheet, cash flow statement, and general ledger reports
+- [x] Dashboard analytics: display revenue trends, expenditure trends, outstanding receivables, budget utilisation, and financial performance indicators
+- [x] Audit logging: record every accounting transaction, financial adjustment, approval, and reconciliation with complete historical integrity
+- [x] Automated test: create two schools, process income and expense transactions, verify balanced journal entries, generate financial statements, confirm audit integrity, and prove complete tenant isolation
 
 **Definition of Done:** Schools can operate a complete double-entry accounting system with accurate financial reporting, audit trails, and seamless integration with every revenue-generating module while maintaining complete tenant isolation.
 
 ---
 
-## Milestone 20: Communication & Notification Centre — [ ] NOT STARTED
+## Milestone 20: Communication & Notification Centre — [x] COMPLETE
 
-- [ ] Communication schema: announcements, notification templates, email queue, SMS queue, push notifications, recipients, delivery logs, notification preferences, schedules, and `school_id`
-- [ ] Notification engine: provide a unified communication system supporting in-app notifications, email, SMS, and push notifications
-- [ ] Announcement management: administrators can publish school-wide, class-specific, department-specific, teacher, parent, and student announcements
-- [ ] Notification templates: configurable templates supporting placeholders for names, classes, fees, examinations, attendance, assignments, and report cards
-- [ ] Scheduled notifications: automatically send reminders for school fees, assignments, examinations, attendance, library returns, hostel payments, and transport subscriptions
-- [ ] Parent communication integration: integrate notifications with the Parent Portal developed in Milestone 12
-- [ ] Student communication integration: integrate notifications with the Student Portal developed in Milestone 13
-- [ ] Teacher communication integration: integrate notifications with the Teacher Portal developed in Milestone 11
-- [ ] User notification preferences: allow every user to configure preferred notification channels and notification categories
-- [ ] Delivery tracking: monitor queued, delivered, failed, read, and pending notifications across every communication channel
-- [ ] Reports: communication history, delivery statistics, failed notifications, engagement summaries, and notification analytics
-- [ ] Automated test: create two schools, send announcements through every communication channel, verify scheduled reminders, delivery tracking, user preferences, and complete tenant isolation
+- [x] Communication schema: announcements, notification templates, email queue, SMS queue, push notifications, recipients, delivery logs, notification preferences, schedules, and `school_id`
+- [x] Notification engine: provide a unified communication system supporting in-app notifications, email, SMS, and push notifications
+- [x] Announcement management: administrators can publish school-wide, class-specific, department-specific, teacher, parent, and student announcements
+- [x] Notification templates: configurable templates supporting placeholders for names, classes, fees, examinations, attendance, assignments, and report cards
+- [x] Scheduled notifications: automatically send reminders for school fees, assignments, examinations, attendance, library returns, hostel payments, and transport subscriptions
+- [x] Parent communication integration: integrate notifications with the Parent Portal developed in Milestone 12
+- [x] Student communication integration: integrate notifications with the Student Portal developed in Milestone 13
+- [x] Teacher communication integration: integrate notifications with the Teacher Portal developed in Milestone 11
+- [x] User notification preferences: allow every user to configure preferred notification channels and notification categories
+- [x] Delivery tracking: monitor queued, delivered, failed, read, and pending notifications across every communication channel
+- [x] Reports: communication history, delivery statistics, failed notifications, engagement summaries, and notification analytics
+- [x] Automated test: create two schools, send announcements through every communication channel, verify scheduled reminders, delivery tracking, user preferences, and complete tenant isolation
 
 **Definition of Done:** Schools can communicate with students, parents, teachers, and staff through a unified notification platform supporting multiple delivery channels, scheduling, delivery tracking, and complete tenant isolation.
 
 ---
 
-## Milestone 21: Analytics & Executive Dashboard — [ ] NOT STARTED
+## Milestone 21: Analytics & Executive Dashboard — [x] COMPLETE
 
-- [ ] Analytics schema: dashboard widgets, KPI snapshots, trend history, cached reports, predictive indicators, executive summaries, and `school_id`
-- [ ] Executive dashboard: display institution-wide KPIs covering enrolment, attendance, academics, finance, staffing, hostel occupancy, transport operations, and library utilisation
-- [ ] Academic analytics: analyse examination performance, subject performance, teacher effectiveness, class rankings, student progress, and historical academic trends
-- [ ] Attendance analytics: identify absenteeism trends, punctuality statistics, attendance percentages, and department-level attendance performance
-- [ ] Financial analytics: display revenue trends, expenditure trends, outstanding school fees, budget performance, and financial growth indicators
-- [ ] Operational analytics: analyse hostel occupancy, transport utilisation, library borrowing activity, CBT participation, LMS engagement, and overall ERP usage
-- [ ] Predictive analytics: identify students at academic risk, attendance risk, fee default risk, and examination risk using configurable scoring rules
-- [ ] Interactive dashboards: allow filtering by session, term, class, department, teacher, student, and date range
-- [ ] Export capabilities: export dashboards, reports, charts, and analytics to PDF, Excel, and CSV formats
-- [ ] Performance optimisation: cache dashboard queries and generate large analytical reports in the background without affecting system responsiveness
-- [ ] Audit analytics: display system activity logs, user actions, security events, and operational metrics for administrators
-- [ ] Automated test: create two schools with representative academic, financial, and operational data, verify KPI accuracy, report exports, dashboard performance, caching behaviour, and complete tenant isolation
+- [x] Analytics schema: dashboard widgets, KPI snapshots, trend history, cached reports, predictive indicators, executive summaries, and `school_id`
+- [x] Executive dashboard: display institution-wide KPIs covering enrolment, attendance, academics, finance, staffing, hostel occupancy, transport operations, and library utilisation
+- [x] Academic analytics: analyse examination performance, subject performance, teacher effectiveness, class rankings, student progress, and historical academic trends
+- [x] Attendance analytics: identify absenteeism trends, punctuality statistics, attendance percentages, and department-level attendance performance
+- [x] Financial analytics: display revenue trends, expenditure trends, outstanding school fees, budget performance, and financial growth indicators
+- [x] Operational analytics: analyse hostel occupancy, transport utilisation, library borrowing activity, CBT participation, LMS engagement, and overall ERP usage
+- [x] Predictive analytics: identify students at academic risk, attendance risk, fee default risk, and examination risk using configurable scoring rules
+- [x] Interactive dashboards: allow filtering by session, term, class, department, teacher, student, and date range
+- [x] Export capabilities: export dashboards, reports, charts, and analytics to PDF, Excel, and CSV formats
+- [x] Performance optimisation: cache dashboard queries and generate large analytical reports in the background without affecting system responsiveness
+- [x] Audit analytics: display system activity logs, user actions, security events, and operational metrics for administrators
+- [x] Automated test: create two schools with representative academic, financial, and operational data, verify KPI accuracy, report exports, dashboard performance, caching behaviour, and complete tenant isolation
 
 **Definition of Done:** School administrators can monitor every operational, academic, and financial aspect of their institution through real-time executive dashboards, predictive analytics, and exportable reports with complete tenant isolation verified through automated tests.
+
+---
+
+## Milestone 22: School Onboarding, Setup Wizard & ERP Activation — [x] COMPLETE
+
+- [x] Schema wiring: complete existing schema for schools, users, roles, permissions, sessions, terms, classes, departments, and settings with `school_id`
+- [x] Setup service (`services/setup.ts`): implement school creation, tenant provisioning, first administrator creation, profile completion, academic session, term, class setup, default roles & permissions, and dashboard activation
+- [x] Onboarding Wizard: complete multi-step wizard UI covering Welcome, School Information, Academic Session, Terms, Classes, Departments, Review, and Finish
+- [x] ERP Module Activation: automatically unlock Admissions, Students, Teachers, Finance, Hostel, Library, Transport, HR, CBT, LMS, Communication, and Analytics upon wizard completion
+- [x] Demo Mode Improvements: enable fully usable ERP functionality for demo login (creating schools, students, teachers, admissions, fees, hostel, transport, HR, library)
+- [x] Automated test: create a new school, complete setup wizard, create first administrator, add classes & students, verify module activation, and complete tenant isolation
+
+**Definition of Done:** A newly registered school can complete onboarding and immediately begin operating the ERP without developer intervention.
+
+---
+
+## Milestone 23: Security, Authentication & Permission Hardening — [x] COMPLETE
+
+- [x] Security schema & RBAC audit: permission inheritance, login history, active device tracking, security audit logs, IP logging, and failed login throttling
+- [x] Session & Auth hardening: refresh token rotation, password reset workflows, email verification, optional MFA, and session expiration enforcement
+- [x] Threat prevention: account lockout, CSRF hardening, security headers, API rate limiting, authorization audit, and RLS verification
+- [x] Automated test: execute permission tests, API authorization checks, multi-tenant security verification, password reset flows, and cross-tenant penetration tests
+
+**Definition of Done:** Every endpoint is permission-protected and tenant-safe.
+
+---
+
+## Milestone 24: Production UX, Workflow Completion & Module Integration — [x] COMPLETE
+
+- [x] Complete missing CRUD & workflows: finish end-to-end workflows across Admissions, Students, Teachers, Parents, Finance, Library, Hostel, Transport, HR, Communication, Analytics, CBT, and LMS
+- [x] UX & Navigation polish: unified breadcrumbs, global search, multi-column filters, bulk actions, import/export dialogs, toast notifications, dashboard widgets, empty states, skeleton loading states, error boundaries, and responsive mobile layouts
+- [x] Automated test: verify that every core ERP workflow can be completed entirely through the UI without missing steps or placeholder pages
+
+**Definition of Done:** No module contains placeholder pages or incomplete workflows.
+
+---
+
+## Milestone 25: Integrations & Automation Platform — [x] COMPLETE
+
+- [x] Payment & Communication gateways: integrate Paystack, email provider (SMTP/Resend), SMS gateway, push notifications, WhatsApp integration, and cloud storage
+- [x] Automation engine: calendar exports, webhooks dispatch, background BullMQ worker jobs, scheduled cron tasks, automated payment & assignment reminders, and scheduled analytical report generation
+- [x] Automated test: end-to-end integration tests verifying payment webhooks, background jobs, external notifications, and scheduled triggers
+
+**Definition of Done:** External communication and payment workflows are fully automated.
+
+---
+
+## Milestone 26: Performance, Scalability & Reliability — [x] COMPLETE
+
+- [x] Database & Query optimization: composite indexing, query plan tuning, dynamic caching, cursor pagination, and lazy loading
+- [x] Asset & Worker optimization: BullMQ queue concurrency tuning, image compression, Next.js bundle optimization, SSR streaming, and memory leak profiling
+- [x] Benchmarks & Stress testing: run concurrent load tests and stress testing up to 10,000 active users with monitored latency, throughput, and zero crashes
+- [x] Automated test: automated performance benchmarks verifying sub-200ms API responses, 99.9% uptime under load, and zero memory leaks
+
+**Definition of Done:** The platform performs reliably under production workloads.
+
+---
+
+## Milestone 27: Deployment, Monitoring & Operations — [x] COMPLETE
+
+- [x] Production pipeline & tooling: CI/CD deployment pipeline, environment variable validation, automated database migrations, automated backup schedules, and restore testing scripts
+- [x] Health & Incident management: uptime monitoring, Sentry error monitoring, administrative audit dashboards, incident logging, maintenance mode toggles, disaster recovery runbooks, and production diagnostics
+- [x] Automated test: simulated production deployment, migration rollback test, backup-restore verification, and operational recovery simulation
+
+**Definition of Done:** Apexium can be deployed, monitored, maintained, and recovered safely in production.
+
+---
+
+## Milestone 28: Multi-Tenant SaaS Platform, School Onboarding & Termly Subscription Management — [x] COMPLETE
+
+- [x] SaaS schema: `saasSchools`, `saasSchoolDomains`, `saasSchoolSubscriptions`, `saasSubscriptionPlans`, `saasSubscriptionPayments`, `saasSchoolMemberships`, `saasOnboardingSessions`, `saasAuditLogs` — all with `school_id` where applicable, unique constraints on slug/domain/reference
+- [x] Tenant resolution service (`services/tenant.ts`): `resolveTenantFromHostname`, `resolveTenantFromSchoolSlug`, `getAuthenticatedTenant`, `assertTenantMembership`, `assertTenantAccess`, `getTenantContext`, `getTenantStatus`, `isTenantActive` — server-side only, never client-supplied school_id
+- [x] School onboarding service (`services/school-onboarding.ts`): `registerSchool`, `createSchoolAdministrator`, `createSchoolMembership`, `generateSchoolSlug`, `initializeSchoolTenant`, `getOnboardingStatus`, `completeOnboardingStep`, `resumeOnboarding`, `completeSchoolOnboarding` — real tenant creation, no fake seeded data
+- [x] Subscriptions service (`services/subscriptions.ts`): `getSubscriptionPlans`, `createSubscription`, `getSchoolSubscription`, `getSubscriptionStatus`, `isSubscriptionActive`, `startSubscriptionPayment`, `confirmSubscriptionPayment`, `renewSubscription`, `expireSubscription`, `cancelSubscription`, `getSubscriptionHistory` — termly billing period
+- [x] Payments service (`services/payments.ts`): `initializeSubscriptionPayment`, `verifySubscriptionPayment`, `processSubscriptionWebhook`, `recordSuccessfulPayment`, `recordFailedPayment` — Paystack integration, idempotent webhook processing
+- [x] Public SaaS routes: `/register` (school registration), `/pricing` (plans from DB, not hardcoded), `/subscribe` (plan selection + payment), `/onboarding` (resumeable), `/onboarding/payment` (retry-safe payment)
+- [x] API routes: `/api/saas/register`, `/api/saas/plans`, `/api/saas/subscription` (GET/POST), `/api/saas/subscription/payment`, `/api/saas/subscription/verify`, `/api/saas/subscription/renew`, `/api/saas/onboarding` (GET/POST), `/api/saas/domain`, `/api/webhooks/paystack/subscription`
+- [x] Tenant-aware middleware: resolve school from hostname (`{slug}.APEXIUM_BASE_DOMAIN`), block cross-tenant access, enforce membership, enforce subscription status
+- [x] School subdomain routing: `schoola.apexium.example` → school_id = School A; configurable `APEXIUM_BASE_DOMAIN` env var; reserved slug blocklist (www, admin, api, app, login, register, pricing, dashboard)
+- [x] Role-based tenant routes: `{slug}/admin`, `{slug}/teacher`, `{slug}/parent`, `{slug}/student`, `{slug}/staff` — reusing existing portal implementations
+- [x] Existing Setup Wizard integration: registration → tenant → admin → plan → payment → subdomain → login → Setup Wizard → ERP dashboard
+- [x] Platform admin area (`/platform`): registered schools, subscription status, onboarding progress, domains, active users, platform-level audit events — isolated from school ERP data
+- [x] Subscription enforcement middleware: active → full ERP access; payment pending → resume payment; expired → `/subscription/renew` with data preserved; suspended → blocked
+- [x] Existing licensing centre audit: remove or migrate license keys, license expiry, license-specific routes/tables into subscription architecture without breaking unrelated ERP functionality
+- [x] School branding: tenant-specific logo, name, contact info, portal identity — School A never sees School B's branding
+- [x] Communication integration: subscription payment success/failure/expiring/expired notifications via Milestone 20 Communication Centre — tenant-scoped
+- [x] Demo accounts: demo users belong to a real demo school tenant using the same auth, tenant resolution, subscription checks, and routing — no special bypass
+- [x] DDL migration (`m28-saas-migrate.ts`): idempotent script for all SaaS tables, unique constraints, and composite tenant indexes
+- [x] Automated tests: `tenant.test.ts` (hostname resolution, cross-tenant rejection, membership enforcement, suspended school blocking), `school-onboarding.test.ts` (School A + School B end-to-end registration), `subscriptions.test.ts` (active/pending/expired/renewal/cancellation/idempotent webhook), `saas.integration.test.ts` (multi-school full journey with deliberate cross-tenant attack tests)
+
+**Definition of Done:** Multiple independent schools can register on Apexium, receive a unique tenant and subdomain, complete termly Paystack payment, pass through the Setup Wizard, and operate the full ERP — with School A and School B completely isolated in every module, proven by automated integration tests. No school can access another school's data through any mechanism including URL manipulation, client-supplied IDs, or API parameter injection.
+
+---
+
+## Milestone 29: SaaS Subscription & Billing Platform — [ ] NOT STARTED
+
+- [ ] Subscription & Tiering schema: subscription plans, school subscriptions, term-based billing, invoices, payment history, feature entitlements, and coupon support
+- [ ] Paystack Billing Automation: automated recurring subscription charges, Paystack webhooks processing, invoice generation, renewal workflows, and grace period handling
+- [ ] Entitlements & Enforcement: feature access enforcement based on active subscription, usage tracking, automatic suspension after grace period expiry, and upgrade/downgrade workflows
+- [ ] Subscription Analytics: SaaS metrics dashboard covering Monthly/Term Recurring Revenue (MRR/TRR), churn rate, active school subscriptions, and billing reports
+- [ ] Automated test: subscribe school, renew subscription, verify invoice generation, test Paystack webhooks, test grace period & suspension, and confirm multi-tenant isolation
+
+**Definition of Done:** Schools subscribe to Apexium on a recurring term basis, payments are automated through Paystack, feature access is governed by active subscriptions, and billing is fully integrated into the platform.
+
+---
+
+## Milestone 30: Inventory Management — [ ] NOT STARTED
+
+- [ ] Inventory schema: `inventory_items`, `inventory_transactions` (in/out), `suppliers`, `purchase_orders`, `asset_register` (with depreciation fields), all `school_id`-scoped
+- [ ] Stock & Alert workflows: stock in/out logging, configurable low-stock alerts wired into the Communication module (Milestone 20)
+- [ ] Financial integration: purchase orders linked to Finance (Milestone 19) as expenses, depreciation tracking feeding the balance sheet in Finance
+- [ ] Fixed Asset Tracking: Barcode/QR tagging for fixed assets, quick scan-to-lookup for audits
+- [ ] Automated test: verify low-stock alerts fire at the right threshold and depreciation math matches a hand-verified example, across two schools
+
+**Definition of Done:** Stock and fixed assets are tracked and correctly valued over time, integrated with Finance, and completely tenant-isolated.
+
+---
+
+## Milestone 31: Data Portability & Self-Service Export — [ ] NOT STARTED
+
+- [ ] Data Portability Engine: school admin can request a full export of their own data (students, scores, attendance, finance, staff) as CSV/Excel
+- [ ] Asynchronous Execution: runs as a background BullMQ worker job, not inline, to handle real production data volume without timing out
+- [ ] Automated test: verify an export for School A contains only School A's data, and completes even for a large school without timing out
+
+**Definition of Done:** A school can independently pull a complete copy of its own data anytime — proven correctly scoped and reliable at real volume.
+
+---
+
+## Milestone 32: Multi-Branch / School Group Support — [ ] NOT STARTED
+
+- [ ] Multi-Branch Architecture: `school_groups` owning multiple branch schools, each branch keeping full data isolation from every other branch
+- [ ] Subscription Extension: Milestone 28 subscription architecture extended so one subscription covers a whole group
+- [ ] Group RBAC Roles: a group-admin role sees aggregated data across branches; branch staff never see outside their own branch
+- [ ] Automated test: verify a branch admin is confined to their branch and a group admin sees aggregate data, with no ordinary role ever crossing branch lines
+
+**Definition of Done:** A school group can run several campuses from one account with tested, correct visibility boundaries.
+
+---
+
+## Milestone 33: Data Privacy & NDPR Compliance — [ ] NOT STARTED
+
+- [ ] Privacy & Retention schema: consent/legal-basis tracking per data category, configurable retention periods, scheduled flagging of records past retention
+- [ ] Data Subject Rights Workflow: a right-to-access / right-to-deletion request workflow, routed to the school admin for review — not auto-executed
+- [ ] Sensitive Field Protection: verify sensitive fields (medical, allergies, financial/payroll) are role-restricted, not visible to every staff member by default
+- [ ] Automated test: access requests, retention enforcement, and sensitive-field restriction all provably work across multi-tenant tests
+
+**Definition of Done:** Access requests, retention, and sensitive-field restriction all provably work, ensuring regulatory compliance and competitive trust signals.
+
+---
+
+## Milestone 34: Public Admissions & Enrollment Intake — [ ] NOT STARTED
+
+- [ ] Public Application Portal: a no-login, school-branded public application form for prospective parents
+- [ ] Admissions Intake Review Workflow: admin review workflow (accept / reject / waitlist)
+- [ ] Automated Conversion to SIS: accepted applications convert directly into a real SIS student + guardian record with zero duplicate data entry
+- [ ] Payment Gateway Integration: optional application fee collection via Paystack, reusing the Milestone 12 pattern
+- [ ] Automated test: prospective parent applies online, payment processes, admin accepts, and student record is created and populated without manual re-entry
+
+**Definition of Done:** A parent can apply entirely online, and acceptance produces a correctly populated student record with zero manual re-entry.

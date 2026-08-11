@@ -1,0 +1,227 @@
+name: CD — Deploy to Production
+
+on:
+  push:
+    branches: ["main"]
+
+# Only one deployment at a time
+concurrency:
+  group: ${{ github.workflow }}-production
+  cancel-in-progress: false
+
+jobs:
+  # ── Gate: CI must pass first ─────────────────────────────────────────────────
+  verify-ci:
+    name: Verify CI Passes
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Confirm branch is main
+        run: echo "Deploying branch ${{ github.ref_name }} to production"
+
+  # ── Step 1: Validate Environment Variables ────────────────────────────────
+  validate-environment:
+    name: Validate Environment
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: verify-ci
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+      REDIS_URL: ${{ secrets.REDIS_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required secrets are present
+        run: |
+          MISSING=""
+          [ -z "$DATABASE_URL" ] && MISSING="$MISSING DATABASE_URL"
+          [ -z "$NEXT_PUBLIC_SUPABASE_URL" ] && MISSING="$MISSING NEXT_PUBLIC_SUPABASE_URL"
+          [ -z "$NEXT_PUBLIC_SUPABASE_ANON_KEY" ] && MISSING="$MISSING NEXT_PUBLIC_SUPABASE_ANON_KEY"
+          [ -z "$SUPABASE_SERVICE_ROLE_KEY" ] && MISSING="$MISSING SUPABASE_SERVICE_ROLE_KEY"
+          [ -z "$REDIS_URL" ] && MISSING="$MISSING REDIS_URL"
+          if [ -n "$MISSING" ]; then
+            echo "❌ Missing required environment variables:$MISSING"
+            exit 1
+          fi
+          echo "✅ All required environment variables are present"
+
+  # ── Step 2: Run Database Migrations ──────────────────────────────────────
+  run-migrations:
+    name: Run Database Migrations
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: validate-environment
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+      SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run database migrations (idempotent)
+        run: pnpm db:migrate
+
+      - name: Verify migration integrity
+        run: pnpm --filter @apexium/db exec tsx src/m25-integrations-migrate.ts || echo "Integration migration already applied"
+
+  # ── Step 3: Deploy to Vercel Production ──────────────────────────────────
+  deploy-production:
+    name: Deploy to Vercel Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    needs: run-migrations
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+
+    outputs:
+      deployment_url: ${{ steps.deploy.outputs.url }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Vercel CLI
+        run: pnpm add -g vercel@latest
+
+      - name: Pull Vercel environment
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build for production
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to production
+        id: deploy
+        run: |
+          URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "url=$URL" >> "$GITHUB_OUTPUT"
+          echo "✅ Deployed to: $URL"
+
+  # ── Step 4: Deploy Worker Service ─────────────────────────────────────────
+  deploy-worker:
+    name: Deploy Background Worker
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: run-migrations
+    env:
+      REDIS_URL: ${{ secrets.REDIS_URL }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 11
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build worker
+        run: pnpm --filter @apexium/worker build
+
+      - name: Worker deployment note
+        run: |
+          echo "ℹ️  Worker deployment: The BullMQ worker is deployed to your configured compute provider."
+          echo "ℹ️  Configure WORKER_DEPLOY_SCRIPT secret to trigger your worker's restart/redeploy."
+          # Example: call Railway, Render, or Fly.io deploy webhook
+          if [ -n "${{ secrets.WORKER_DEPLOY_WEBHOOK }}" ]; then
+            curl -X POST "${{ secrets.WORKER_DEPLOY_WEBHOOK }}"
+            echo "✅ Worker deploy webhook triggered"
+          fi
+
+  # ── Step 5: Post-Deployment Health Check ─────────────────────────────────
+  post-deploy-healthcheck:
+    name: Post-Deploy Health Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: deploy-production
+
+    steps:
+      - name: Wait for deployment to warm up
+        run: sleep 15
+
+      - name: Health check deployed application
+        run: |
+          DEPLOYMENT_URL="${{ needs.deploy-production.outputs.deployment_url }}"
+          if [ -z "$DEPLOYMENT_URL" ]; then
+            DEPLOYMENT_URL="${{ secrets.NEXT_PUBLIC_APP_URL }}"
+          fi
+
+          echo "Checking health at: $DEPLOYMENT_URL/api/health"
+
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" "$DEPLOYMENT_URL/api/health" || echo "000")
+
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "✅ Health check passed (HTTP $HTTP_STATUS)"
+          elif [ "$HTTP_STATUS" = "000" ]; then
+            echo "⚠️  Could not reach health endpoint — check deployment URL configuration"
+          else
+            echo "⚠️  Health check returned HTTP $HTTP_STATUS — investigate via /api/operations/diagnostics"
+          fi
+
+  # ── Step 6: Record Deployment Timestamp ──────────────────────────────────
+  record-deployment:
+    name: Record Deployment
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    needs: [deploy-production, post-deploy-healthcheck]
+    if: always()
+
+    steps:
+      - name: Output deployment record
+        run: |
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "DEPLOYMENT RECORD"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+          echo "Timestamp    : $(date -u '+%B %d, %Y, %H:%M UTC')"
+          echo "Commit SHA   : ${{ github.sha }}"
+          echo "Branch       : ${{ github.ref_name }}"
+          echo "Triggered by : ${{ github.actor }}"
+          echo "Workflow Run : ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+          echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"

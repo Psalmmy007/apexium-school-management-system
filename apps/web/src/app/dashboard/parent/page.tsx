@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { NotificationBell } from "@/components/NotificationBell";
 
 interface Child {
   id: string;
@@ -90,30 +91,41 @@ export default function ParentDashboardPage() {
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 pb-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Parent Portal</h1>
-            <p className="text-sm text-gray-500">Monitor academic performance, attendance, and fee status</p>
+          <div className="flex items-center justify-between w-full md:w-auto">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">Parent Portal</h1>
+              <p className="text-sm text-gray-500">Monitor academic performance, attendance, and fee status</p>
+            </div>
+            <div className="md:hidden">
+              <NotificationBell />
+            </div>
           </div>
 
-          {/* Multi-Child Switcher */}
-          {children.length > 1 && (
-            <div className="flex items-center space-x-2 bg-gray-100 p-1.5 rounded-lg border border-gray-200">
-              <span className="text-xs font-semibold text-gray-600 px-2">Select Child:</span>
-              {children.map((child) => (
-                <button
-                  key={child.id}
-                  onClick={() => setSelectedChildId(child.id)}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                    selectedChildId === child.id
-                      ? "bg-white text-indigo-600 shadow-sm"
-                      : "text-gray-600 hover:text-gray-900"
-                  }`}
-                >
-                  {child.firstName} {child.lastName}
-                </button>
-              ))}
+          <div className="flex items-center gap-3">
+            <div className="hidden md:block">
+              <NotificationBell />
             </div>
-          )}
+
+            {/* Multi-Child Switcher */}
+            {children.length > 1 && (
+              <div className="flex items-center space-x-2 bg-gray-100 p-1.5 rounded-lg border border-gray-200">
+                <span className="text-xs font-semibold text-gray-600 px-2">Select Child:</span>
+                {children.map((child) => (
+                  <button
+                    key={child.id}
+                    onClick={() => setSelectedChildId(child.id)}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+                      selectedChildId === child.id
+                        ? "bg-white text-indigo-600 shadow-sm"
+                        : "text-gray-600 hover:text-gray-900"
+                    }`}
+                  >
+                    {child.firstName}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
         {loading ? (

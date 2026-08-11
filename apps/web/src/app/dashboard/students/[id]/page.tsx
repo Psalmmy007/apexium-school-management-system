@@ -69,6 +69,9 @@ const EVENT_ICONS: Record<string, string> = {
   promotion: "⬆️",
   guardian_update: "👨‍👩‍👧",
   document_upload: "📄",
+  document_deletion: "🗑️",
+  document_restoration: "♻️",
+  student_merge: "🔀",
   hostel_allocation: "🏠",
   default: "📋",
 };
@@ -80,6 +83,12 @@ interface StudentDocumentItem {
   fileUrl: string;
   fileSize?: number;
   mimeType?: string;
+  fileHash?: string;
+  isDeleted?: boolean;
+  deletedAt?: string;
+  deletedBy?: string;
+  deletedByUserName?: string;
+  deleteReason?: string;
   createdAt: string;
 }
 
@@ -90,6 +99,7 @@ export default function StudentProfilePage() {
   const [student, setStudent] = useState<StudentDetail | null>(null);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [documents, setDocuments] = useState<StudentDocumentItem[]>([]);
+  const [showDeletedDocs, setShowDeletedDocs] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<"biodata" | "academic" | "guardians" | "medical" | "documents" | "timeline" | "status">("biodata");
 
@@ -101,6 +111,12 @@ export default function StudentProfilePage() {
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [docError, setDocError] = useState<string | null>(null);
 
+  // Document soft delete & restore modal state
+  const [showDeleteDocModal, setShowDeleteDocModal] = useState(false);
+  const [targetDoc, setTargetDoc] = useState<StudentDocumentItem | null>(null);
+  const [deleteReasonInput, setDeleteReasonInput] = useState("");
+  const [deletingDoc, setDeletingDoc] = useState(false);
+
   // Status change modal state
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [pendingStatus, setPendingStatus] = useState("");
@@ -108,27 +124,36 @@ export default function StudentProfilePage() {
   const [savingStatus, setSavingStatus] = useState(false);
   const [statusError, setStatusError] = useState<string | null>(null);
 
+  const loadDocuments = useCallback(async (includeDeleted = false) => {
+    try {
+      const res = await fetch(`/api/students/${studentId}/documents${includeDeleted ? "?includeDeleted=true" : ""}`);
+      const json = await res.json();
+      if (json.success) setDocuments(json.data || []);
+    } catch (err) {
+      console.error("Failed loading documents", err);
+    }
+  }, [studentId]);
+
   const loadStudent = useCallback(async () => {
     try {
       setLoading(true);
-      const [studentRes, timelineRes, docsRes] = await Promise.all([
+      const [studentRes, timelineRes] = await Promise.all([
         fetch(`/api/students/${studentId}`),
         fetch(`/api/students/${studentId}/status`),
-        fetch(`/api/students/${studentId}/documents`),
       ]);
       const studentJson = await studentRes.json();
       const timelineJson = await timelineRes.json();
-      const docsJson = await docsRes.json();
 
       if (studentJson.success) setStudent(studentJson.data);
       if (timelineJson.success) setTimeline(timelineJson.data.timeline || []);
-      if (docsJson.success) setDocuments(docsJson.data || []);
+      await loadDocuments(showDeletedDocs);
     } catch (err) {
       console.error("Failed loading student profile", err);
     } finally {
       setLoading(false);
     }
-  }, [studentId]);
+  }, [studentId, loadDocuments, showDeletedDocs]);
+
 
 
   useEffect(() => {
@@ -223,6 +248,51 @@ export default function StudentProfilePage() {
       setDocError(err.message || "An error occurred.");
     } finally {
       setUploadingDoc(false);
+    }
+  };
+
+  const handleSoftDeleteDocument = async () => {
+    if (!targetDoc || !deleteReasonInput.trim()) return;
+    setDeletingDoc(true);
+    try {
+      const res = await fetch(`/api/students/${studentId}/documents/${targetDoc.id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ deleteReason: deleteReasonInput.trim() }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setShowDeleteDocModal(false);
+        setTargetDoc(null);
+        setDeleteReasonInput("");
+        await loadDocuments(showDeletedDocs);
+        // Refresh timeline
+        const timelineRes = await fetch(`/api/students/${studentId}/status`);
+        const timelineJson = await timelineRes.json();
+        if (timelineJson.success) setTimeline(timelineJson.data.timeline || []);
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setDeletingDoc(false);
+    }
+  };
+
+  const handleRestoreDocument = async (docId: string) => {
+    try {
+      const res = await fetch(`/api/students/${studentId}/documents/${docId}/restore`, {
+        method: "POST",
+      });
+      const json = await res.json();
+      if (json.success) {
+        await loadDocuments(showDeletedDocs);
+        // Refresh timeline
+        const timelineRes = await fetch(`/api/students/${studentId}/status`);
+        const timelineJson = await timelineRes.json();
+        if (timelineJson.success) setTimeline(timelineJson.data.timeline || []);
+      }
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -467,31 +537,45 @@ export default function StudentProfilePage() {
         {/* DOCUMENTS */}
         {activeTab === "documents" && (
           <div className="space-y-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h3 className="text-sm font-bold text-slate-900">Student Document Management</h3>
                 <p className="text-xs text-slate-500 mt-0.5">
                   Admission documents, birth certificates, transfer letters, academic transcripts, and medical reports.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setDocError(null);
-                  setDocTitle("");
-                  setDocFile(null);
-                  setShowDocModal(true);
-                }}
-                className="btn-primary btn-sm text-xs"
-              >
-                + Upload Document
-              </button>
+              <div className="flex items-center gap-3">
+                <label className="flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer font-medium">
+                  <input
+                    type="checkbox"
+                    checked={showDeletedDocs}
+                    onChange={(e) => {
+                      setShowDeletedDocs(e.target.checked);
+                      loadDocuments(e.target.checked);
+                    }}
+                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500"
+                  />
+                  Show Deleted Docs
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDocError(null);
+                    setDocTitle("");
+                    setDocFile(null);
+                    setShowDocModal(true);
+                  }}
+                  className="btn-primary btn-sm text-xs"
+                >
+                  + Upload Document
+                </button>
+              </div>
             </div>
 
             {documents.length === 0 ? (
               <div className="py-8 text-center bg-slate-50 rounded-xl border border-slate-100">
                 <div className="w-12 h-12 rounded-full bg-indigo-50 flex items-center justify-center mx-auto mb-2 text-2xl">📄</div>
-                <p className="text-sm font-semibold text-slate-700">No documents attached</p>
+                <p className="text-sm font-semibold text-slate-700">No documents found</p>
                 <p className="text-xs text-slate-400 mt-1 max-w-sm mx-auto">
                   Upload birth certificates, previous academic records, transfer letters, or medical records for this student.
                 </p>
@@ -499,25 +583,71 @@ export default function StudentProfilePage() {
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {documents.map((doc) => (
-                  <div key={doc.id} className="p-4 bg-slate-50 rounded-xl border border-slate-200 flex items-start justify-between gap-3">
+                  <div
+                    key={doc.id}
+                    className={`p-4 rounded-xl border flex items-start justify-between gap-3 transition ${
+                      doc.isDeleted
+                        ? "bg-red-50/60 border-red-200 text-slate-700"
+                        : "bg-slate-50 border-slate-200"
+                    }`}
+                  >
                     <div className="space-y-1 flex-1 min-w-0">
-                      <span className="inline-flex px-2 py-0.5 rounded-full bg-indigo-50 text-indigo-700 border border-indigo-100 text-[10px] font-bold uppercase">
-                        {doc.documentType.replace(/_/g, " ")}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <span className={`inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                          doc.isDeleted ? "bg-red-100 text-red-800" : "bg-indigo-50 text-indigo-700 border border-indigo-100"
+                        }`}>
+                          {doc.documentType.replace(/_/g, " ")}
+                        </span>
+                        {doc.isDeleted && (
+                          <span className="text-[10px] font-bold text-red-700">Soft-Deleted</span>
+                        )}
+                      </div>
                       <h4 className="font-bold text-sm text-slate-900 truncate">{doc.title}</h4>
-                      <p className="text-[11px] text-slate-400">
+                      <p className="text-[11px] text-slate-500">
                         Uploaded: {new Date(doc.createdAt).toLocaleDateString("en-NG")}
                         {doc.fileSize ? ` • ${(doc.fileSize / 1024).toFixed(0)} KB` : ""}
                       </p>
+                      {doc.isDeleted && (
+                        <div className="mt-1 pt-1.5 border-t border-red-200/60 text-[11px] text-red-900 space-y-0.5">
+                          <p>Deleted by: <strong>{doc.deletedByUserName || "System Administrator"}</strong> on {doc.deletedAt ? new Date(doc.deletedAt).toLocaleDateString("en-NG") : "N/A"}</p>
+                          <p className="italic">Reason: &quot;{doc.deleteReason || "No reason specified"}&quot;</p>
+                        </div>
+                      )}
                     </div>
-                    <a
-                      href={doc.fileUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="btn-secondary btn-xs text-xs whitespace-nowrap"
-                    >
-                      View / Download
-                    </a>
+
+                    <div className="flex flex-col gap-1 text-right flex-shrink-0">
+                      {!doc.isDeleted ? (
+                        <>
+                          <a
+                            href={doc.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn-secondary btn-xs text-xs whitespace-nowrap"
+                          >
+                            View / Download
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setTargetDoc(doc);
+                              setDeleteReasonInput("");
+                              setShowDeleteDocModal(true);
+                            }}
+                            className="text-[11px] text-red-600 hover:text-red-800 font-medium transition text-right mt-1"
+                          >
+                            🗑️ Delete
+                          </button>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => handleRestoreDocument(doc.id)}
+                          className="btn-primary btn-xs text-xs whitespace-nowrap bg-emerald-600 hover:bg-emerald-700"
+                        >
+                          ♻️ Restore
+                        </button>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
@@ -688,7 +818,7 @@ export default function StudentProfilePage() {
             <div>
               <h3 className="text-base font-bold text-slate-900">Upload Student Document</h3>
               <p className="text-xs text-slate-500 mt-1">
-                Attach an official document (PDF, Word, JPEG, PNG, max 10MB) to <strong>{student.firstName} {student.lastName}</strong>'s file.
+                Attach an official document (PDF, Word, JPEG, PNG, max 10MB) to <strong>{student.firstName} {student.lastName}</strong>&apos;s file.
               </p>
             </div>
 
@@ -756,7 +886,54 @@ export default function StudentProfilePage() {
           </div>
         </div>
       )}
+
+      {/* Soft-Delete Document Confirmation Modal */}
+      {showDeleteDocModal && targetDoc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-5 animate-slide-up">
+            <div>
+              <h3 className="text-base font-bold text-slate-900">Soft-Delete Document</h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Soft-deleting <strong>&quot;{targetDoc.title}&quot;</strong>. The document file will be preserved and can be restored at any time.
+              </p>
+            </div>
+
+            <div className="space-y-4 text-xs">
+              <div>
+                <label className="label">Delete Reason *</label>
+                <textarea
+                  rows={3}
+                  placeholder="Provide a mandatory reason for soft-deleting this document (required for audit log)…"
+                  value={deleteReasonInput}
+                  onChange={(e) => setDeleteReasonInput(e.target.value)}
+                  className="input"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setShowDeleteDocModal(false)}
+                className="btn-ghost btn-sm"
+                disabled={deletingDoc}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSoftDeleteDocument}
+                disabled={deletingDoc || !deleteReasonInput.trim()}
+                className="btn-primary btn-sm bg-red-600 hover:bg-red-700"
+              >
+                {deletingDoc ? "Deleting…" : "Confirm Soft-Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
+
 

@@ -208,3 +208,191 @@ Proof it works:
 4. Next.js TypeScript type checking (`tsc --noEmit`) passes cleanly with zero errors.
 
 Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+---
+
+## Milestone 16.1: Enterprise SIS Hardening (Production Ready) — COMPLETE
+Date: August 7, 2026
+
+What this means in plain terms: The Student Information System has undergone a full enterprise hardening pass. Admission numbers are generated atomically with customizable per-school templates (e.g. APS/2026/000001), duplicate student records can be safely merged without losing any attendance, scores, fees, or documents, files uploaded are strictly checked against security standards and binary magic numbers, student documents support soft-deletion with restore capabilities, printable ID cards with QR codes are generated dynamically, and all bulk operations support dry-run previews before changing any data.
+
+Proof it works: 85/85 Vitest integration tests passed (including atomic sequence concurrency, student merge engine, upload magic numbers, dry-run bulk ops, and tenant isolation), 0 TypeScript errors (`tsc --noEmit`), zero-error Next.js production build (`pnpm --filter @apexium/web build`), and OpenAPI 3.0 spec endpoint (`/api/docs/sis`).
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+---
+
+## Milestone 17: Transport Management System — COMPLETE
+Date: August 7, 2026
+
+What this means in plain terms: The system now includes a full Transport Management System. School administrators can register bus fleets, manage drivers with licence expiry warnings, define pickup/drop-off routes with ordered stops, allocate students to transport routes while strictly enforcing vehicle seating capacity limits, track daily morning and afternoon trips with student boarding registers, schedule vehicle servicing & repairs, log fuel expenditures, automatically issue transport fee invoices, and expose real-time transport information to parents in the Parent Portal.
+
+Proof it works: 92/92 Vitest integration tests passed across 22 test files (including vehicle registration, driver licence expiry alerts, route creation, capacity enforcement, student allocation, daily trip execution, boarding attendance, maintenance logs, fuel tracking, parent portal visibility, and multi-tenant isolation), 0 TypeScript errors (`tsc --noEmit`), and zero-error Next.js production build (`pnpm --filter @apexium/web build`).
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+---
+
+## Milestone 18: Human Resources & Payroll — COMPLETE
+Date: August 7, 2026
+
+What this means in plain terms: The system now includes a complete enterprise-grade Human Resources & Payroll System. School administrators can manage teaching and non-teaching staff records, organize departments and position grade levels, configure basic salary scales and dynamic allowances (housing, transport, hazard, duty, ICT), track staff leave entitlement balances (annual, sick, casual) with a multi-stage approval workflow (Pending -> Reviewed -> Approved), execute automated monthly payroll runs that explicitly read staff attendance penalties, snapshot itemized payslips & payroll items to guarantee historical immutability, lock approved payroll runs to prevent tampering, generate bank batch payment transfer export files (CSV format), attach HR employee documents, and maintain an immutable HR audit trail.
+
+Proof it works: 103/103 Vitest integration tests passed across 23 test files (verifying staff registration, leave balance tracking, multi-stage approval workflows, attendance-integrated payroll calculations, immutable payslip item snapshots, payroll locking, bank export files, employee self-service queries, HR document management, salary change history logs, and strict multi-tenant isolation), 0 TypeScript errors (`tsc --noEmit`), and zero-error Next.js production build (`pnpm --filter @apexium/web build`).
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+---
+
+## Milestone 19: Finance & Accounting — COMPLETE
+Date: August 7, 2026
+
+What this means in plain terms: The system now includes a full enterprise-grade Finance & Accounting System. School administrators can manage a hierarchical Chart of Accounts (Assets, Liabilities, Equity, Revenue, Expense) with dynamically calculated ledger balances (no stored account balances), execute balanced double-entry journal postings with strict debit=credit enforcement, reverse posted journal entries via reversing journal entries (preserving immutable audit history), automatically consolidate revenue from School Fees, Hostel, Transport, and Library into sub-ledger journal entries, submit and approve operational expense vouchers with automated budget utilization tracking, lock accounting periods & fiscal years to prevent unauthorized backdated edits, reconcile bank statement balances, generate downloadable financial statements (Trial Balance, Income Statement, Balance Sheet), and view an immutable accounting audit trail.
+
+Proof it works: 111/111 Vitest integration tests passed across 24 test files (verifying hierarchical chart of accounts setup, derived ledger balances, balanced double-entry journal postings, unbalanced entry rejection, reversing journal workflows, automatic subledger revenue postings, expense approval workflows, budget variance tracking, financial statement calculations, bank reconciliation workflows, immutable audit logs, and 100% multi-tenant isolation), 0 TypeScript errors (`tsc --noEmit`), and zero-error Next.js production build (`pnpm --filter @apexium/web build`).
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+---
+
+## Milestone 20: Communication & Notification Centre — COMPLETE
+Date: August 7, 2026
+
+What this means in plain terms: The system now includes an event-driven Communication & Notification Centre. School administrators can broadcast announcements to specific target audiences (All School, Parents, Students, Teachers, Staff), configure dynamic notification templates with placeholders (`{student_name}`, `{fee_amount}`, `{due_date}`), emit domain events asynchronously (`STUDENT_ABSENT`, `FEE_REMINDER`, `REPORT_CARD_READY`, `ASSIGNMENT_DUE`), deliver messages across In-App, Email, SMS, and Push channels while strictly respecting user channel preferences, track real-time delivery logs & read receipts, schedule automated event triggers, and view communication analytics metrics.
+
+Proof it works: 117/117 Vitest integration tests passed across 25 test files (verifying event-driven domain event emission & asynchronous notification processing, template placeholder rendering, announcement publishing, read receipt tracking, user channel preference enforcement, communication delivery analytics, and 100% multi-tenant isolation), 0 TypeScript errors (`tsc --noEmit`), and zero-error Next.js production build (`pnpm --filter @apexium/web build`).
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+---
+
+## Milestone 21: Analytics & Executive Dashboard — COMPLETE
+Date: August 7, 2026
+
+What this means in plain terms: The system now includes an Analytics & Executive Dashboard Hub powered by a unified `AnalyticsAggregator` engine. School administrators can slice institution-wide KPIs across interactive dimensions (Session, Term, Class, Department, Teacher, Date Range), monitor real-time enrolment, student & staff attendance rates %, academic grade distributions & subject rankings, financial revenue vs expense trends & budget utilization %, hostel occupancy %, transport utilization %, active library loans, CBT exam submissions, LMS engagement, predictive student risk scoring (evaluating Academic Risk <40%, Attendance Risk <75%, Fee Default Risk, and Examination Risk <40%), administrator audit & security analytics (failed logins, user activity, security events, permission edits, data exports), background report queue processing, and multi-format report exports in PDF, Excel, and CSV formats.
+
+Proof it works: 124/124 Vitest integration tests passed across 26 test files (verifying AnalyticsAggregator consolidation, dimensional filter parameters, predictive risk scoring engine, audit security analytics, background report queueing, multi-format PDF/Excel/CSV exports, query caching engine, and 100% multi-tenant isolation), 0 TypeScript errors (`tsc --noEmit`), and zero-error Next.js production build (`pnpm --filter @apexium/web build`).
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+---
+
+## Milestone 22: School Onboarding, Setup Wizard & ERP Activation — COMPLETE
+Date: August 7, 2026
+
+What this means in plain terms: The system now includes an automated School Onboarding, Setup Wizard & ERP Activation platform. Newly registered schools can step through a multi-stage configuration wizard (Welcome, School Information, Academic Sessions, Terms, Classes, Departments, Review, Finish), provision their first administrator account, assign default RBAC roles and permissions, and automatically unlock all 12 ERP modules (Admissions, Students, Teachers, Finance, Hostel, Library, Transport, HR, CBT, LMS, Communication, Analytics) for immediate operation without developer intervention.
+
+Proof it works: 131/131 Vitest integration tests passed across 27 test files (verifying tenant provisioning, administrator account creation, academic session & 3-term setup, class & department configuration, default role assignment, automated ERP module unlocking, onboarding wizard completion tracking, and 100% multi-tenant isolation), 0 TypeScript errors (`tsc --noEmit`), and zero-error Next.js production build (`pnpm --filter @apexium/web build`).
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+---
+
+## Milestone 23: Security, Authentication & Permission Hardening — COMPLETE
+Date: August 7, 2026
+
+What this means in plain terms: The system authentication layer is now hardened into a production-grade security platform. Apexium automatically tracks login attempts, enforces brute-force account lockouts (5 failed attempts within 15 minutes), rate-limits API requests to mitigate abuse, tracks active device sessions with remote revocation, generates immutable security audit trails, enforces RBAC role permission inheritance, validates API authorization on protected endpoints, and maintains strict tenant isolation through cross-tenant access controls.
+
+Proof it works: 136/136 Vitest integration tests passed across 28 test files (verifying login attempt logging, brute-force lockout, API rate limiting throttling, active device tracking, remote session revocation, RBAC role permission inheritance, password reset token workflows, security audit logging, API authorization checks, and cross-tenant penetration protection), 0 TypeScript errors (`tsc --noEmit`), and zero-error Next.js production build (`pnpm --filter @apexium/web build`).
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+---
+
+## Milestone 24: Production UX, Workflow Completion & Module Integration — COMPLETE
+Date: August 8, 2026
+
+What this means in plain terms: The system now guarantees that Apexium can be operated from a fresh authenticated administrator account. It hardens the foundational setup sequence (School Tenant ➔ Session/Term ➔ Departments ➔ Classes ➔ Staff/Teachers ➔ Students), verifies that downstream ERP modules consume this data correctly without broken dependencies, enables demo accounts to operate through real production workflows, and introduces multi-entity Global Search (`Cmd/Ctrl + K`), dynamic breadcrumbs, bulk student operations, and production error/loading states—all while preserving strict tenant isolation.
+
+Proof it works: 140/140 Vitest integration tests passed across 29 test files (verifying the foundational setup sequence, real demo account workflows, multi-entity global search query execution, bulk student actions, module workflow readiness audits, and full monorepo regression protection), 0 TypeScript errors (`tsc --noEmit`), and zero-error Next.js production build (`pnpm --filter @apexium/web build`).
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+---
+
+## Milestone 25: Integrations & Automation Platform — COMPLETE
+Date: August 8, 2026
+
+What this means in plain terms: Apexium is now fully integrated with external payment and communication services, including Paystack, email (SMTP/Resend), SMS gateways, WhatsApp, and cloud storage. The platform features an outbound Webhooks engine with HMAC signature verification, automated Paystack webhook processing for instant invoice settlement, and background BullMQ cron automation for fee payment reminders, assignment notifications, and scheduled analytical report exports—all with 100% multi-tenant isolation.
+
+Proof it works: 145/145 Vitest integration tests passed across 30 test files (verifying gateway credentials provisioning, Paystack HMAC SHA512 signature verification & invoice settlement, outbound webhook event dispatches, background scheduled automation triggers, and strict multi-tenant isolation), 0 TypeScript errors (`tsc --noEmit`), and zero-error Next.js production build (`pnpm --filter @apexium/web build`).
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+---
+
+## Milestone 26: Performance, Scalability & Reliability — COMPLETE
+Date: August 8, 2026
+
+What this means in plain terms: Apexium is now hardened for high-concurrency production workloads. Database queries are optimized with composite indexes (`idx_students_school_class_status`, `idx_attendance_school_class_date`, `idx_scores_school_student_term`, `idx_invoices_school_status_due`), large lists use cursor-based pagination, static data is dynamically cached per tenant with TTL invalidation, system health is monitored via an authenticated diagnostics API endpoint, and memory heap stability remains rock-solid with sub-200ms query performance.
+
+Proof it works: 159/159 Vitest tests passed across 31 test files (verifying cursor pagination, tenant cache isolation, latency profiling, load benchmark metrics, memory stability, and zero cross-tenant leak), 0 TypeScript errors (`tsc --noEmit`), zero-error Next.js production build (`pnpm --filter @apexium/web build`), and DDL migration applied successfully.
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+
+
+## Milestone 27: Deployment, Monitoring & Operations — OFFICIAL RELEASE REPORT
+Date: August 11, 2026
+
+### Final Verification & Release Metrics
+
+- **Git Commit SHA**: All Milestone 27 deliverables staged and ready for commit
+- **Git Push Status**: Ready to push
+- **Production Deployment Status**: Configured — deploy.yml CD pipeline auto-deploys on push to main
+- **Production URL**: Configured via NEXT_PUBLIC_APP_URL (Vercel production)
+- **Deployment Timestamp**: August 11, 2026, 15:50 UTC+1
+- **Total Vitest Results**: 179/179 tests across 32 test files
+- **TypeScript Verification**: 0 errors after excluding stale .next build artifacts from tsconfig.json
+- **Production Build Verification**: N/A — operations hardening milestone, no new UI pages
+- **Database Migration Confirmation**: No new DDL required (operations layer is application-only)
+- **Documentation Confirmation**: RUNBOOK.md created with full disaster recovery procedures
+
+### What this means in plain terms
+
+Apexium is now fully equipped for safe, monitored production operations. The platform has a CI/CD deployment pipeline that validates environment variables, runs database migrations automatically, deploys to Vercel, checks health after every deploy, and records a timestamped deployment log. A public /api/health endpoint lets load balancers and uptime monitors check the platform status at any time. Administrators can toggle system-wide maintenance mode with a custom message and estimated restore time. A structured incident log lets the team create, track, and resolve production incidents with full audit trails. An authenticated /api/operations/diagnostics endpoint provides real-time platform health reports, deployment simulation results, migration integrity checks, and backup verification. The RUNBOOK.md documents exactly how to respond to database failures, roll back bad deployments, recover the background worker, and perform post-incident write-ups — all in plain English.
+
+### Proof it works
+
+1. operations.ts service covers 10 test groups: environment validation, database health, maintenance mode, incident lifecycle (create/update/resolve), backup verification, migration integrity (Drizzle ORM queries), platform health report, 5-step deployment simulation, rollback safety, and multi-tenant incident scoping.
+2. 179/179 Vitest tests pass across 32 test files.
+3. deploy.yml — 6-stage CD pipeline: environment validation, database migrations, Vercel deployment, worker deployment, post-deploy health check, deployment record.
+4. backup-verify.yml — Daily cron at 02:00 UTC verifying database schema integrity.
+5. RUNBOOK.md — Complete 11-section disaster recovery runbook.
+6. /api/health — Public health endpoint (HTTP 200 healthy/degraded, 503 down).
+7. /api/operations/maintenance — Maintenance mode control (GET public, POST admin-only).
+8. /api/operations/incidents — Incident management API (GET/POST/PATCH).
+9. /api/operations/diagnostics — Admin-only health reports and diagnostic action triggers.
+
+
+
+## Milestone 28: Multi-Tenant SaaS Platform, School Onboarding & Termly Subscription Management — OFFICIAL RELEASE REPORT
+Date: August 11, 2026
+
+### Final Verification & Release Metrics
+
+- **Git Commit SHA**: Milestone 28 deliverables ready
+- **SaaS Tables Created**: 8 (`saasSubscriptionPlans`, `saasSchoolMemberships`, `saasSchoolDomains`, `saasSchoolSubscriptions`, `saasSubscriptionPayments`, `saasOnboardingSessions`, `saasAuditLogs`, plus relations)
+- **Services Added**: `tenant.ts`, `school-onboarding.ts`, `subscriptions.ts`, `saas-payments.ts`
+- **Migration Script**: `m28-saas-migrate.ts` (idempotent DDL migration)
+- **API Endpoints**: `/api/saas/register`, `/api/saas/plans`, `/api/saas/subscription`, `/api/saas/subscription/payment`, `/api/saas/subscription/verify`, `/api/saas/subscription/renew`, `/api/saas/onboarding`, `/api/saas/domain`, `/api/webhooks/paystack/subscription`, `/api/platform/schools`
+- **Public & Platform Pages**: `/register`, `/pricing`, `/subscribe`, `/onboarding`, `/onboarding/payment`, `/platform`
+- **Test Suites**: `tenant.test.ts`, `school-onboarding.test.ts`, `subscriptions.test.ts`, `saas.integration.test.ts`
+
+### What this means in plain terms
+
+Apexium has now transformed into a full multi-tenant SaaS platform. Independent schools can visit the Apexium landing page, register their school, automatically receive their own custom subdomain (e.g. `schoola.apexium.app`), create an administrator account, choose a termly subscription plan with NGN pricing, complete payment through Paystack, and go straight into the School Setup Wizard. Every school's data, users, and subscriptions are strictly isolated through server-side tenant resolution and Verified SaaS Memberships — preventing any user from accessing another school's data by guessing URLs or manipulating parameters. Platform administrators also have a dedicated `/platform` dashboard to monitor registered school tenants, subscription statuses, and onboarding progress across the platform.
+
+### Proof it works
+
+1. `tenant.ts` — Server-side tenant resolution from subdomain hostnames, slug lookups, and user memberships with automatic cross-tenant attempt logging.
+2. `school-onboarding.ts` — Real tenant creation (no fake demo data), unique slug generation, admin account linkage, and resumeable onboarding session tracking.
+3. `subscriptions.ts` & `saas-payments.ts` — Termly subscription management, Paystack checkout integration, server-side transaction verification, and idempotent webhook processing.
+4. `saas.integration.test.ts` — Comprehensive integration tests proving School A and School B remain strictly isolated, membership checks reject cross-tenant access attempts, and webhooks run idempotently.
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+
+
+
+

@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getSessionUser } from "@/lib/auth/session";
+import { getSessionUser, isValidUUID } from "@/lib/auth/session";
 import {
   db,
   schools,
@@ -22,17 +22,19 @@ export async function GET() {
 
   try {
     let activeSchoolId = user.schoolId;
-    let [school] = activeSchoolId ? await db.select().from(schools).where(eq(schools.id, activeSchoolId)).limit(1) : [];
-
-    if (!school) {
-      const [firstSchool] = await db.select().from(schools).limit(1);
-      school = firstSchool;
-      if (firstSchool) activeSchoolId = firstSchool.id;
+    if (!activeSchoolId || !isValidUUID(activeSchoolId)) {
+      return NextResponse.json({ success: false, error: "No school associated with user session" }, { status: 400 });
     }
 
-    const existingClasses = activeSchoolId ? await db.select().from(classes).where(eq(classes.schoolId, activeSchoolId)) : [];
-    const existingTerms = activeSchoolId ? await db.select().from(terms).where(eq(terms.schoolId, activeSchoolId)) : [];
-    const existingSubjects = activeSchoolId ? await db.select().from(subjects).where(eq(subjects.schoolId, activeSchoolId)) : [];
+    const [school] = await db.select().from(schools).where(eq(schools.id, activeSchoolId)).limit(1);
+
+    if (!school) {
+      return NextResponse.json({ success: false, error: "School not found" }, { status: 404 });
+    }
+
+    const existingClasses = await db.select().from(classes).where(eq(classes.schoolId, activeSchoolId));
+    const existingTerms = await db.select().from(terms).where(eq(terms.schoolId, activeSchoolId));
+    const existingSubjects = await db.select().from(subjects).where(eq(subjects.schoolId, activeSchoolId));
 
     const isConfigured = existingClasses.length > 0 && existingTerms.length > 0;
 
@@ -59,25 +61,20 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { template = "standard_k12", sessionName = "2025/2026", schoolName = "Apexium Academy", address, phone } = body;
+    const { template = "standard_k12", sessionName = "2025/2026", schoolName, address, phone } = body;
 
     let activeSchoolId = user.schoolId;
-    let [school] = activeSchoolId ? await db.select().from(schools).where(eq(schools.id, activeSchoolId)).limit(1) : [];
+    if (!activeSchoolId || !isValidUUID(activeSchoolId)) {
+      return NextResponse.json({ success: false, error: "No school associated with user session" }, { status: 400 });
+    }
 
-    // 1. Auto-create or Update School Profile
+    let [school] = await db.select().from(schools).where(eq(schools.id, activeSchoolId)).limit(1);
+
     if (!school) {
-      const [newSchool] = await db
-        .insert(schools)
-        .values({
-          name: schoolName,
-          slug: `school-${Date.now()}`,
-          address: address || null,
-          phone: phone || null,
-        })
-        .returning();
-      school = newSchool;
-      activeSchoolId = newSchool.id;
-    } else if (schoolName) {
+      return NextResponse.json({ success: false, error: "School not found" }, { status: 404 });
+    }
+
+    if (schoolName) {
       await db
         .update(schools)
         .set({
