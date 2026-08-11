@@ -618,3 +618,22 @@ export async function reconcileBankAccount(data: {
 
   return rec;
 }
+
+export async function recordExpense(data: {
+  schoolId: string;
+  category: string;
+  amount: number;
+  description: string;
+  date?: Date;
+  vendorName?: string;
+  paymentMethod?: string;
+}) {
+  return submitExpenseVoucher({
+    schoolId: data.schoolId,
+    category: data.category,
+    amount: data.amount,
+    vendorName: data.vendorName ?? "Supplier",
+    remarks: data.description,
+    paymentMethod: data.paymentMethod ?? "Bank_Transfer",
+  });
+}

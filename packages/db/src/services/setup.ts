@@ -290,7 +290,7 @@ export async function getSchoolOnboardingStatus(schoolId: string) {
   };
 }
 
-export async function completeSchoolOnboarding(schoolId: string) {
+export async function completeSetupWizardOnboarding(schoolId: string) {
   await db
     .insert(schoolSettings)
     .values({

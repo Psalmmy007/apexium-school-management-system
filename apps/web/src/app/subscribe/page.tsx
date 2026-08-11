@@ -51,12 +51,46 @@ function SubscribeContent() {
     }
   };
 
+  const [couponCode, setCouponCode] = useState("");
+  const [couponApplied, setCouponApplied] = useState<{ code: string; discountAmount: number; finalAmount: number } | null>(null);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState<string | null>(null);
+
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) return;
+    setCouponLoading(true);
+    setCouponError(null);
+
+    try {
+      const res = await fetch("/api/saas/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: couponCode, subtotal: 35000 }), // default Growth tier subtotal
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.valid) {
+        throw new Error(data.reason || "Invalid coupon code");
+      }
+
+      setCouponApplied({
+        code: data.coupon.code,
+        discountAmount: data.discountAmount,
+        finalAmount: data.finalAmount,
+      });
+    } catch (err: unknown) {
+      setCouponError(err instanceof Error ? err.message : "Coupon failed");
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
         <h2 className="text-3xl font-extrabold text-white">Confirm Subscription</h2>
         <p className="mt-2 text-sm text-slate-400">
-          Complete your termly subscription to activate your school's ERP subdomain.
+          Complete your termly subscription to activate your school&apos;s ERP subdomain.
         </p>
 
         {error && (
@@ -65,7 +99,36 @@ function SubscribeContent() {
           </div>
         )}
 
-        <div className="mt-8 bg-slate-900 border border-slate-800 p-8 rounded-2xl">
+        <div className="mt-8 bg-slate-900 border border-slate-800 p-8 rounded-2xl text-left space-y-6">
+          <div>
+            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2">
+              Promotional Coupon Code
+            </label>
+            <div className="flex space-x-2">
+              <input
+                type="text"
+                value={couponCode}
+                onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                placeholder="PROMO2026"
+                className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+              />
+              <button
+                onClick={handleApplyCoupon}
+                disabled={couponLoading || !couponCode.trim()}
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white font-medium rounded-xl text-xs transition disabled:opacity-50"
+              >
+                {couponLoading ? "Validating..." : "Apply"}
+              </button>
+            </div>
+            {couponError && <p className="mt-2 text-xs text-red-400">{couponError}</p>}
+            {couponApplied && (
+              <div className="mt-2 p-3 bg-green-950/40 border border-green-800/60 rounded-xl text-xs text-green-300 flex justify-between">
+                <span>Coupon <strong>{couponApplied.code}</strong> Applied!</span>
+                <span>- ₦{couponApplied.discountAmount.toLocaleString()}</span>
+              </div>
+            )}
+          </div>
+
           <button
             onClick={handleSubscribe}
             disabled={loading}

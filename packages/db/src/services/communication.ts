@@ -316,3 +316,17 @@ export async function getCommunicationAnalytics(schoolId: string) {
     totalAnnouncements: announcements.length,
   };
 }
+
+export async function sendNotification(data: {
+  schoolId: string;
+  recipientId: string;
+  title: string;
+  message: string;
+  type?: string;
+}) {
+  return emitDomainEvent({
+    schoolId: data.schoolId,
+    eventType: data.type ?? "system_alert",
+    payload: { title: data.title, message: data.message, recipientId: data.recipientId },
+  });
+}

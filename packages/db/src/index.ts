@@ -32,6 +32,12 @@ export * from "./services/tenant";
 export * from "./services/school-onboarding";
 export * from "./services/subscriptions";
 export * from "./services/saas-payments";
+export * from "./services/billing-invoices";
+export * from "./services/coupons";
+export * from "./services/entitlements";
+export * from "./services/saas-analytics";
+export * from "./services/inventory";
+export * from "./services/data-export";
 export { db } from "./client";
 export type { Db } from "./client";
 

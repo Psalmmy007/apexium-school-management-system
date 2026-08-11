@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUser, isValidUUID } from "@/lib/auth/session";
-import { completeSchoolOnboarding, db, schools } from "@apexium/db";
+import { completeSetupWizardOnboarding, db, schools } from "@apexium/db";
 
 export async function POST() {
   const user = await getSessionUser();
@@ -19,7 +19,7 @@ export async function POST() {
   }
 
   try {
-    const result = await completeSchoolOnboarding(schoolId);
+    const result = await completeSetupWizardOnboarding(schoolId);
     return NextResponse.json({
       success: true,
       message: "Onboarding completed! All ERP modules are now unlocked.",

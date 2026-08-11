@@ -1,6 +1,6 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { SessionUser } from "@apexium/types";
-import { db, users, students, schools, saasSchoolMemberships } from "@apexium/db";
+import { db, users, students, saasSchoolMemberships } from "@apexium/db";
 import { eq, and } from "drizzle-orm";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -90,13 +90,6 @@ export async function getStudentSessionUser(): Promise<SessionUser | null> {
   if (sessionUser && sessionUser.role === "student") {
     return sessionUser;
   }
-
-  try {
-    const [studentUser] = await db
-      .select()
-      .from(users)
-      .where(eq(users.role, "student"))
-      .limit(1);
 
   if (sessionUser?.schoolId) {
     try {

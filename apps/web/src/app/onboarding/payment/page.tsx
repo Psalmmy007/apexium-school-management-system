@@ -20,7 +20,7 @@ function PaymentContent() {
             </div>
             <h2 className="text-2xl font-bold text-white">Payment Failed</h2>
             <p className="mt-2 text-sm text-slate-400">
-              We couldn't confirm your subscription payment. Please retry below.
+              We couldn&apos;t confirm your subscription payment. Please retry below.
             </p>
             <div className="mt-6">
               <Link

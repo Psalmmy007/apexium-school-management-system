@@ -3155,6 +3155,348 @@ export const saasOnboardingSessionsRelations = relations(saasOnboardingSessions,
   school: one(schools, { fields: [saasOnboardingSessions.schoolId], references: [schools.id] }),
 }));
 
+// ════════════════════════════════════════════════════════════════
+// MILESTONE 29 — Billing Automation, Invoices & Entitlements
+// ════════════════════════════════════════════════════════════════
+
+// ── Table: saas_coupons ───────────────────────────────────────
+// Promotional discount codes for subscription checkout
+export const saasCoupons = pgTable(
+  "saas_coupons",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    code: varchar("code", { length: 50 }).notNull().unique(),
+    description: text("description"),
+    discountType: varchar("discount_type", { length: 20 }).notNull().default("percentage"), // percentage | fixed
+    discountValue: doublePrecision("discount_value").notNull(), // e.g., 20 = 20% or NGN 5000
+    maxRedemptions: integer("max_redemptions"),
+    redemptionsCount: integer("redemptions_count").notNull().default(0),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    couponCodeIdx: uniqueIndex("idx_saas_coupon_code").on(table.code),
+    couponActiveIdx: index("idx_saas_coupon_active").on(table.isActive),
+  })
+);
+
+// ── Table: saas_invoices ───────────────────────────────────────
+// Tax invoices generated for every termly subscription payment
+export const saasInvoices = pgTable(
+  "saas_invoices",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    invoiceNumber: varchar("invoice_number", { length: 100 }).notNull().unique(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    subscriptionId: uuid("subscription_id")
+      .notNull()
+      .references(() => saasSchoolSubscriptions.id),
+    paymentId: uuid("payment_id").references(() => saasSubscriptionPayments.id),
+    subtotal: doublePrecision("subtotal").notNull(),
+    discountAmount: doublePrecision("discount_amount").notNull().default(0),
+    taxAmount: doublePrecision("tax_amount").notNull().default(0),
+    totalAmount: doublePrecision("total_amount").notNull(),
+    currency: varchar("currency", { length: 10 }).notNull().default("NGN"),
+    status: varchar("status", { length: 30 }).notNull().default("paid"), // paid | unpaid | refunded | void
+    billingPeriod: varchar("billing_period", { length: 20 }).notNull().default("TERM"),
+    issuedAt: timestamp("issued_at", { withTimezone: true }).notNull().defaultNow(),
+    dueAt: timestamp("due_at", { withTimezone: true }),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    invoiceNumberIdx: uniqueIndex("idx_saas_invoice_number").on(table.invoiceNumber),
+    schoolInvoiceIdx: index("idx_saas_invoice_school").on(table.schoolId),
+    subscriptionInvoiceIdx: index("idx_saas_invoice_subscription").on(table.subscriptionId),
+  })
+);
+
+// ── Table: saas_subscription_usages ─────────────────────────
+// Usage tracking (student count, storage, API usage) for entitlement enforcement
+export const saasSubscriptionUsages = pgTable(
+  "saas_subscription_usages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    activeStudentsCount: integer("active_students_count").notNull().default(0),
+    maxStudentsLimit: integer("max_students_limit").notNull().default(200),
+    gracePeriodEndsAt: timestamp("grace_period_ends_at", { withTimezone: true }),
+    isGracePeriodActive: boolean("is_grace_period_active").notNull().default(false),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    schoolUsageIdx: uniqueIndex("idx_saas_usage_school").on(table.schoolId),
+  })
+);
+
+// ── Milestone 29 Relations ─────────────────────────────────────
+export const saasInvoicesRelations = relations(saasInvoices, ({ one }) => ({
+  school: one(schools, { fields: [saasInvoices.schoolId], references: [schools.id] }),
+  subscription: one(saasSchoolSubscriptions, { fields: [saasInvoices.subscriptionId], references: [saasSchoolSubscriptions.id] }),
+  payment: one(saasSubscriptionPayments, { fields: [saasInvoices.paymentId], references: [saasSubscriptionPayments.id] }),
+}));
+
+export const saasSubscriptionUsagesRelations = relations(saasSubscriptionUsages, ({ one }) => ({
+  school: one(schools, { fields: [saasSubscriptionUsages.schoolId], references: [schools.id] }),
+}));
+
+// ════════════════════════════════════════════════════════════════
+// MILESTONE 30 — Inventory Management & Fixed Assets
+// ════════════════════════════════════════════════════════════════
+
+// ── Table: inventory_items ──────────────────────────────────────
+export const inventoryItems = pgTable(
+  "inventory_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 255 }).notNull(),
+    description: text("description"),
+    category: varchar("category", { length: 100 }).notNull().default("General"), // Stationery, Chemicals, ICT, Books, Uniforms, Cleaning, Sports, Office
+    unit: varchar("unit", { length: 50 }).notNull().default("pcs"), // pcs, boxes, reams, kg, liters, sets
+    sku: varchar("sku", { length: 100 }),
+    currentQuantity: integer("current_quantity").notNull().default(0),
+    minimumQuantity: integer("minimum_quantity").notNull().default(10), // Low stock alert threshold
+    unitCost: doublePrecision("unit_cost").notNull().default(0),
+    totalStockValue: doublePrecision("total_stock_value").notNull().default(0),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    schoolInventoryIdx: index("idx_inventory_school").on(table.schoolId),
+    categoryIdx: index("idx_inventory_category").on(table.schoolId, table.category),
+    skuIdx: index("idx_inventory_sku").on(table.schoolId, table.sku),
+    lowStockIdx: index("idx_inventory_low_stock").on(table.schoolId, table.currentQuantity, table.minimumQuantity),
+  })
+);
+
+// ── Table: inventory_transactions ──────────────────────────────
+export const inventoryTransactions = pgTable(
+  "inventory_transactions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    inventoryItemId: uuid("inventory_item_id")
+      .notNull()
+      .references(() => inventoryItems.id, { onDelete: "cascade" }),
+    transactionType: varchar("transaction_type", { length: 30 }).notNull(), // stock_in, stock_out, adjustment, opening_balance
+    quantity: integer("quantity").notNull(),
+    unitCost: doublePrecision("unit_cost").notNull().default(0),
+    resultingBalance: integer("resulting_balance").notNull(),
+    reference: varchar("reference", { length: 255 }), // PO-1001, MANUAL, ADJUSTMENT
+    reason: text("reason"),
+    performedBy: uuid("performed_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    schoolTxIdx: index("idx_inventory_tx_school").on(table.schoolId),
+    itemTxIdx: index("idx_inventory_tx_item").on(table.schoolId, table.inventoryItemId),
+    txDateIdx: index("idx_inventory_tx_date").on(table.schoolId, table.createdAt),
+  })
+);
+
+// ── Table: suppliers ───────────────────────────────────────────
+export const suppliers = pgTable(
+  "suppliers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 255 }).notNull(),
+    contactPerson: varchar("contact_person", { length: 255 }),
+    phone: varchar("phone", { length: 50 }),
+    email: varchar("email", { length: 255 }),
+    address: text("address"),
+    taxNumber: varchar("tax_number", { length: 100 }),
+    status: varchar("status", { length: 30 }).notNull().default("active"), // active, inactive
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    schoolSupplierIdx: index("idx_supplier_school").on(table.schoolId),
+    supplierNameIdx: index("idx_supplier_name").on(table.schoolId, table.name),
+  })
+);
+
+// ── Table: purchase_orders ─────────────────────────────────────
+export const purchaseOrders = pgTable(
+  "purchase_orders",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    supplierId: uuid("supplier_id")
+      .notNull()
+      .references(() => suppliers.id, { onDelete: "cascade" }),
+    orderNumber: varchar("order_number", { length: 100 }).notNull(),
+    orderDate: timestamp("order_date", { withTimezone: true }).notNull().defaultNow(),
+    expectedDeliveryDate: timestamp("expected_delivery_date", { withTimezone: true }),
+    status: varchar("status", { length: 30 }).notNull().default("draft"), // draft, pending_approval, approved, received, cancelled
+    subtotal: doublePrecision("subtotal").notNull().default(0),
+    taxAmount: doublePrecision("tax_amount").notNull().default(0),
+    totalAmount: doublePrecision("total_amount").notNull().default(0),
+    notes: text("notes"),
+    createdBy: uuid("created_by").references(() => users.id, { onDelete: "set null" }),
+    approvedBy: uuid("approved_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    schoolPoIdx: index("idx_po_school").on(table.schoolId),
+    poNumberIdx: uniqueIndex("idx_po_number").on(table.schoolId, table.orderNumber),
+    poStatusIdx: index("idx_po_status").on(table.schoolId, table.status),
+  })
+);
+
+// ── Table: purchase_order_items ────────────────────────────────
+export const purchaseOrderItems = pgTable(
+  "purchase_order_items",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    purchaseOrderId: uuid("purchase_order_id")
+      .notNull()
+      .references(() => purchaseOrders.id, { onDelete: "cascade" }),
+    inventoryItemId: uuid("inventory_item_id")
+      .notNull()
+      .references(() => inventoryItems.id, { onDelete: "cascade" }),
+    quantityOrdered: integer("quantity_ordered").notNull(),
+    quantityReceived: integer("quantity_received").notNull().default(0),
+    unitPrice: doublePrecision("unit_price").notNull(),
+    totalPrice: doublePrecision("total_price").notNull(),
+  },
+  (table) => ({
+    poItemIdx: index("idx_po_item_order").on(table.purchaseOrderId),
+  })
+);
+
+// ── Table: asset_register ──────────────────────────────────────
+export const assetRegister = pgTable(
+  "asset_register",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    assetName: varchar("asset_name", { length: 255 }).notNull(),
+    category: varchar("category", { length: 100 }).notNull().default("Furniture"), // Furniture, IT Equipment, Vehicles, Buildings, Machinery, Lab Equipment
+    description: text("description"),
+    purchaseDate: timestamp("purchase_date", { withTimezone: true }).notNull().defaultNow(),
+    purchaseCost: doublePrecision("purchase_cost").notNull(),
+    usefulLifeYears: integer("useful_life_years").notNull().default(5),
+    depreciationMethod: varchar("depreciation_method", { length: 50 }).notNull().default("straight_line"), // straight_line
+    accumulatedDepreciation: doublePrecision("accumulated_depreciation").notNull().default(0),
+    currentBookValue: doublePrecision("current_book_value").notNull(),
+    residualValue: doublePrecision("residual_value").notNull().default(0),
+    location: varchar("location", { length: 255 }),
+    assignedDepartment: varchar("assigned_department", { length: 255 }),
+    assignedStaffId: uuid("assigned_staff_id").references(() => users.id, { onDelete: "set null" }),
+    barcode: varchar("barcode", { length: 100 }),
+    qrCode: varchar("qr_code", { length: 100 }),
+    status: varchar("status", { length: 30 }).notNull().default("active"), // active, in_repair, disposed, written_off
+    disposalDate: timestamp("disposal_date", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    schoolAssetIdx: index("idx_asset_school").on(table.schoolId),
+    barcodeIdx: index("idx_asset_barcode").on(table.schoolId, table.barcode),
+    qrCodeIdx: index("idx_asset_qr").on(table.schoolId, table.qrCode),
+    assetCategoryIdx: index("idx_asset_category").on(table.schoolId, table.category),
+  })
+);
+
+// ── Milestone 30 Relations ─────────────────────────────────────
+export const inventoryItemsRelations = relations(inventoryItems, ({ one, many }) => ({
+  school: one(schools, { fields: [inventoryItems.schoolId], references: [schools.id] }),
+  transactions: many(inventoryTransactions),
+  poItems: many(purchaseOrderItems),
+}));
+
+export const inventoryTransactionsRelations = relations(inventoryTransactions, ({ one }) => ({
+  school: one(schools, { fields: [inventoryTransactions.schoolId], references: [schools.id] }),
+  item: one(inventoryItems, { fields: [inventoryTransactions.inventoryItemId], references: [inventoryItems.id] }),
+  user: one(users, { fields: [inventoryTransactions.performedBy], references: [users.id] }),
+}));
+
+export const suppliersRelations = relations(suppliers, ({ one, many }) => ({
+  school: one(schools, { fields: [suppliers.schoolId], references: [schools.id] }),
+  purchaseOrders: many(purchaseOrders),
+}));
+
+export const purchaseOrdersRelations = relations(purchaseOrders, ({ one, many }) => ({
+  school: one(schools, { fields: [purchaseOrders.schoolId], references: [schools.id] }),
+  supplier: one(suppliers, { fields: [purchaseOrders.supplierId], references: [suppliers.id] }),
+  creator: one(users, { fields: [purchaseOrders.createdBy], references: [users.id] }),
+  approver: one(users, { fields: [purchaseOrders.approvedBy], references: [users.id] }),
+  items: many(purchaseOrderItems),
+}));
+
+export const purchaseOrderItemsRelations = relations(purchaseOrderItems, ({ one }) => ({
+  purchaseOrder: one(purchaseOrders, { fields: [purchaseOrderItems.purchaseOrderId], references: [purchaseOrders.id] }),
+  inventoryItem: one(inventoryItems, { fields: [purchaseOrderItems.inventoryItemId], references: [inventoryItems.id] }),
+}));
+
+export const assetRegisterRelations = relations(assetRegister, ({ one }) => ({
+  school: one(schools, { fields: [assetRegister.schoolId], references: [schools.id] }),
+  assignedStaff: one(users, { fields: [assetRegister.assignedStaffId], references: [users.id] }),
+}));
+
+// ════════════════════════════════════════════════════════════════
+// MILESTONE 31 — Data Portability & Self-Service Export
+// ════════════════════════════════════════════════════════════════
+
+// ── Table: data_exports ─────────────────────────────────────────
+export const dataExports = pgTable(
+  "data_exports",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    requestedBy: uuid("requested_by").references(() => users.id, { onDelete: "set null" }),
+    format: varchar("format", { length: 20 }).notNull().default("csv"), // csv, excel, zip
+    status: varchar("status", { length: 30 }).notNull().default("QUEUED"), // QUEUED, PROCESSING, COMPLETED, FAILED, EXPIRED
+    progress: integer("progress").notNull().default(0), // 0 to 100
+    fileReference: text("file_reference"), // local path or cloud key
+    fileSize: integer("file_size").notNull().default(0), // bytes
+    recordCount: integer("record_count").notNull().default(0),
+    datasets: jsonb("datasets"), // ["students", "scores", "attendance", "finance", "staff"]
+    errorMessage: text("error_message"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    startedAt: timestamp("started_at", { withTimezone: true }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    schoolExportIdx: index("idx_export_school").on(table.schoolId),
+    schoolStatusIdx: index("idx_export_school_status").on(table.schoolId, table.status),
+    schoolCreatedIdx: index("idx_export_school_created").on(table.schoolId, table.createdAt),
+  })
+);
+
+// ── Milestone 31 Relations ─────────────────────────────────────
+export const dataExportsRelations = relations(dataExports, ({ one }) => ({
+  school: one(schools, { fields: [dataExports.schoolId], references: [schools.id] }),
+  requester: one(users, { fields: [dataExports.requestedBy], references: [users.id] }),
+}));
+
+
+
+
 
 
 

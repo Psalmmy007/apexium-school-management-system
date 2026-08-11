@@ -13,17 +13,33 @@ interface PlatformSchool {
   onboardingStatus: string;
 }
 
+interface SaasMetrics {
+  totalSchools: number;
+  activeSchools: number;
+  suspendedSchools: number;
+  activeSubscriptions: number;
+  expiredSubscriptions: number;
+  termlyRecurringRevenue: number;
+  monthlyRecurringRevenue: number;
+  churnRatePercent: number;
+  totalCollectedRevenue: number;
+}
+
 export default function PlatformAdminDashboard() {
   const [schools, setSchools] = useState<PlatformSchool[]>([]);
+  const [metrics, setMetrics] = useState<SaasMetrics | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    fetch("/api/platform/schools")
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.schools) setSchools(data.schools);
-        else setError(data.error || "Failed to load platform dashboard");
+    Promise.all([
+      fetch("/api/platform/schools").then((res) => res.json()),
+      fetch("/api/saas/analytics").then((res) => res.json()),
+    ])
+      .then(([schoolsData, analyticsData]) => {
+        if (schoolsData.schools) setSchools(schoolsData.schools);
+        if (analyticsData.metrics) setMetrics(analyticsData.metrics);
+        if (schoolsData.error) setError(schoolsData.error);
       })
       .catch((err) => setError(err.message))
       .finally(() => setLoading(false));
@@ -49,46 +65,78 @@ export default function PlatformAdminDashboard() {
         ) : error ? (
           <div className="bg-red-950/60 border border-red-800 text-red-300 p-4 rounded-xl text-sm">{error}</div>
         ) : (
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
-            <div className="p-6 border-b border-slate-800 flex justify-between items-center">
-              <h2 className="text-lg font-semibold text-white">Registered School Tenants ({schools.length})</h2>
-            </div>
+          <React.Fragment>
+            {metrics && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
+                  <div className="text-xs font-medium text-slate-400 uppercase">Termly Recurring Rev (TRR)</div>
+                  <div className="text-2xl font-extrabold text-white mt-2">₦{metrics.termlyRecurringRevenue.toLocaleString()}</div>
+                  <div className="text-xs text-indigo-400 mt-1">MRR ₦{metrics.monthlyRecurringRevenue.toLocaleString()}/mo</div>
+                </div>
 
-            <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm text-slate-300">
-                <thead className="bg-slate-950 text-xs uppercase text-slate-400 border-b border-slate-800">
-                  <tr>
-                    <th className="px-6 py-4">School Name</th>
-                    <th className="px-6 py-4">Slug & Domain</th>
-                    <th className="px-6 py-4">Status</th>
-                    <th className="px-6 py-4">Subscription</th>
-                    <th className="px-6 py-4">Onboarding</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-800">
-                  {schools.map((school) => (
-                    <tr key={school.id} className="hover:bg-slate-850/50 transition">
-                      <td className="px-6 py-4 font-medium text-white">{school.name}</td>
-                      <td className="px-6 py-4 text-xs font-mono text-indigo-400">{school.domain}</td>
-                      <td className="px-6 py-4">
-                        <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
-                          school.isActive ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
-                        }`}>
-                          {school.isActive ? "Active" : "Suspended"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 capitalize">
-                          {school.subscriptionStatus}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-xs text-slate-400">{school.onboardingStatus}</td>
+                <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
+                  <div className="text-xs font-medium text-slate-400 uppercase">Active School Tenants</div>
+                  <div className="text-2xl font-extrabold text-green-400 mt-2">{metrics.activeSchools}</div>
+                  <div className="text-xs text-slate-500 mt-1">Total {metrics.totalSchools} registered</div>
+                </div>
+
+                <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
+                  <div className="text-xs font-medium text-slate-400 uppercase">Active Subscriptions</div>
+                  <div className="text-2xl font-extrabold text-blue-400 mt-2">{metrics.activeSubscriptions}</div>
+                  <div className="text-xs text-slate-500 mt-1">{metrics.expiredSubscriptions} expired</div>
+                </div>
+
+                <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl">
+                  <div className="text-xs font-medium text-slate-400 uppercase">SaaS Churn Rate</div>
+                  <div className="text-2xl font-extrabold text-purple-400 mt-2">{metrics.churnRatePercent}%</div>
+                  <div className="text-xs text-slate-500 mt-1">Termly retention</div>
+                </div>
+              </div>
+            )}
+
+            <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-2xl">
+              <div className="p-6 border-b border-slate-800 flex justify-between items-center">
+                <h2 className="text-lg font-semibold text-white">Registered School Tenants ({schools.length})</h2>
+              </div>
+
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-sm text-slate-300">
+                  <thead className="bg-slate-950 text-xs uppercase text-slate-400 border-b border-slate-800">
+                    <tr>
+                      <th className="px-6 py-4">School Name</th>
+                      <th className="px-6 py-4">Slug & Domain</th>
+                      <th className="px-6 py-4">Status</th>
+                      <th className="px-6 py-4">Subscription</th>
+                      <th className="px-6 py-4">Onboarding</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-800">
+                    {schools.map((school) => (
+                      <tr key={school.id} className="hover:bg-slate-850/50 transition">
+                        <td className="px-6 py-4 font-medium text-white">{school.name}</td>
+                        <td className="px-6 py-4 text-xs font-mono text-indigo-400">{school.domain}</td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                              school.isActive ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
+                            }`}
+                          >
+                            {school.isActive ? "Active" : "Suspended"}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className="px-2.5 py-1 rounded-full text-xs font-medium bg-blue-500/20 text-blue-400 capitalize">
+                            {school.subscriptionStatus}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-xs text-slate-400">{school.onboardingStatus}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          </React.Fragment>
         )}
       </div>
     </div>

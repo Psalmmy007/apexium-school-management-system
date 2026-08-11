@@ -61,7 +61,7 @@ export default function RegisterSchoolPage() {
             Register Your School
           </h2>
           <p className="mt-2 text-sm text-slate-400">
-            Start managing your school with Nigeria's #1 School ERP platform
+            Start managing your school with Nigeria&apos;s #1 School ERP platform
           </p>
         </div>
       </div>

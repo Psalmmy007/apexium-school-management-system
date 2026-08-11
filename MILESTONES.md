@@ -463,37 +463,40 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 ---
 
-## Milestone 29: SaaS Subscription & Billing Platform — [ ] NOT STARTED
+## Milestone 29: SaaS Subscription & Billing Platform — [x] COMPLETE
 
-- [ ] Subscription & Tiering schema: subscription plans, school subscriptions, term-based billing, invoices, payment history, feature entitlements, and coupon support
-- [ ] Paystack Billing Automation: automated recurring subscription charges, Paystack webhooks processing, invoice generation, renewal workflows, and grace period handling
-- [ ] Entitlements & Enforcement: feature access enforcement based on active subscription, usage tracking, automatic suspension after grace period expiry, and upgrade/downgrade workflows
-- [ ] Subscription Analytics: SaaS metrics dashboard covering Monthly/Term Recurring Revenue (MRR/TRR), churn rate, active school subscriptions, and billing reports
-- [ ] Automated test: subscribe school, renew subscription, verify invoice generation, test Paystack webhooks, test grace period & suspension, and confirm multi-tenant isolation
+- [x] Subscription & Tiering schema: subscription plans, school subscriptions, term-based billing, invoices, payment history, feature entitlements, and coupon support
+- [x] Paystack Billing Automation: automated recurring subscription charges, Paystack webhooks processing, invoice generation, renewal workflows, and grace period handling
+- [x] Entitlements & Enforcement: feature access enforcement based on active subscription, usage tracking, automatic suspension after grace period expiry, and upgrade/downgrade workflows
+- [x] Subscription Analytics: SaaS metrics dashboard covering Monthly/Term Recurring Revenue (MRR/TRR), churn rate, active school subscriptions, and billing reports
+- [x] Automated test: subscribe school, renew subscription, verify invoice generation, test Paystack webhooks, test grace period & suspension, and confirm multi-tenant isolation
 
 **Definition of Done:** Schools subscribe to Apexium on a recurring term basis, payments are automated through Paystack, feature access is governed by active subscriptions, and billing is fully integrated into the platform.
 
+
 ---
 
-## Milestone 30: Inventory Management — [ ] NOT STARTED
+## Milestone 30: Inventory Management — [x] COMPLETE
 
-- [ ] Inventory schema: `inventory_items`, `inventory_transactions` (in/out), `suppliers`, `purchase_orders`, `asset_register` (with depreciation fields), all `school_id`-scoped
-- [ ] Stock & Alert workflows: stock in/out logging, configurable low-stock alerts wired into the Communication module (Milestone 20)
-- [ ] Financial integration: purchase orders linked to Finance (Milestone 19) as expenses, depreciation tracking feeding the balance sheet in Finance
-- [ ] Fixed Asset Tracking: Barcode/QR tagging for fixed assets, quick scan-to-lookup for audits
-- [ ] Automated test: verify low-stock alerts fire at the right threshold and depreciation math matches a hand-verified example, across two schools
+- [x] Inventory schema: `inventory_items`, `inventory_transactions` (in/out), `suppliers`, `purchase_orders`, `asset_register` (with depreciation fields), all `school_id`-scoped
+- [x] Stock & Alert workflows: stock in/out logging, configurable low-stock alerts wired into the Communication module (Milestone 20)
+- [x] Financial integration: purchase orders linked to Finance (Milestone 19) as expenses, depreciation tracking feeding the balance sheet in Finance
+- [x] Fixed Asset Tracking: Barcode/QR tagging for fixed assets, quick scan-to-lookup for audits
+- [x] Automated test: verify low-stock alerts fire at the right threshold and depreciation math matches a hand-verified example, across two schools
 
 **Definition of Done:** Stock and fixed assets are tracked and correctly valued over time, integrated with Finance, and completely tenant-isolated.
 
+
 ---
 
-## Milestone 31: Data Portability & Self-Service Export — [ ] NOT STARTED
+## Milestone 31: Data Portability & Self-Service Export — [x] COMPLETE
 
-- [ ] Data Portability Engine: school admin can request a full export of their own data (students, scores, attendance, finance, staff) as CSV/Excel
-- [ ] Asynchronous Execution: runs as a background BullMQ worker job, not inline, to handle real production data volume without timing out
-- [ ] Automated test: verify an export for School A contains only School A's data, and completes even for a large school without timing out
+- [x] Data Portability Engine: school admin can request a full export of their own data (students, scores, attendance, finance, staff) as CSV/Excel
+- [x] Asynchronous Execution: runs as a background BullMQ worker job, not inline, to handle real production data volume without timing out
+- [x] Automated test: verify an export for School A contains only School A's data, and completes even for a large school without timing out
 
 **Definition of Done:** A school can independently pull a complete copy of its own data anytime — proven correctly scoped and reliable at real volume.
+
 
 ---
 
