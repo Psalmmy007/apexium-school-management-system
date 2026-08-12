@@ -3540,6 +3540,92 @@ export const groupMemberships = pgTable(
   })
 );
 
+// ── Milestone 33: Data Privacy & NDPR Compliance ─────────────────────────────
+
+// ── Table: privacy_consents ──────────────────────────────────────────────────
+export const privacyConsents = pgTable(
+  "privacy_consents",
+  {
+    id:             uuid("id").primaryKey().defaultRandom(),
+    schoolId:       uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }),
+    dataSubjectId:  uuid("data_subject_id"),           // user_id or student_id (nullable)
+    subjectType:    varchar("subject_type", { length: 50 }).notNull().default("student"), // 'student' | 'staff' | 'parent'
+    dataCategory:   varchar("data_category", { length: 100 }).notNull(), // 'medical' | 'financial' | 'biometric' | 'academic'
+    legalBasis:     varchar("legal_basis", { length: 100 }).notNull().default("consent"), // 'consent' | 'legitimate_interest' | 'legal_obligation'
+    status:         varchar("status", { length: 50 }).notNull().default("active"), // 'active' | 'withdrawn' | 'expired'
+    consentText:    text("consent_text"),
+    grantedAt:      timestamp("granted_at", { withTimezone: true }).notNull().defaultNow(),
+    expiresAt:      timestamp("expires_at", { withTimezone: true }),
+    withdrawnAt:    timestamp("withdrawn_at", { withTimezone: true }),
+    ipAddress:      varchar("ip_address", { length: 100 }),
+    createdAt:      timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    schoolIdx:    index("idx_privacy_consents_school").on(table.schoolId),
+    subjectIdx:   index("idx_privacy_consents_subject").on(table.schoolId, table.dataSubjectId),
+    categoryIdx:  index("idx_privacy_consents_category").on(table.schoolId, table.dataCategory),
+  })
+);
+
+export const privacyConsentsRelations = relations(privacyConsents, ({ one }) => ({
+  school: one(schools, { fields: [privacyConsents.schoolId], references: [schools.id] }),
+}));
+
+// ── Table: data_retention_policies ──────────────────────────────────────────
+export const dataRetentionPolicies = pgTable(
+  "data_retention_policies",
+  {
+    id:                  uuid("id").primaryKey().defaultRandom(),
+    schoolId:            uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }),
+    dataCategory:        varchar("data_category", { length: 100 }).notNull(), // 'student_records' | 'attendance' | 'financial' | 'medical' | 'cbt_results'
+    retentionYears:      integer("retention_years").notNull().default(7),
+    autoFlagExpired:     boolean("auto_flag_expired").notNull().default(true),
+    autoDeleteEnabled:   boolean("auto_delete_enabled").notNull().default(false), // never auto-delete without explicit admin action
+    legalBasisNote:      text("legal_basis_note"),
+    createdAt:           timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt:           timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    schoolCategoryUnique: uniqueIndex("idx_retention_school_category").on(table.schoolId, table.dataCategory),
+    schoolIdx:            index("idx_retention_school").on(table.schoolId),
+  })
+);
+
+export const dataRetentionPoliciesRelations = relations(dataRetentionPolicies, ({ one }) => ({
+  school: one(schools, { fields: [dataRetentionPolicies.schoolId], references: [schools.id] }),
+}));
+
+// ── Table: data_subject_requests ─────────────────────────────────────────────
+export const dataSubjectRequests = pgTable(
+  "data_subject_requests",
+  {
+    id:               uuid("id").primaryKey().defaultRandom(),
+    schoolId:         uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }),
+    requesterEmail:   varchar("requester_email", { length: 255 }).notNull(),
+    requesterName:    varchar("requester_name", { length: 255 }),
+    requestType:      varchar("request_type", { length: 50 }).notNull().default("access"), // 'access' | 'deletion' | 'portability' | 'correction'
+    dataCategories:   text("data_categories").array(),
+    subjectId:        uuid("subject_id"),              // optional: user_id or student_id if known
+    status:           varchar("status", { length: 50 }).notNull().default("pending"), // 'pending' | 'under_review' | 'completed' | 'rejected'
+    adminNotes:       text("admin_notes"),
+    reviewedBy:       uuid("reviewed_by").references(() => users.id),
+    reviewedAt:       timestamp("reviewed_at", { withTimezone: true }),
+    responseSent:     boolean("response_sent").notNull().default(false),
+    createdAt:        timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt:        timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    schoolIdx:  index("idx_dsr_school").on(table.schoolId),
+    statusIdx:  index("idx_dsr_status").on(table.schoolId, table.status),
+    emailIdx:   index("idx_dsr_email").on(table.schoolId, table.requesterEmail),
+  })
+);
+
+export const dataSubjectRequestsRelations = relations(dataSubjectRequests, ({ one }) => ({
+  school:     one(schools, { fields: [dataSubjectRequests.schoolId], references: [schools.id] }),
+  reviewer:   one(users,   { fields: [dataSubjectRequests.reviewedBy], references: [users.id] }),
+}));
+
 // ── Milestone 32 Relations ─────────────────────────────────────
 export const schoolGroupsRelations = relations(schoolGroups, ({ one, many }) => ({
   owner: one(users, { fields: [schoolGroups.ownerUserId], references: [users.id] }),

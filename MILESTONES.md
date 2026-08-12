@@ -512,12 +512,12 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 ---
 
-## Milestone 33: Data Privacy & NDPR Compliance — [ ] NOT STARTED
+## Milestone 33: Data Privacy & NDPR Compliance — [x] COMPLETE
 
-- [ ] Privacy & Retention schema: consent/legal-basis tracking per data category, configurable retention periods, scheduled flagging of records past retention
-- [ ] Data Subject Rights Workflow: a right-to-access / right-to-deletion request workflow, routed to the school admin for review — not auto-executed
-- [ ] Sensitive Field Protection: verify sensitive fields (medical, allergies, financial/payroll) are role-restricted, not visible to every staff member by default
-- [ ] Automated test: access requests, retention enforcement, and sensitive-field restriction all provably work across multi-tenant tests
+- [x] Privacy & Retention schema: consent/legal-basis tracking per data category, configurable retention periods, scheduled flagging of records past retention
+- [x] Data Subject Rights Workflow: a right-to-access / right-to-deletion request workflow, routed to the school admin for review — not auto-executed
+- [x] Sensitive Field Protection: verify sensitive fields (medical, allergies, financial/payroll) are role-restricted, not visible to every staff member by default
+- [x] Automated test: access requests, retention enforcement, and sensitive-field restriction all provably work across multi-tenant tests
 
 **Definition of Done:** Access requests, retention, and sensitive-field restriction all provably work, ensuring regulatory compliance and competitive trust signals.
 

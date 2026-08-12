@@ -162,6 +162,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
               <NavItem href="/dashboard/library" id="nav-library" label="Library System" icon={<IconReports />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/hostel" id="nav-hostel" label="Hostel System" icon={<IconAttendance />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/settings/licenses" id="nav-licenses" label="License Center" icon={<IconLicense />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/settings/privacy" id="nav-privacy" label="Data Privacy & NDPR" icon={<IconSettings />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/settings" id="nav-settings" label="Settings" icon={<IconSettings />} onClick={() => setIsMobileMenuOpen(false)} />
             </>
           )}

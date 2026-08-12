@@ -39,6 +39,6 @@ export * from "./services/saas-analytics";
 export * from "./services/inventory";
 export * from "./services/data-export";
 export * from "./services/multi-branch";
+export * from "./services/privacy";
 export { db } from "./client";
 export type { Db } from "./client";
-

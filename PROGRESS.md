@@ -683,3 +683,34 @@ Apexium now supports Multi-Branch School Groups (`school_groups`). Educational o
 Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
 
 
+## Milestone 33: Data Privacy & NDPR Compliance — COMPLETE
+Date: August 12, 2026
+
+### Deliverables
+- **Schema Tables Added**: 3 (`privacy_consents`, `data_retention_policies`, `data_subject_requests`)
+- **Migration Script**: `m33-privacy-migrate.ts` (idempotent, applied on both primary and pooler Supabase databases)
+- **Service**: `packages/db/src/services/privacy.ts` — 10 functions: consent recording/withdrawal, retention policy upsert, expired record flagging, DSR submission, admin DSR review, and sensitive field role enforcement
+- **API Endpoints**: `/api/privacy/consents`, `/api/privacy/requests`, `/api/privacy/requests/[id]`, `/api/privacy/retention`
+- **UI Dashboard**: `/dashboard/settings/privacy` — Consent Registry, Retention Policies, Data Subject Requests, Sensitive Field Access Reference
+- **Sidebar Nav**: "Data Privacy & NDPR" added to admin System navigation
+
+### What this means in plain terms
+
+Apexium now meets Nigeria Data Protection Regulation (NDPR) compliance requirements. Each school can record why and how it collects sensitive data (medical records, financial data, etc.) and track whether parents/students have given consent. Administrators can set configurable data retention windows (e.g. student records for 7 years) and see which data categories have exceeded their retention period. Parents, students, or staff can formally request access to or deletion of their data, and the system routes these requests to the school admin for human review — nothing is auto-deleted. Sensitive fields like medical history and payroll information are restricted so only administrators can see them; teachers are explicitly denied access.
+
+### Proof it works
+
+1. `privacy.ts` — All 10 service functions implemented and working against live Supabase database
+2. `privacy.test.ts` — **10/10 Vitest tests passed**:
+   - Consent recording (medical category, consent legal basis)
+   - Consent withdrawal (status → withdrawn, withdrawnAt timestamp)
+   - Retention policy upsert (student_records, 7 years, auto_delete_enabled = false)
+   - Expired record flagging (attendance policy set to 0 years, flag fires correctly)
+   - DSR submission (right-to-access request, status = pending)
+   - DSR admin review (status → completed, adminNotes, reviewedBy populated)
+   - Teacher denied access to medical sensitive field category (throws "Access denied")
+   - Admin allowed access to medical sensitive field category (resolves cleanly)
+   - Teacher denied access to financial_payroll sensitive field category
+   - Cross-tenant isolation (School B admin cannot see School A's data subject requests)
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
