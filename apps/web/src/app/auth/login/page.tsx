@@ -40,35 +40,43 @@ export default function LoginPage() {
 
   return (
     <div className="w-full max-w-md animate-slide-up">
-      {/* Mobile logo */}
-      <div className="flex items-center gap-2 mb-8 lg:hidden">
-        <div className="w-8 h-8 rounded-lg bg-brand-600 flex items-center justify-center">
+      {/* Mobile Brand Header */}
+      <div className="flex items-center gap-3 mb-8 lg:hidden">
+        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-indigo-400 flex items-center justify-center shadow-lg shadow-indigo-500/20">
           <svg
-            className="w-5 h-5 text-white"
+            className="w-6 h-6 text-white"
             fill="none"
             viewBox="0 0 24 24"
             stroke="currentColor"
-            strokeWidth={1.5}
+            strokeWidth={2}
           >
             <path
               strokeLinecap="round"
               strokeLinejoin="round"
-              d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5"
+              d="M12 14l9-5-9-5-9 5 9 5z"
+            />
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 01-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"
             />
           </svg>
         </div>
-        <span className="font-bold text-lg text-brand-900">Apexium ERP</span>
+        <span className="font-extrabold text-xl text-slate-900 tracking-tight">
+          Apexium<span className="text-indigo-600">ERP</span>
+        </span>
       </div>
 
-      <h1 className="text-2xl font-bold text-slate-900 mb-1">Welcome back</h1>
+      <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">Welcome back</h1>
       <p className="text-slate-500 text-sm mb-8">
         Sign in to your school account to continue.
       </p>
 
+      {/* Clean Single-Purpose Login Form */}
       <form id="login-form" onSubmit={handleLogin} className="space-y-5">
         <div>
-          <label htmlFor="email" className="label">
-            Email address
+          <label htmlFor="email" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+            Email Address
           </label>
           <input
             id="email"
@@ -78,15 +86,20 @@ export default function LoginPage() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="input-field"
+            className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none text-slate-900 text-sm transition-all"
             placeholder="you@yourschool.edu"
           />
         </div>
 
         <div>
-          <label htmlFor="password" className="label">
-            Password
-          </label>
+          <div className="flex items-center justify-between mb-2">
+            <label htmlFor="password" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+              Password
+            </label>
+            <a href="#forgot-password" className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">
+              Forgot password?
+            </a>
+          </div>
           <input
             id="password"
             name="password"
@@ -95,7 +108,7 @@ export default function LoginPage() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="input-field"
+            className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none text-slate-900 text-sm transition-all"
             placeholder="••••••••"
           />
         </div>
@@ -104,9 +117,9 @@ export default function LoginPage() {
           <div
             id="login-error"
             role="alert"
-            className="rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700"
+            className="rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-700 font-medium"
           >
-            {error}
+            ⚠️ {error}
           </div>
         )}
 
@@ -114,7 +127,7 @@ export default function LoginPage() {
           id="login-submit"
           type="submit"
           disabled={loading}
-          className="btn-primary w-full"
+          className="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/25 hover:shadow-indigo-500/40 transition-all text-sm cursor-pointer disabled:opacity-50 flex items-center justify-center"
         >
           {loading ? (
             <>
@@ -145,96 +158,8 @@ export default function LoginPage() {
         </button>
       </form>
 
-      {/* Demo Credentials Quick Fill Section */}
-      <div className="mt-8 pt-6 border-t border-slate-200">
-        <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 text-center">
-          Demo Portals Quick Fill
-        </p>
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={() => {
-              setEmail("admin@apexium.edu");
-              setPassword("DemoAdmin123!");
-            }}
-            className="px-3 py-2 text-xs font-semibold rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border border-indigo-200 transition-colors"
-          >
-            🛡️ Demo Admin
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setEmail("teacher@apexium.edu");
-              setPassword("DemoTeacher123!");
-            }}
-            className="px-3 py-2 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 transition-colors"
-          >
-            👨‍🏫 Demo Teacher
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setEmail("parent@apexium.edu");
-              setPassword("DemoParent123!");
-            }}
-            className="px-3 py-2 text-xs font-semibold rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 transition-colors"
-          >
-            👨‍👩‍👧 Demo Parent
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setEmail("student@apexium.edu");
-              setPassword("DemoStudent123!");
-            }}
-            className="px-3 py-2 text-xs font-semibold rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 border border-sky-200 transition-colors"
-          >
-            🎓 Demo Student
-          </button>
-        </div>
-      </div>
-
-      {/* SaaS Registration & Navigation Links */}
-      <div className="mt-6 p-4 rounded-xl bg-indigo-50/70 border border-indigo-100 space-y-2 text-center text-xs">
-        <p className="font-semibold text-slate-700">Want to create a new school tenant on Apexium SaaS?</p>
-        <div className="flex justify-center space-x-3">
-          <a href="/register" className="font-bold text-indigo-600 hover:text-indigo-800 underline">
-            🚀 Register School Tenant
-          </a>
-          <span className="text-slate-300">•</span>
-          <a href="/pricing" className="font-bold text-indigo-600 hover:text-indigo-800 underline">
-            💳 Subscription Plans
-          </a>
-          <span className="text-slate-300">•</span>
-          <a href="/platform" className="font-bold text-purple-600 hover:text-purple-800 underline">
-            🌐 Platform Admin
-          </a>
-        </div>
-      </div>
-
-      {/* Direct Module Quick Shortcuts for Verification */}
-      <div className="mt-4 pt-4 border-t border-slate-200">
-        <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2 text-center">
-          Enterprise ERP Module Quick Access
-        </p>
-        <div className="grid grid-cols-3 gap-1.5 text-center text-xs font-semibold">
-          <a href="/dashboard/inventory" className="p-2 rounded bg-slate-100 hover:bg-slate-200 text-slate-700">
-            📦 Inventory
-          </a>
-          <a href="/dashboard/settings/data-export" className="p-2 rounded bg-slate-100 hover:bg-slate-200 text-slate-700">
-            💾 Data Export
-          </a>
-          <a href="/dashboard/group" className="p-2 rounded bg-slate-100 hover:bg-slate-200 text-slate-700">
-            🏢 Multi-Branch
-          </a>
-        </div>
-      </div>
-
-      <p className="mt-6 text-center text-sm text-slate-500">
-        Already have a school account? Sign in above or contact your school administrator.
+      <p className="mt-8 text-center text-xs text-slate-400">
+        Apexium School ERP • Multi-Tenant Enterprise Education System
       </p>
     </div>
   );

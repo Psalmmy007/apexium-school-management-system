@@ -86,15 +86,20 @@ export default function SchoolLoginPageClient({ school }: { school: SchoolInfo }
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="input"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none text-slate-900 text-sm transition-all"
               placeholder="user@school.edu.ng"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-slate-700 font-bold mb-1">
-              Password
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label htmlFor="password" className="block text-slate-700 font-bold">
+                Password
+              </label>
+              <a href="#forgot-password" className="text-indigo-600 hover:underline font-semibold text-[11px]">
+                Forgot password?
+              </a>
+            </div>
             <input
               id="password"
               name="password"
@@ -103,7 +108,7 @@ export default function SchoolLoginPageClient({ school }: { school: SchoolInfo }
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="input"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none text-slate-900 text-sm transition-all"
               placeholder="••••••••"
             />
           </div>
@@ -122,60 +127,15 @@ export default function SchoolLoginPageClient({ school }: { school: SchoolInfo }
             id="login-submit"
             type="submit"
             disabled={loading}
-            className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow-md cursor-pointer disabled:opacity-50"
+            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow-md cursor-pointer disabled:opacity-50 flex items-center justify-center text-sm"
           >
             {loading ? "Signing in..." : `Sign In to ${school.name}`}
           </button>
         </form>
 
-        {/* Demo Credentials Quick Fill */}
-        <div className="pt-4 border-t border-slate-100 space-y-2">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block text-center">
-            Demo Portal Sign In Options
-          </span>
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <button
-              type="button"
-              onClick={() => {
-                setEmail("admin@apexium.edu");
-                setPassword("DemoAdmin123!");
-              }}
-              className="px-2.5 py-1.5 rounded-lg bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-semibold border border-indigo-200 transition"
-            >
-              🛡️ Admin
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setEmail("teacher@apexium.edu");
-                setPassword("DemoTeacher123!");
-              }}
-              className="px-2.5 py-1.5 rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 font-semibold border border-emerald-200 transition"
-            >
-              👨‍🏫 Teacher
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setEmail("parent@apexium.edu");
-                setPassword("DemoParent123!");
-              }}
-              className="px-2.5 py-1.5 rounded-lg bg-amber-50 text-amber-700 hover:bg-amber-100 font-semibold border border-amber-200 transition"
-            >
-              👨‍👩‍👧 Parent
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setEmail("student@apexium.edu");
-                setPassword("DemoStudent123!");
-              }}
-              className="px-2.5 py-1.5 rounded-lg bg-sky-50 text-sky-700 hover:bg-sky-100 font-semibold border border-sky-200 transition"
-            >
-              🎓 Student
-            </button>
-          </div>
-        </div>
+        <p className="text-[11px] text-center text-slate-400 border-t border-slate-100 pt-3">
+          Powered by Apexium ERP • Secure Portal Session
+        </p>
       </div>
     </div>
   );

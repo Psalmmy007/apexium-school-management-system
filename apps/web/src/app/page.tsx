@@ -79,6 +79,14 @@ export default function HomePage() {
             >
               💳 View Naira Plans & Pricing
             </Link>
+
+            <a
+              id="hero-demo-cta"
+              href="#demo-showcase"
+              className="w-full sm:w-auto text-center font-semibold text-indigo-300 hover:text-white bg-indigo-950/60 hover:bg-indigo-900/80 border border-indigo-800/80 px-6 py-4 rounded-2xl transition-all"
+            >
+              ✨ Try a Live Demo
+            </a>
           </div>
 
           {/* ── Role-Based Entry Points Cards ─────────────────────────────────── */}
@@ -116,6 +124,75 @@ export default function HomePage() {
                 className="inline-flex items-center text-sm font-bold text-purple-400 hover:text-purple-300 transition-colors"
               >
                 Sign In to Your School Portal →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ── Live Demo Role Showcase Section ─────────────────────────────────── */}
+      <section id="demo-showcase" className="py-16 bg-slate-900/60 border-t border-slate-800/80">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-10">
+            <h2 className="text-xs font-bold text-indigo-400 uppercase tracking-widest mb-2">Interactive Product Demonstration</h2>
+            <p className="text-2xl sm:text-3xl font-extrabold text-white">Experience Apexium ERP Roles Live</p>
+            <p className="text-sm text-slate-400 mt-2">Explore pre-configured demo account profiles across administrative and portal user roles.</p>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-5xl mx-auto">
+            <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col justify-between">
+              <div>
+                <div className="text-2xl mb-2">🛡️</div>
+                <h3 className="font-bold text-white text-base">School Admin Demo</h3>
+                <p className="text-xs text-slate-400 mt-1">Full management of students, teachers, fees, setup, and school configuration.</p>
+              </div>
+              <Link
+                href="/auth/login"
+                className="mt-4 w-full text-center py-2 px-3 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 text-xs font-bold border border-indigo-500/30 transition-all"
+              >
+                Launch Admin Demo →
+              </Link>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col justify-between">
+              <div>
+                <div className="text-2xl mb-2">👨‍🏫</div>
+                <h3 className="font-bold text-white text-base">Teacher Portal Demo</h3>
+                <p className="text-xs text-slate-400 mt-1">Attendance entry, Continuous Assessment (CA) scores, and lesson note management.</p>
+              </div>
+              <Link
+                href="/auth/login"
+                className="mt-4 w-full text-center py-2 px-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 text-xs font-bold border border-emerald-500/30 transition-all"
+              >
+                Launch Teacher Demo →
+              </Link>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col justify-between">
+              <div>
+                <div className="text-2xl mb-2">👨‍👩‍👧</div>
+                <h3 className="font-bold text-white text-base">Parent Portal Demo</h3>
+                <p className="text-xs text-slate-400 mt-1">View child report cards, attendance calendar, and online fee payment portal.</p>
+              </div>
+              <Link
+                href="/auth/login"
+                className="mt-4 w-full text-center py-2 px-3 rounded-xl bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 text-xs font-bold border border-amber-500/30 transition-all"
+              >
+                Launch Parent Demo →
+              </Link>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 flex flex-col justify-between">
+              <div>
+                <div className="text-2xl mb-2">🎓</div>
+                <h3 className="font-bold text-white text-base">Student Portal Demo</h3>
+                <p className="text-xs text-slate-400 mt-1">Check timetable, online CBT exams, academic progress, and study materials.</p>
+              </div>
+              <Link
+                href="/auth/login"
+                className="mt-4 w-full text-center py-2 px-3 rounded-xl bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 text-xs font-bold border border-sky-500/30 transition-all"
+              >
+                Launch Student Demo →
               </Link>
             </div>
           </div>
