@@ -5,7 +5,7 @@ import {
   dataRetentionPolicies, 
   dataSubjectRequests, 
   students, 
-  attendance 
+  studentAttendance 
 } from '../schema/index';
 
 // 1. recordConsent

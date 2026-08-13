@@ -1,29 +1,21 @@
-import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { db, users } from '@apexium/db';
-import { eq } from 'drizzle-orm';
+import { getSessionUser } from '@/lib/auth/session';
 import { NextResponse } from 'next/server';
 import { reviewDataSubjectRequest } from '@apexium/db';
 
 export async function PATCH(req: Request, { params }: { params: { id: string } }) {
-  const supabase = createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  
-  const [dbUser] = await db.select().from(users).where(eq(users.id, user.id as any)).limit(1);
-  if (!dbUser?.schoolId) return NextResponse.json({ error: 'No school context' }, { status: 403 });
-  
-  const schoolId = dbUser.schoolId;
+  const user = await getSessionUser();
+  if (!user || !user.schoolId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await req.json();
-    const request = await reviewDataSubjectRequest({
+    const reviewed = await reviewDataSubjectRequest({
       requestId: params.id,
-      schoolId,
-      adminUserId: dbUser.id,
+      schoolId: user.schoolId,
+      adminUserId: user.id,
       status: body.status,
       adminNotes: body.adminNotes,
     });
-    return NextResponse.json(request);
+    return NextResponse.json(reviewed);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

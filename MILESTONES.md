@@ -523,12 +523,12 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 ---
 
-## Milestone 34: Public Admissions & Enrollment Intake — [ ] NOT STARTED
+## Milestone 34: Public Admissions & Enrollment Intake — [x] COMPLETE
 
-- [ ] Public Application Portal: a no-login, school-branded public application form for prospective parents
-- [ ] Admissions Intake Review Workflow: admin review workflow (accept / reject / waitlist)
-- [ ] Automated Conversion to SIS: accepted applications convert directly into a real SIS student + guardian record with zero duplicate data entry
-- [ ] Payment Gateway Integration: optional application fee collection via Paystack, reusing the Milestone 12 pattern
-- [ ] Automated test: prospective parent applies online, payment processes, admin accepts, and student record is created and populated without manual re-entry
+- [x] Public Application Portal: a no-login, school-branded public application form for prospective parents
+- [x] Admissions Intake Review Workflow: admin review workflow (accept / reject / waitlist)
+- [x] Automated Conversion to SIS: accepted applications convert directly into a real SIS student + guardian record with zero duplicate data entry
+- [x] Payment Gateway Integration: optional application fee collection via Paystack, reusing the Milestone 12 pattern
+- [x] Automated test: prospective parent applies online, payment processes, admin accepts, and student record is created and populated without manual re-entry
 
 **Definition of Done:** A parent can apply entirely online, and acceptance produces a correctly populated student record with zero manual re-entry.

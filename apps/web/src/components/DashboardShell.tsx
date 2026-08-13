@@ -101,6 +101,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
             <>
               <p className="nav-group-label mt-4">Academic</p>
               <NavItem href="/dashboard/teacher" id="nav-teacher-portal" label="Teacher Workspace" icon={<IconDashboard />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/admissions" id="nav-admissions" label="Admissions" icon={<IconStudents />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/students" id="nav-students" label="Students" icon={<IconStudents />} onClick={() => setIsMobileMenuOpen(false)} />
               {user.role === "admin" && (
                 <NavItem href="/dashboard/academics/structure" id="nav-academic-structure" label="Academic Structure" icon={<IconTimetable />} onClick={() => setIsMobileMenuOpen(false)} />

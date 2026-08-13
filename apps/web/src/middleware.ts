@@ -38,6 +38,8 @@ const ALWAYS_PUBLIC_PREFIXES = [
   "/api/webhooks/",
   "/api/saas/plans",
   "/api/saas/register",
+  "/api/admissions/",   // Public admissions intake API
+  "/s/",                // School-specific public pages (admissions, login)
   "/_next/",
   "/favicon",
 ];

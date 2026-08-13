@@ -3637,19 +3637,101 @@ export const schoolGroupsRelations = relations(schoolGroups, ({ one, many }) => 
 export const groupMembershipsRelations = relations(groupMemberships, ({ one }) => ({
   group: one(schoolGroups, { fields: [groupMemberships.groupId], references: [schoolGroups.id] }),
   user: one(users, { fields: [groupMemberships.userId], references: [users.id] }),
+}));// ── Enums (New) ────────────────────────────────────────────────
+export const guardianRelationshipEnum = pgEnum("guardian_relationship", ["father", "mother", "guardian", "other"]);
+
+// ── Table: admission_applications ───────────────────────────────
+export const admissionApplications = pgTable(
+  "admission_applications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    schoolId: uuid("school_id")
+      .notNull()
+      .references(() => schools.id, { onDelete: "cascade" }),
+    applicationReference: varchar("application_reference", { length: 50 }).notNull(),
+    firstName: varchar("first_name", { length: 100 }).notNull(),
+    middleName: varchar("middle_name", { length: 100 }),
+    lastName: varchar("last_name", { length: 100 }).notNull(),
+    dateOfBirth: timestamp("date_of_birth", { mode: "date" }).notNull(),
+    gender: genderEnum("gender").notNull(),
+    nationality: varchar("nationality", { length: 100 }).default("Nigerian"),
+    currentSchool: varchar("current_school", { length: 200 }),
+    previousAcademicInfo: text("previous_academic_info"),
+    desiredClassId: uuid("desired_class_id").references(() => classes.id, { onDelete: "set null" }),
+    desiredSession: varchar("desired_session", { length: 50 }),
+    desiredTermId: uuid("desired_term_id").references(() => terms.id, { onDelete: "set null" }),
+    guardianName: varchar("guardian_name", { length: 200 }).notNull(),
+    guardianRelationship: guardianRelationshipEnum("guardian_relationship").notNull().default("guardian"),
+    guardianEmail: varchar("guardian_email", { length: 255 }).notNull(),
+    guardianPhone: varchar("guardian_phone", { length: 50 }).notNull(),
+    guardianAddress: text("guardian_address"),
+    status: varchar("status", { length: 50 }).notNull().default("draft"),
+    source: varchar("source", { length: 100 }).default("online"),
+    rejectionReason: text("rejection_reason"),
+    waitlistReason: text("waitlist_reason"),
+    internalNotes: text("internal_notes"),
+    consentRecorded: boolean("consent_recorded").notNull().default(false),
+    paymentRequired: boolean("payment_required").notNull().default(false),
+    paymentVerified: boolean("payment_verified").notNull().default(false),
+    paymentReference: varchar("payment_reference", { length: 200 }),
+    submittedAt: timestamp("submitted_at", { withTimezone: true }),
+    reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
+    reviewedBy: uuid("reviewed_by").references(() => users.id, { onDelete: "set null" }),
+    decisionAt: timestamp("decision_at", { withTimezone: true }),
+    decisionBy: uuid("decision_by").references(() => users.id, { onDelete: "set null" }),
+    convertedStudentId: uuid("converted_student_id").references(() => students.id, { onDelete: "set null" }),
+    convertedAt: timestamp("converted_at", { withTimezone: true }),
+    convertedBy: uuid("converted_by").references(() => users.id, { onDelete: "set null" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    schoolIdx: index("idx_admission_school").on(table.schoolId),
+    referenceIdx: uniqueIndex("idx_admission_reference_school").on(table.schoolId, table.applicationReference),
+    globalReferenceIdx: uniqueIndex("idx_admission_reference_global").on(table.applicationReference),
+    statusIdx: index("idx_admission_status").on(table.schoolId, table.status),
+    guardianEmailIdx: index("idx_admission_guardian_email").on(table.schoolId, table.guardianEmail),
+    nameDobIdx: index("idx_admission_name_dob").on(table.schoolId, table.firstName, table.lastName, table.dateOfBirth),
+  })
+);
+
+export const admissionApplicationsRelations = relations(admissionApplications, ({ one, many }) => ({
+  school: one(schools, { fields: [admissionApplications.schoolId], references: [schools.id] }),
+  desiredClass: one(classes, { fields: [admissionApplications.desiredClassId], references: [classes.id] }),
+  desiredTerm: one(terms, { fields: [admissionApplications.desiredTermId], references: [terms.id] }),
+  reviewedBy: one(users, { fields: [admissionApplications.reviewedBy], references: [users.id] }),
+  decisionBy: one(users, { fields: [admissionApplications.decisionBy], references: [users.id] }),
+  convertedStudent: one(students, { fields: [admissionApplications.convertedStudentId], references: [students.id] }),
+  convertedBy: one(users, { fields: [admissionApplications.convertedBy], references: [users.id] }),
+  documents: many(admissionDocuments),
 }));
 
+// ── Table: admission_documents ────────────────────────────────
+export const admissionDocuments = pgTable(
+  "admission_documents",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    applicationId: uuid("application_id").notNull().references(() => admissionApplications.id, { onDelete: "cascade" }),
+    schoolId: uuid("school_id").notNull().references(() => schools.id, { onDelete: "cascade" }),
+    documentType: varchar("document_type", { length: 100 }).notNull(),
+    fileName: varchar("file_name", { length: 500 }).notNull(),
+    storagePath: varchar("storage_path", { length: 1000 }).notNull(),
+    fileSizeBytes: integer("file_size_bytes"),
+    mimeType: varchar("mime_type", { length: 100 }),
+    verificationStatus: varchar("verification_status", { length: 50 }).notNull().default("pending"),
+    verifiedBy: uuid("verified_by").references(() => users.id, { onDelete: "set null" }),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    uploadedAt: timestamp("uploaded_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    applicationIdx: index("idx_adoc_application").on(table.applicationId),
+    schoolIdx: index("idx_adoc_school").on(table.schoolId),
+  })
+);
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+export const admissionDocumentsRelations = relations(admissionDocuments, ({ one }) => ({
+  application: one(admissionApplications, { fields: [admissionDocuments.applicationId], references: [admissionApplications.id] }),
+  school: one(schools, { fields: [admissionDocuments.schoolId], references: [schools.id] }),
+  verifiedBy: one(users, { fields: [admissionDocuments.verifiedBy], references: [users.id] }),
+}));

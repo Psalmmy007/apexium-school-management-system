@@ -22,6 +22,7 @@ import {
   lmsSubmissions,
 } from "../index";
 import { eq, and, sql, desc, count, avg, sum } from "drizzle-orm";
+import { getAdmissionStatistics } from "./admissions";
 
 export interface AnalyticsFilterParams {
   sessionId?: string;
@@ -429,4 +430,9 @@ export async function exportAnalyticsDataset(
   }
 
   return `Metric,Value\nTotal Students,${data.totalStudents}\nStudent Attendance Rate,${data.studentAttendanceRate}%\nTotal Revenue,₦${data.totalRevenue}\nTotal Expenses,₦${data.totalExpenses}\nNet Income,₦${data.netIncome}\nHostel Occupancy,${data.hostelOccupancyRate}%\nTransport Utilization,${data.transportUtilizationRate}%`;
+}
+
+// ── Milestone 34: Admissions Analytics ──────────────────────────
+export async function getAdmissionAnalytics(schoolId: string) {
+  return await getAdmissionStatistics(schoolId);
 }

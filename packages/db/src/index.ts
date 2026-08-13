@@ -42,3 +42,4 @@ export * from "./services/multi-branch";
 export * from "./services/privacy";
 export { db } from "./client";
 export type { Db } from "./client";
+export * from "./services/admissions";

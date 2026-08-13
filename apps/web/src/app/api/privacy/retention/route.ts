@@ -1,21 +1,13 @@
-import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { db, users } from '@apexium/db';
-import { eq } from 'drizzle-orm';
+import { getSessionUser } from '@/lib/auth/session';
 import { NextResponse } from 'next/server';
 import { getRetentionPolicies, setRetentionPolicy } from '@apexium/db';
 
 export async function GET() {
-  const supabase = createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  
-  const [dbUser] = await db.select().from(users).where(eq(users.id, user.id as any)).limit(1);
-  if (!dbUser?.schoolId) return NextResponse.json({ error: 'No school context' }, { status: 403 });
-  
-  const schoolId = dbUser.schoolId;
+  const user = await getSessionUser();
+  if (!user || !user.schoolId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
-    const policies = await getRetentionPolicies(schoolId);
+    const policies = await getRetentionPolicies(user.schoolId);
     return NextResponse.json(policies);
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
@@ -23,22 +15,14 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const supabase = createSupabaseServerClient();
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  
-  const [dbUser] = await db.select().from(users).where(eq(users.id, user.id as any)).limit(1);
-  if (!dbUser?.schoolId) return NextResponse.json({ error: 'No school context' }, { status: 403 });
-  
-  const schoolId = dbUser.schoolId;
+  const user = await getSessionUser();
+  if (!user || !user.schoolId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   try {
     const body = await req.json();
     const policy = await setRetentionPolicy({
-      schoolId,
-      dataCategory: body.dataCategory,
-      retentionYears: body.retentionYears,
-      legalBasisNote: body.legalBasisNote,
+      schoolId: user.schoolId,
+      ...body,
     });
     return NextResponse.json(policy);
   } catch (error: any) {
