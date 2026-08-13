@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUser, isValidUUID } from "@/lib/auth/session";
-import { completeSetupWizardOnboarding, db, schools } from "@apexium/db";
+import { completeSetupWizardOnboarding } from "@apexium/db";
 
 export async function POST() {
   const user = await getSessionUser();
@@ -8,14 +8,12 @@ export async function POST() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let schoolId = user.schoolId;
+  const schoolId = user.schoolId;
   if (!isValidUUID(schoolId)) {
-    const [firstSchool] = await db.select().from(schools).limit(1);
-    if (firstSchool && isValidUUID(firstSchool.id)) {
-      schoolId = firstSchool.id;
-    } else {
-      return NextResponse.json({ error: "No active school found to complete onboarding." }, { status: 400 });
-    }
+    return NextResponse.json(
+      { error: "No active school tenant context found to complete onboarding." },
+      { status: 400 }
+    );
   }
 
   try {

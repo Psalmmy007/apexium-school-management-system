@@ -1,36 +1,135 @@
-import { render, screen } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import LoginPage from "./login/page";
 import SchoolLoginPageClient from "../s/[slug]/auth/login/SchoolLoginPageClient";
+import PricingPage from "../pricing/page";
 
 // Mock next/navigation
+const mockPush = vi.fn();
+const mockRefresh = vi.fn();
+let mockSearchParams = new URLSearchParams();
+
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    push: vi.fn(),
-    refresh: vi.fn(),
+    push: mockPush,
+    refresh: mockRefresh,
   }),
+  useSearchParams: () => mockSearchParams,
 }));
 
 // Mock supabase client
+const mockSignInWithPassword = vi.fn();
 vi.mock("@/lib/supabase/client", () => ({
   createSupabaseBrowserClient: () => ({
     auth: {
-      signInWithPassword: vi.fn().mockResolvedValue({ data: { user: { id: "user-123" } }, error: null }),
+      signInWithPassword: mockSignInWithPassword,
     },
   }),
 }));
 
-describe("Login Page Overhaul & Security Audit", () => {
-  it("renders a clean single-purpose login form with email, password, and sign in button", () => {
+describe("Login Page Overhaul, Accessibility & Demo Flow Audit", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSearchParams = new URLSearchParams();
+  });
+
+  it("renders a clean single-purpose login form with accessible email, password, and sign in button", () => {
     render(<LoginPage />);
 
-    expect(screen.getByLabelText(/Email Address/i)).toBeDefined();
-    expect(screen.getByLabelText(/Password/i)).toBeDefined();
-    expect(screen.getByRole("button", { name: /Sign in/i })).toBeDefined();
+    const emailInput = screen.getByLabelText(/Email Address/i) as HTMLInputElement;
+    const passwordInput = screen.getByLabelText(/Password/i) as HTMLInputElement;
+    const submitBtn = screen.getByRole("button", { name: /Sign in/i });
+
+    expect(emailInput).toBeDefined();
+    expect(emailInput.type).toBe("email");
+    expect(emailInput.required).toBe(true);
+    expect(emailInput.getAttribute("autocomplete")).toBe("email");
+
+    expect(passwordInput).toBeDefined();
+    expect(passwordInput.type).toBe("password");
+    expect(passwordInput.required).toBe(true);
+    expect(passwordInput.getAttribute("autocomplete")).toBe("current-password");
+
+    expect(submitBtn).toBeDefined();
     expect(screen.getByText(/Forgot password\?/i)).toBeDefined();
   });
 
-  it("SECURITY VERIFICATION: Ensures public login page contains NO Demo buttons, Registration, Pricing, Platform Admin, or ERP Quick Access", () => {
+  it("handles invalid login credentials and renders an accessible error alert (role='alert')", async () => {
+    mockSignInWithPassword.mockResolvedValueOnce({
+      data: null,
+      error: { message: "Invalid login credentials" },
+    });
+
+    render(<LoginPage />);
+
+    fireEvent.change(screen.getByLabelText(/Email Address/i), { target: { value: "invalid@school.edu" } });
+    fireEvent.change(screen.getByLabelText(/Password/i), { target: { value: "WrongPass123" } });
+    fireEvent.click(screen.getByRole("button", { name: /Sign in/i }));
+
+    await waitFor(() => {
+      const alertEl = screen.getByRole("alert");
+      expect(alertEl).toBeDefined();
+      expect(alertEl.textContent).toContain("Invalid login credentials");
+    });
+  });
+
+  it("DEMO FLOW VERIFICATION: pre-fills admin demo credentials when ?demo=admin is passed", async () => {
+    mockSearchParams = new URLSearchParams("demo=admin");
+    render(<LoginPage />);
+
+    await waitFor(() => {
+      const emailInput = screen.getByLabelText(/Email Address/i) as HTMLInputElement;
+      const passwordInput = screen.getByLabelText(/Password/i) as HTMLInputElement;
+
+      expect(emailInput.value).toBe("admin@apexium.edu");
+      expect(passwordInput.value).toBe("DemoAdmin123!");
+      expect(screen.getByText(/Pre-filled demo credentials for School Administrator/i)).toBeDefined();
+    });
+  });
+
+  it("DEMO FLOW VERIFICATION: pre-fills teacher demo credentials when ?demo=teacher is passed", async () => {
+    mockSearchParams = new URLSearchParams("demo=teacher");
+    render(<LoginPage />);
+
+    await waitFor(() => {
+      const emailInput = screen.getByLabelText(/Email Address/i) as HTMLInputElement;
+      const passwordInput = screen.getByLabelText(/Password/i) as HTMLInputElement;
+
+      expect(emailInput.value).toBe("teacher@apexium.edu");
+      expect(passwordInput.value).toBe("DemoTeacher123!");
+      expect(screen.getByText(/Pre-filled demo credentials for Teacher Portal/i)).toBeDefined();
+    });
+  });
+
+  it("DEMO FLOW VERIFICATION: pre-fills parent demo credentials when ?demo=parent is passed", async () => {
+    mockSearchParams = new URLSearchParams("demo=parent");
+    render(<LoginPage />);
+
+    await waitFor(() => {
+      const emailInput = screen.getByLabelText(/Email Address/i) as HTMLInputElement;
+      const passwordInput = screen.getByLabelText(/Password/i) as HTMLInputElement;
+
+      expect(emailInput.value).toBe("parent@apexium.edu");
+      expect(passwordInput.value).toBe("DemoParent123!");
+      expect(screen.getByText(/Pre-filled demo credentials for Parent Portal/i)).toBeDefined();
+    });
+  });
+
+  it("DEMO FLOW VERIFICATION: pre-fills student demo credentials when ?demo=student is passed", async () => {
+    mockSearchParams = new URLSearchParams("demo=student");
+    render(<LoginPage />);
+
+    await waitFor(() => {
+      const emailInput = screen.getByLabelText(/Email Address/i) as HTMLInputElement;
+      const passwordInput = screen.getByLabelText(/Password/i) as HTMLInputElement;
+
+      expect(emailInput.value).toBe("student@apexium.edu");
+      expect(passwordInput.value).toBe("DemoStudent123!");
+      expect(screen.getByText(/Pre-filled demo credentials for Student Portal/i)).toBeDefined();
+    });
+  });
+
+  it("SECURITY VERIFICATION: Ensures public login page contains NO static Demo buttons, Registration, Pricing, Platform Admin, or ERP Quick Access", () => {
     const { container } = render(<LoginPage />);
     const html = container.innerHTML;
 
@@ -38,7 +137,7 @@ describe("Login Page Overhaul & Security Audit", () => {
     expect(html).not.toContain('href="/platform"');
     expect(html).not.toContain("Platform Admin");
 
-    // Must NOT contain Demo Quick Fill buttons
+    // Must NOT contain static Demo Quick Fill buttons in HTML
     expect(html).not.toContain("Demo Admin");
     expect(html).not.toContain("Demo Teacher");
     expect(html).not.toContain("Demo Parent");
@@ -76,6 +175,14 @@ describe("Login Page Overhaul & Security Audit", () => {
     expect(html).not.toContain("Platform Admin");
     expect(html).not.toContain('href="/platform"');
     expect(html).not.toContain("Enterprise ERP Module Quick Access");
+  });
+
+  it("SECURITY VERIFICATION: Ensures pricing page HTML does NOT expose /platform or Platform Admin", () => {
+    const { container } = render(<PricingPage />);
+    const html = container.innerHTML;
+
+    expect(html).not.toContain('href="/platform"');
+    expect(html).not.toContain("Platform Admin");
   });
 });
 
@@ -153,6 +260,7 @@ describe("Protected ERP Routes Access Control", () => {
     "/dashboard",
     "/dashboard/inventory",
     "/dashboard/settings/data-export",
+    "/dashboard/settings/privacy",
     "/dashboard/group",
     "/platform",
   ];

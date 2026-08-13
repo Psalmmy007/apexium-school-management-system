@@ -1,8 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSessionUser, isValidUUID } from "@/lib/auth/session";
 import {
-  db,
-  schools,
   configureAcademicSessionAndTerms,
   configureClassesAndDepartments,
   provisionTeachersAndStaff,
@@ -16,14 +14,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  let schoolId = user.schoolId;
+  const schoolId = user.schoolId;
   if (!isValidUUID(schoolId)) {
-    const [firstSchool] = await db.select().from(schools).limit(1);
-    if (firstSchool && isValidUUID(firstSchool.id)) {
-      schoolId = firstSchool.id;
-    } else {
-      return NextResponse.json({ error: "No active school institution found to configure." }, { status: 400 });
-    }
+    return NextResponse.json(
+      { error: "No active school tenant context found to configure." },
+      { status: 400 }
+    );
   }
 
   try {
@@ -36,40 +32,50 @@ export async function POST(req: Request) {
     );
 
     const { classes, departments } = await configureClassesAndDepartments(
-      user.schoolId,
+      schoolId,
       classNames,
       departmentNames
     );
 
     // Default or user-provided teachers
     const staffToProvision = teachers || [
-      { firstName: "Grace", lastName: "Okonkwo", email: `teacher.grace.${Date.now()}@school.edu.ng` },
-      { firstName: "David", lastName: "Adeyemi", email: `teacher.david.${Date.now()}@school.edu.ng` },
+      { name: "John Doe", email: `teacher1-${Date.now()}@apexium.edu`, subject: "Mathematics" },
+      { name: "Jane Smith", email: `teacher2-${Date.now()}@apexium.edu`, subject: "English Language" },
     ];
-    const createdTeachers = await provisionTeachersAndStaff(user.schoolId, staffToProvision);
 
-    // Default or user-provided students assigned to created classes
-    const defaultClassId = classes[0]?.id;
+    const provisionedStaff = await provisionTeachersAndStaff(
+      schoolId,
+      staffToProvision
+    );
+
+    // Default or user-provided students
     const studentsToProvision = students || [
-      { firstName: "Emmanuel", lastName: "Bello", classId: defaultClassId },
-      { firstName: "Chiamaka", lastName: "Eze", classId: defaultClassId },
+      { firstName: "Emmanuel", lastName: "Adeyemi", admissionNumber: `ADM-${Date.now()}-01`, gender: "male" as const },
+      { firstName: "Fatima", lastName: "Bello", admissionNumber: `ADM-${Date.now()}-02`, gender: "female" as const },
     ];
-    const createdStudents = await provisionStudentsAndClassAssignments(user.schoolId, studentsToProvision);
 
-    const rolesList = await assignDefaultRolesAndPermissions(user.schoolId);
+    const provisionedStudents = await provisionStudentsAndClassAssignments(
+      schoolId,
+      studentsToProvision
+    );
+
+    const rolesSummary = await assignDefaultRolesAndPermissions(schoolId);
 
     return NextResponse.json({
       success: true,
-      message: "Academic structure, classes, teachers, and students configured successfully",
-      session,
-      terms,
-      classes,
-      departments,
-      teachers: createdTeachers,
-      students: createdStudents,
-      roles: rolesList,
+      message: "Setup Wizard execution completed successfully.",
+      summary: {
+        session,
+        termsCount: terms.length,
+        classesCount: classes.length,
+        departmentsCount: departments.length,
+        teachersCount: provisionedStaff.length,
+        studentsCount: provisionedStudents.length,
+        rolesAssigned: rolesSummary.length,
+      },
     });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    console.error("Setup wizard error:", error);
+    return NextResponse.json({ error: error.message || "Setup wizard failed" }, { status: 500 });
   }
 }

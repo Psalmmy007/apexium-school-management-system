@@ -1,15 +1,39 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect, Suspense } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
-export default function LoginPage() {
+function LoginFormContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const demoRole = searchParams.get("demo");
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const [demoNotice, setDemoNotice] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (demoRole === "admin") {
+      setEmail("admin@apexium.edu");
+      setPassword("DemoAdmin123!");
+      setDemoNotice("✨ Pre-filled demo credentials for School Administrator. Click Sign In below.");
+    } else if (demoRole === "teacher") {
+      setEmail("teacher@apexium.edu");
+      setPassword("DemoTeacher123!");
+      setDemoNotice("✨ Pre-filled demo credentials for Teacher Portal. Click Sign In below.");
+    } else if (demoRole === "parent") {
+      setEmail("parent@apexium.edu");
+      setPassword("DemoParent123!");
+      setDemoNotice("✨ Pre-filled demo credentials for Parent Portal. Click Sign In below.");
+    } else if (demoRole === "student") {
+      setEmail("student@apexium.edu");
+      setPassword("DemoStudent123!");
+      setDemoNotice("✨ Pre-filled demo credentials for Student Portal. Click Sign In below.");
+    }
+  }, [demoRole]);
 
   async function handleLogin(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -71,6 +95,15 @@ export default function LoginPage() {
       <p className="text-slate-500 text-sm mb-8">
         Sign in to your school account to continue.
       </p>
+
+      {demoNotice && (
+        <div
+          id="demo-banner"
+          className="mb-6 p-3.5 rounded-xl bg-indigo-50 border border-indigo-200 text-xs font-semibold text-indigo-800"
+        >
+          {demoNotice}
+        </div>
+      )}
 
       {/* Clean Single-Purpose Login Form */}
       <form id="login-form" onSubmit={handleLogin} className="space-y-5">
@@ -162,5 +195,13 @@ export default function LoginPage() {
         Apexium School ERP • Multi-Tenant Enterprise Education System
       </p>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={<div className="p-8 text-slate-500">Loading authentication portal...</div>}>
+      <LoginFormContent />
+    </Suspense>
   );
 }

@@ -147,7 +147,7 @@ export default function HomePage() {
                 <p className="text-xs text-slate-400 mt-1">Full management of students, teachers, fees, setup, and school configuration.</p>
               </div>
               <Link
-                href="/auth/login"
+                href="/auth/login?demo=admin"
                 className="mt-4 w-full text-center py-2 px-3 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 text-xs font-bold border border-indigo-500/30 transition-all"
               >
                 Launch Admin Demo →
@@ -161,7 +161,7 @@ export default function HomePage() {
                 <p className="text-xs text-slate-400 mt-1">Attendance entry, Continuous Assessment (CA) scores, and lesson note management.</p>
               </div>
               <Link
-                href="/auth/login"
+                href="/auth/login?demo=teacher"
                 className="mt-4 w-full text-center py-2 px-3 rounded-xl bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 text-xs font-bold border border-emerald-500/30 transition-all"
               >
                 Launch Teacher Demo →
@@ -175,7 +175,7 @@ export default function HomePage() {
                 <p className="text-xs text-slate-400 mt-1">View child report cards, attendance calendar, and online fee payment portal.</p>
               </div>
               <Link
-                href="/auth/login"
+                href="/auth/login?demo=parent"
                 className="mt-4 w-full text-center py-2 px-3 rounded-xl bg-amber-600/20 hover:bg-amber-600/30 text-amber-300 text-xs font-bold border border-amber-500/30 transition-all"
               >
                 Launch Parent Demo →
@@ -189,7 +189,7 @@ export default function HomePage() {
                 <p className="text-xs text-slate-400 mt-1">Check timetable, online CBT exams, academic progress, and study materials.</p>
               </div>
               <Link
-                href="/auth/login"
+                href="/auth/login?demo=student"
                 className="mt-4 w-full text-center py-2 px-3 rounded-xl bg-sky-600/20 hover:bg-sky-600/30 text-sky-300 text-xs font-bold border border-sky-500/30 transition-all"
               >
                 Launch Student Demo →
