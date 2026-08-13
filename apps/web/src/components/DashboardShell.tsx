@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { GlobalSearch } from "./GlobalSearch";
+import { NotificationBell } from "./NotificationBell";
 
 interface UserInfo {
   firstName: string;
@@ -233,18 +235,23 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
               </div>
             </div>
 
-            {/* Right: Notifications, User Avatar & Sign Out Button */}
+            {/* Right: Notifications, Global Search & Sign Out Button */}
             <div className="flex items-center gap-2 sm:gap-3">
               <button
-                id="notifications-btn"
-                aria-label="Notifications"
-                className="w-9 h-9 rounded-xl flex items-center justify-center text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition-colors cursor-pointer relative"
+                type="button"
+                onClick={() => {
+                  window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true }));
+                }}
+                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium text-slate-500 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition cursor-pointer"
+                title="Search ERP (Ctrl+K)"
               >
-                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-                </svg>
-                <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-indigo-600 ring-2 ring-white" />
+                <span>🔍</span>
+                <span>Search...</span>
+                <kbd className="bg-white px-1.5 py-0.5 rounded text-[10px] font-mono text-slate-400 border border-slate-200">⌘K</kbd>
               </button>
+
+              <GlobalSearch />
+              <NotificationBell />
 
               <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
                 <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center border border-indigo-200 shadow-xs">
