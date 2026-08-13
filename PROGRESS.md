@@ -714,3 +714,26 @@ Apexium now meets Nigeria Data Protection Regulation (NDPR) compliance requireme
    - Cross-tenant isolation (School B admin cannot see School A's data subject requests)
 
 Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+---
+
+## Milestone 34: Public Admissions & Enrollment Intake — COMPLETE
+Date: August 13, 2026
+
+What this means in plain terms: Prospective parents can visit any school's public web address (e.g. `schoola.apexium.app/admissions`) and submit an online application without needing an existing account. Admins can review, shortlist, waitlist, or accept applicants from their dashboard. Accepting an applicant automatically converts them into a real student, creates or links their guardian record, assigns them to a class, sends an email notification, and logs all security and privacy consent events — requiring zero duplicate data entry.
+
+Proof it works: 9/9 Vitest tests passed in `admissions.test.ts` (draft application submission, status transitions, document verification, duplicate detection, student conversion, and tenant isolation). Next.js production build succeeded with 0 errors across 187 pages.
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+---
+
+## Milestone 35: Public Marketing Landing Page — COMPLETE
+Date: August 13, 2026
+
+What this means in plain terms: The public homepage (`/`) has been completely redesigned with a clear African school value proposition (offline-first, WAEC/NECO grading, transparent Naira pricing, free data export), distinct role-based entry points for school registration vs. existing school login, real built product proof cards, transparent published Naira pricing tiers, a single dominant primary call-to-action ("Register Your School"), and a structural social proof section. In addition, a critical security fix was implemented: the superadmin "SaaS Platform Operator Dashboard" link was completely removed from the public website so internal operator routes are never discoverable by public visitors.
+
+Proof it works: 4/4 Vitest tests passed in `page.test.tsx` verifying that headline differentiators, role-based entry points, dominant primary CTA, and Naira pricing render correctly, and confirming that `/platform` or "SaaS Platform Operator Dashboard" links are 100% absent from the rendered HTML. TypeScript compilation passed with 0 errors and Next.js production build succeeded cleanly.
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+

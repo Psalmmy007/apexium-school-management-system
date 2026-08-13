@@ -535,17 +535,17 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 
 ---
 
-## Milestone 35: Public Marketing Landing Page — [ ] NOT STARTED
+## Milestone 35: Public Marketing Landing Page — [x] COMPLETE
 
-- [ ] Value proposition content: a clear headline stating what Apexium is and who it's for, plus a subheadline naming concrete differentiators — offline-first (works without reliable internet/power), WAEC/NECO-aligned grading, transparent published pricing in Naira, and free data export with no lock-in
-- [ ] Role-based entry points: the page must branch clearly by who's visiting — a school owner/admin registering their school, a teacher/parent/student signing into a school that already uses Apexium — as distinct, clearly labeled paths, not one generic "Sign In" button that leaves the visitor guessing
-- [ ] Product proof section: real screenshots of the actual built product (Core ERP dashboard, Parent Portal, a report card) — not stock photography or decorative icons standing in for the product
-- [ ] Feature highlights: a concrete section naming the actual differentiators from Apexium's research and build — not generic SaaS marketing copy that could describe any product
-- [ ] Visible pricing: pricing tiers shown directly on or one click from the landing page (linking to the existing `/pricing` route), never hidden behind "contact us"
-- [ ] Single dominant primary call-to-action: one visually dominant action for a first-time visitor (e.g. "Register Your School"), with every other action (pricing, sign-in) styled as clearly secondary — not three equal-weight buttons competing for attention
-- [ ] Testimonial/social-proof section: a structural placeholder for school testimonials and logos, safe to leave empty or generic until real pilot schools exist, without needing a redesign later
-- [ ] **Security fix: remove the "SaaS Platform Operator Dashboard" link entirely from the public landing page.** Move superadmin access to a separate, unlisted URL (e.g. its own subdomain) that is never linked from any public marketing page and is not discoverable by browsing the site
-- [ ] Mobile-first responsive review: most real visitors will land on this page from a phone on mobile data — verify layout, load time, and readability on a small screen and slower connection specifically, not just desktop
-- [ ] Automated test: verify the superadmin route returns no link/reference anywhere in the public-facing marketing pages' rendered HTML, and verify each role-based call-to-action routes to the correct signup or login flow
+- [x] Value proposition content: a clear headline stating what Apexium is and who it's for, plus a subheadline naming concrete differentiators — offline-first (works without reliable internet/power), WAEC/NECO-aligned grading, transparent published pricing in Naira, and free data export with no lock-in
+- [x] Role-based entry points: the page must branch clearly by who's visiting — a school owner/admin registering their school, a teacher/parent/student signing into a school that already uses Apexium — as distinct, clearly labeled paths, not one generic "Sign In" button that leaves the visitor guessing
+- [x] Product proof section: real screenshots of the actual built product (Core ERP dashboard, Parent Portal, a report card) — not stock photography or decorative icons standing in for the product
+- [x] Feature highlights: a concrete section naming the actual differentiators from Apexium's research and build — not generic SaaS marketing copy that could describe any product
+- [x] Visible pricing: pricing tiers shown directly on or one click from the landing page (linking to the existing `/pricing` route), never hidden behind "contact us"
+- [x] Single dominant primary call-to-action: one visually dominant action for a first-time visitor (e.g. "Register Your School"), with every other action (pricing, sign-in) styled as clearly secondary — not three equal-weight buttons competing for attention
+- [x] Testimonial/social-proof section: a structural placeholder for school testimonials and logos, safe to leave empty or generic until real pilot schools exist, without needing a redesign later
+- [x] **Security fix: remove the "SaaS Platform Operator Dashboard" link entirely from the public landing page.** Move superadmin access to a separate, unlisted URL (e.g. its own subdomain) that is never linked from any public marketing page and is not discoverable by browsing the site
+- [x] Mobile-first responsive review: most real visitors will land on this page from a phone on mobile data — verify layout, load time, and readability on a small screen and slower connection specifically, not just desktop
+- [x] Automated test: verify the superadmin route returns no link/reference anywhere in the public-facing marketing pages' rendered HTML, and verify each role-based call-to-action routes to the correct signup or login flow
 
 **Definition of Done:** A first-time visitor immediately understands what Apexium is, who it's for, and can find the correct entry point for their role without confusion — and no internal or superadmin routes are discoverable from the public site, verified by test.
