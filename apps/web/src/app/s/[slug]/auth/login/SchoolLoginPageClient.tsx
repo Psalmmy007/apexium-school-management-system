@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { School, MapPin, Phone, AlertCircle, ArrowRight } from "lucide-react";
+import { ActionButton } from "@/components/ui/ActionButton";
+import { PasswordField } from "@/components/ui/PasswordField";
 
 interface SchoolInfo {
   id: string;
@@ -106,25 +108,21 @@ export default function SchoolLoginPageClient({ school }: { school: SchoolInfo }
           </div>
 
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <label htmlFor="password" className="block text-slate-700 font-bold">
-                Password
-              </label>
-              <a href="#forgot-password" className="text-indigo-600 hover:underline font-semibold text-[11px]">
-                Forgot password?
-              </a>
-            </div>
-            <input
+            <PasswordField
               id="password"
               name="password"
-              type="password"
-              autoComplete="current-password"
+              label="Password"
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-slate-900 text-sm transition-all"
-              placeholder="••••••••"
+              autoComplete="current-password"
+              showRequirements={false}
             />
+            <div className="flex justify-end mt-1">
+              <a href="#forgot-password" className="text-indigo-400 hover:text-indigo-300 font-semibold text-[11px]">
+                Forgot password?
+              </a>
+            </div>
           </div>
 
           {error && (
@@ -138,15 +136,17 @@ export default function SchoolLoginPageClient({ school }: { school: SchoolInfo }
             </div>
           )}
 
-          <button
+          <ActionButton
             id="login-submit"
             type="submit"
-            disabled={loading}
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow-md cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
+            loading={loading}
+            loadingText="Signing in…"
+            variant="primary"
+            className="w-full min-h-[48px]"
+            icon={<ArrowRight className="w-4 h-4" />}
           >
-            <span>{loading ? "Signing in..." : `Sign In to ${school.name}`}</span>
-            <ArrowRight className="w-4 h-4" />
-          </button>
+            Sign In to {school.name}
+          </ActionButton>
         </form>
 
         <p className="text-[11px] text-center text-slate-400 border-t border-slate-100 pt-3">

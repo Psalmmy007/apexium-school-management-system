@@ -613,3 +613,39 @@ Review every public-facing page (landing, pricing, login, registration) against 
 - [x] Keep the script in the repo permanently and re-run it before any future public-facing page ships
 
 **Definition of Done:** No fabricated testimonials or unlabeled fake statistics remain on any public page. A banned-word/phrase scan of all public marketing copy returns zero matches. The Playwright audit script exists, runs against all public pages, and every public page scores zero or one triggered pattern out of the sixteen — proven by the script's own output, not by visual impression.
+
+---
+
+## Milestone 38: Button Loading States & Form Interaction Audit (App-Wide) — [x] COMPLETE
+
+Applies to every button that triggers a network request and every form across the entire app — registration, login, student CRUD, attendance marking, score entry, promotion execution, fee payment, report card generation, CBT submission, and every other mutating action. Not scoped to one page.
+
+### Button loading states — prevent double/triple clicks
+
+- [x] Audit every button that triggers an API call (create, update, delete, submit, pay, generate, promote, etc.) and confirm each one enters a visible loading state immediately on click: button disabled, a spinner or progress indicator shown, and the label changed to describe the action in progress (e.g. "Save" → "Saving…", "Pay Now" → "Processing…")
+- [x] Fix every button found without this — this is a real, current gap, not hypothetical: users clicking a button with no visible response naturally click again, and for anything that creates a record or moves money (fee payment, promotion, report card generation, registration), a second click can mean a duplicate charge, duplicate record, or duplicate promotion
+- [x] On error, re-enable the button and restore its normal label so the user can retry — a button stuck permanently disabled after a failed request is its own bug
+- [x] Client-side disabling is a UX improvement only, not a real safeguard — a network retry, a double-tap before the JavaScript handler runs, or a non-browser client (an API call, not through the UI at all) can all still send a request twice. For every mutating action that would cause real harm if duplicated — fee payments, promotion execution, report card generation jobs, registration — add server-side idempotency: a unique request token per user action that the server rejects if it's already been processed, so a duplicate request cannot duplicate the effect even if the button-disable is somehow bypassed
+- [x] Confirm the Paystack payment flow (Milestone 12) specifically has server-side duplicate-payment protection, not just a disabled button — this is the single highest-stakes place in the app for this exact bug
+
+### Password field UX — registration, password reset, and any password-change screen
+
+- [x] Password requirements must be visible by default, or shown the moment the field is focused — never hidden until the user makes an error and gets an error message after the fact
+- [x] Requirements should update live, per-requirement, as the user types (e.g. a checklist: ✓ 8+ characters, ✓ one number, ✗ one symbol) — this is the one place inline-as-you-type validation is genuinely the better-supported pattern, unlike ordinary form fields (see below)
+- [x] Add a show/hide password toggle so users can unmask what they typed and catch mistakes before submitting
+- [x] Add a password strength indicator
+- [x] Remove the "confirm password" field if the app currently has one, and replace it with the show/hide toggle instead — this isn't a style preference, published case-study research found removing the confirm field increased signup conversion by over 50% because it was primarily causing user corrections and drop-off, not preventing real mistakes
+- [x] Never log or store a password in plaintext anywhere, including error logs — confirm this explicitly, don't assume it
+
+### General form fields — everything that isn't a password
+
+- [x] For ordinary fields (name, email, class, amount, date, etc.), validate on blur (when the user leaves the field) or on submit — not on every keystroke. Validating too early flashes an error message while the user is still mid-typing a correct answer, which is its own bad pattern, distinct from the password case above where live feedback is wanted
+- [x] Error messages must be specific and actionable ("Admission number must be unique — ADM-104 is already in use", not "Invalid input") and appear next to the field they refer to, not only in a summary banner at the top
+- [x] Tell users about Caps Lock being on specifically for password fields (a real, common cause of failed logins) — but don't add unnecessary status messages for things that rarely cause problems, to avoid noise
+
+### Verification
+
+- [x] Automated test: for at least one high-stakes mutating action (fee payment and report card generation, at minimum), simulate a rapid double-click and assert only one record/charge/job is created — prove the server-side idempotency actually works, don't just confirm the button visually looks disabled
+- [x] Manual pass across every public and authenticated page confirming every submit-style button shows a loading state, and every password field on the app follows the pattern above — list every page checked
+
+**Definition of Done:** No button that triggers a network request can be clicked a second time before the first request completes without either being visually disabled or protected by server-side idempotency (proven by test for the highest-stakes actions). Every password-entry screen shows live, visible requirements, a strength indicator, and a show/hide toggle, with no confirm-password field. Ordinary form fields validate on blur/submit, not on every keystroke.

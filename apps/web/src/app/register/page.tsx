@@ -5,6 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight, School } from "lucide-react";
 import { PublicHeader } from "@/components/public/PublicHeader";
+import { ActionButton } from "@/components/ui/ActionButton";
+import { PasswordField } from "@/components/ui/PasswordField";
 import { tokens } from "@/lib/design-system/tokens";
 
 export default function RegisterSchoolPage() {
@@ -145,20 +147,16 @@ export default function RegisterSchoolPage() {
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-300">
-                  Password *
-                </label>
-                <input
-                  type="password"
-                  name="password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="••••••••"
-                  className="mt-1 block w-full rounded-xl bg-slate-800 border border-slate-700 px-4 py-3 text-white placeholder-slate-500 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500 text-sm min-h-[44px]"
-                />
-              </div>
+              <PasswordField
+                id="register-password"
+                name="password"
+                label="Admin Password"
+                required
+                value={formData.password}
+                onChange={handleChange}
+                autoComplete="new-password"
+                showRequirements={true}
+              />
 
               <div>
                 <label className="block text-sm font-medium text-slate-300">
@@ -188,15 +186,18 @@ export default function RegisterSchoolPage() {
                 />
               </div>
 
-              <div>
-                <button
+              <div className="pt-2">
+                <ActionButton
+                  id="register-submit-btn"
                   type="submit"
-                  disabled={loading}
-                  className="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 transition-all min-h-[44px] items-center gap-2"
+                  loading={loading}
+                  loadingText="Registering Institution…"
+                  variant="primary"
+                  className="w-full min-h-[48px]"
+                  icon={<ArrowRight className="w-4 h-4" />}
                 >
-                  <span>{loading ? "Registering Institution..." : "Continue to Plan Selection"}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
+                  Continue to Plan Selection
+                </ActionButton>
               </div>
             </form>
 

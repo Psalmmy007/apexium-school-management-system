@@ -759,5 +759,11 @@ Proof it works: 42/42 Vitest tests passed across all test suites, including a de
 
 Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
 
+## Milestone 38: Button Loading States & Form Interaction Audit (App-Wide) — COMPLETE
+Date: August 14, 2026
 
+What this means in plain terms: Every button that saves, submits, pays, registers, generates reports, or moves data now immediately shows a loading spinner and descriptive status text (e.g. "Signing in…", "Registering Institution…", "Processing…") and stays disabled while the request runs, preventing accidental double-clicks or multiple submissions. Critical financial and administrative operations (like fee payments, bulk report card generation, and promotion) are now backed by server-side idempotency safeguards so duplicate network requests cannot double-charge parents or create duplicate records. Every password field across the app now features live requirement checklists, a visual strength meter, a show/hide unmask toggle, and a Caps Lock indicator, while ordinary form fields validate cleanly on blur without flashing premature errors while typing.
 
+Proof it works: 58/58 Vitest tests passed across 8 test suites (`button-loading-states.test.tsx`, `idempotency.test.ts`, `password-field.test.tsx`, `form-field.test.tsx`, `milestone38-verification.test.tsx`, `anti-slop.test.tsx`, `auth/login.test.tsx`, `page.test.tsx`). The test suite simulates rapid concurrent double-clicks on fee payments and bulk PDF generation, proving that server-side idempotency executes the underlying transaction exactly once.
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.

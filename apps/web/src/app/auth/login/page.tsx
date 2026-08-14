@@ -4,6 +4,14 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { School, AlertCircle, Sparkles, ArrowRight, ChevronDown } from "lucide-react";
+import {
+  Lock,
+  Eye,
+  EyeOff,
+  Building2,
+} from "lucide-react";
+import { ActionButton } from "@/components/ui/ActionButton";
+import { PasswordField } from "@/components/ui/PasswordField";
 import { BrandLogo } from "@/components/public/BrandLogo";
 import { tokens } from "@/lib/design-system/tokens";
 
@@ -107,25 +115,21 @@ function LoginFormContent() {
         </div>
 
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <label htmlFor="password" className={tokens.label + " mb-0"}>
-              Password
-            </label>
+          <PasswordField
+            id="password"
+            name="password"
+            label="Password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            autoComplete="current-password"
+            showRequirements={false}
+          />
+          <div className="flex justify-end mt-1.5">
             <a href="#forgot-password" className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors py-1">
               Forgot password?
             </a>
           </div>
-          <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            required
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            className={tokens.input + " min-h-[44px]"}
-            placeholder="••••••••"
-          />
         </div>
 
         {error && (
@@ -139,42 +143,17 @@ function LoginFormContent() {
           </div>
         )}
 
-        <button
+        <ActionButton
           id="login-submit"
           type="submit"
-          disabled={loading}
-          className={tokens.btnPrimary + " w-full min-h-[48px] py-3.5 sm:py-4 mt-2"}
+          loading={loading}
+          loadingText="Signing in…"
+          variant="primary"
+          className="w-full min-h-[48px] py-3.5 sm:py-4 mt-2"
+          icon={<ArrowRight className="w-4 h-4" />}
         >
-          {loading ? (
-            <>
-              <svg
-                className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                fill="none"
-                viewBox="0 0 24 24"
-              >
-                <circle
-                  className="opacity-25"
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                />
-                <path
-                  className="opacity-75"
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 12 0 12 0v4a4 4 0 100 8v4z"
-                />
-              </svg>
-              <span>Signing in…</span>
-            </>
-          ) : (
-            <>
-              <span>Sign in</span>
-              <ArrowRight className="w-4 h-4" />
-            </>
-          )}
-        </button>
+          Sign in
+        </ActionButton>
       </form>
 
       {/* School Subdomain Portal Lookup (Helpful helper for multi-tenant schools) */}
