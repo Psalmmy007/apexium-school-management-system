@@ -2,7 +2,7 @@ name: CD — Deploy to Production
 
 on:
   push:
-    branches: ["master"]
+    branches: ["master", "main"]
 
 # Only one deployment at a time
 concurrency:
