@@ -137,7 +137,7 @@ function ParentFeesContent() {
 
         {loading ? (
           <div className="text-center py-12 text-gray-500">Loading fee records...</div>
-        ) : !studentId || invoices.length === 0 ? (
+        ) : invoices.length === 0 ? (
           <div className="bg-gray-50 border border-gray-200 text-gray-700 p-6 rounded-xl text-center space-y-2">
             <p className="font-semibold text-gray-900">No Invoices Issued Yet</p>
             <p className="text-xs text-gray-500">
