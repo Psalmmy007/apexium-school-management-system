@@ -4,6 +4,8 @@ import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { School, AlertCircle, Sparkles, ArrowRight, ChevronDown } from "lucide-react";
+import { BrandLogo } from "@/components/public/BrandLogo";
+import { tokens } from "@/lib/design-system/tokens";
 
 function LoginFormContent() {
   const router = useRouter();
@@ -64,28 +66,23 @@ function LoginFormContent() {
   }
 
   return (
-    <div className="w-full max-w-md animate-slide-up">
+    <div className={tokens.authCard}>
       {/* Mobile Brand Header */}
       <div className="flex items-center gap-3 mb-8 lg:hidden">
-        <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-md">
-          <School className="w-5 h-5 text-white" />
-        </div>
-        <span className="font-extrabold text-xl text-slate-900 tracking-tight">
-          Apexium<span className="text-indigo-600">ERP</span>
-        </span>
+        <BrandLogo />
       </div>
 
-      <h1 className="text-2xl font-bold text-slate-900 tracking-tight mb-1">Welcome back</h1>
-      <p className="text-slate-500 text-sm mb-8">
+      <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-2">Welcome back</h1>
+      <p className="text-slate-400 text-sm mb-8">
         Sign in to your school account to continue.
       </p>
 
       {demoNotice && (
         <div
           id="demo-banner"
-          className="mb-6 p-3.5 rounded-xl bg-indigo-50 border border-indigo-200 text-xs font-semibold text-indigo-800 flex items-center gap-2"
+          className={tokens.bannerNotice + " mb-6"}
         >
-          <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
+          <Sparkles className="w-4 h-4 text-indigo-400 shrink-0" />
           <span>{demoNotice}</span>
         </div>
       )}
@@ -93,7 +90,7 @@ function LoginFormContent() {
       {/* Clean Single-Purpose Login Form */}
       <form id="login-form" onSubmit={handleLogin} className="space-y-5">
         <div>
-          <label htmlFor="email" className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">
+          <label htmlFor="email" className={tokens.label}>
             Email Address
           </label>
           <input
@@ -104,17 +101,17 @@ function LoginFormContent() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-slate-900 text-sm transition-all"
+            className={tokens.input}
             placeholder="you@yourschool.edu"
           />
         </div>
 
         <div>
           <div className="flex items-center justify-between mb-2">
-            <label htmlFor="password" className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+            <label htmlFor="password" className={tokens.label + " mb-0"}>
               Password
             </label>
-            <a href="#forgot-password" className="text-xs font-semibold text-indigo-600 hover:text-indigo-700 transition-colors">
+            <a href="#forgot-password" className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors">
               Forgot password?
             </a>
           </div>
@@ -126,7 +123,7 @@ function LoginFormContent() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-slate-900 text-sm transition-all"
+            className={tokens.input}
             placeholder="••••••••"
           />
         </div>
@@ -135,9 +132,9 @@ function LoginFormContent() {
           <div
             id="login-error"
             role="alert"
-            className="rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-700 font-medium flex items-center gap-2"
+            className={tokens.bannerError}
           >
-            <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+            <AlertCircle className="w-4 h-4 text-red-400 shrink-0" />
             <span>{error}</span>
           </div>
         )}
@@ -146,7 +143,7 @@ function LoginFormContent() {
           id="login-submit"
           type="submit"
           disabled={loading}
-          className="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-md transition-all text-sm cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
+          className={tokens.btnPrimary + " w-full py-4"}
         >
           {loading ? (
             <>
@@ -181,15 +178,15 @@ function LoginFormContent() {
       </form>
 
       {/* School Subdomain Portal Lookup (Helpful helper for multi-tenant schools) */}
-      <div className="mt-6 pt-6 border-t border-slate-100 text-center">
-        <details className="group text-xs text-slate-500">
-          <summary className="cursor-pointer font-medium hover:text-indigo-600 transition-colors list-none flex items-center justify-center gap-1.5">
+      <div className="mt-8 pt-6 border-t border-slate-800 text-center">
+        <details className="group text-xs text-slate-400">
+          <summary className="cursor-pointer font-medium hover:text-indigo-400 transition-colors list-none flex items-center justify-center gap-1.5">
             <School className="w-3.5 h-3.5 text-slate-400" />
             <span>Have a custom school portal URL?</span>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform" />
           </summary>
-          <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-left space-y-2">
-            <p className="text-[11px] text-slate-500">
+          <div className="mt-3 p-3.5 bg-slate-950 rounded-xl border border-slate-800 text-left space-y-2">
+            <p className="text-[11px] text-slate-400 leading-relaxed">
               If your school has a dedicated Apexium portal (e.g., <code>schoolname.apexium.app</code> or <code>/s/schoolname</code>), you can enter your school code below to navigate there directly:
             </p>
             <div className="flex gap-2">
@@ -197,7 +194,7 @@ function LoginFormContent() {
                 type="text"
                 id="school-slug-input"
                 placeholder="school-code (e.g. stjude)"
-                className="flex-1 px-3 py-1.5 rounded-lg border border-slate-300 text-xs focus:ring-1 focus:ring-indigo-500 outline-none"
+                className="flex-1 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white placeholder-slate-500 text-xs focus:ring-1 focus:ring-indigo-500 outline-none"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
@@ -213,7 +210,7 @@ function LoginFormContent() {
                   const val = (input?.value || "").trim().toLowerCase();
                   if (val) router.push(`/s/${val}/auth/login`);
                 }}
-                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold transition"
+                className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold transition border border-slate-700"
               >
                 Go
               </button>
@@ -222,8 +219,8 @@ function LoginFormContent() {
         </details>
       </div>
 
-      <p className="mt-6 text-center text-xs text-slate-400">
-        Apexium School ERP • Multi-Tenant Enterprise Education System
+      <p className="mt-6 text-center text-[11px] text-slate-500">
+        Apexium ERP • Multi-Tenant School Management Platform
       </p>
     </div>
   );
@@ -231,7 +228,7 @@ function LoginFormContent() {
 
 export default function LoginPage() {
   return (
-    <Suspense fallback={<div className="p-8 text-slate-500">Loading authentication portal...</div>}>
+    <Suspense fallback={<div className="p-8 text-slate-400">Loading authentication portal...</div>}>
       <LoginFormContent />
     </Suspense>
   );
