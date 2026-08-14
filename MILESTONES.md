@@ -566,3 +566,50 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 - [x] Automated test: send unauthenticated requests directly to the superadmin routes and to Inventory/Data Export/Multi-Branch API routes and assert each is rejected server-side — this must pass even with no UI link present, proving the protection isn't just a hidden button.
 
 **Definition of Done:** The login page contains only sign-in functionality with no demo, registration, pricing, or superadmin links reachable from it or present in its HTML; every gated route rejects unauthenticated access at the server level independent of any UI link; and this is proven by automated test rather than visual inspection — since visual inspection alone already missed this twice.
+
+---
+
+## Milestone 37: Anti-Slop Content & Design Audit — [x] COMPLETE
+
+### Content — remove fabricated claims (do this first, before anything cosmetic)
+
+- [x] Confirm whether the three testimonials on the landing page (Grace International Schools Lagos, Apex College Abuja, St. Mary Academy Ibadan) are real, consented customer quotes. If they are not real, remove them immediately and replace the section with an honest placeholder ("Now onboarding our first schools") until real testimonials exist.
+- [x] Confirm whether the "Product Proof" statistics (1,248 students, 96.4% attendance, ₦18,450,000 collected) are from a real school or fabricated demo numbers. If fabricated, either clearly label them as illustrative/sample data, or replace with real numbers from an actual pilot school once one exists.
+
+### Content — banned word list
+
+- [x] Search all public-facing marketing copy (landing page, pricing page, login page, registration flow) for these words and rewrite every instance found: delve, leverage, harness, unleash, unlock, empower, streamline, optimize, seamless/seamlessly, innovative, transformative, cutting-edge, groundbreaking, game-changer, paradigm, unprecedented, elevate, robust, holistic, synergy, tapestry, realm, landscape (used metaphorically), testament, pivotal, multifaceted, intricate, meticulous, vibrant, utilize, facilitate, showcase, foster, navigate (used metaphorically), journey (unless literal travel), actionable
+
+### Content — banned phrases and structures
+
+- [x] Remove any instance of "It's not just X, it's Y" or similar negative-parallelism constructions
+- [x] Remove "In today's [fast-paced/digital] world/landscape," "unlock the power of," "whether you're a [X] or a [Y]," "let's dive in," "it's important/worth noting that"
+- [x] Rewrite any sentence that bolds multiple keyword phrases in a row (e.g. the current hero sentence bolding four separate feature terms) — one clear idea per sentence, plain language, not a feature list wearing a sentence's clothes
+- [x] Remove forced three-item lists where the real number of points is different — state the actual number of things, not a rounded-to-three version
+
+### Design — the 16-pattern check (based on a published 1,590-page audit methodology; triggering 4+ patterns = "heavy slop")
+
+Review every public-facing page (landing, pricing, login, registration) against each of these. For each one found, fix it:
+
+- [x] Inter (or any default sans-serif) used for the hero headline with no deliberate typeface choice
+- [x] "VibeCode Purple" — the lavender/indigo-to-blue gradient currently used as the primary background — replace with a palette chosen deliberately for Apexium, not the default
+- [x] Permanent dark/gradient theme with no reasoning beyond "looks modern"
+- [x] Gradients used as a default background treatment rather than a deliberate choice
+- [x] Colored glows or colored box-shadows around cards or buttons
+- [x] Centered hero text in a generic sans-serif with no typographic personality
+- [x] A badge or label positioned directly above the H1 headline
+- [x] Colored left (or top) borders on cards — described in the source research as "almost as reliable a sign of AI-generated design as em-dashes are for text"
+- [x] Identical feature cards, each with an icon on top, all the same shape and treatment (the current "Why African Schools Choose Apexium" 4-card grid and the emoji-icon role cards both fall into this pattern)
+- [x] Numbered "1, 2, 3" step sequences used decoratively rather than because the content is a genuine sequence
+- [x] Stat banner rows presented with no context for where the numbers came from
+- [x] **Emoji used as the icon system anywhere in the interface** (nav, buttons, section headers, cards) — replace with a real icon set (e.g. Lucide, which is already available in this stack) throughout
+- [x] All-caps section labels and headings used as a default styling choice rather than a deliberate one
+
+### Verification — build this once, reuse it forever
+
+- [x] Build a small deterministic audit script (Playwright): load each public page in a headless browser, walk the DOM and computed styles, and check for each of the 16 design patterns above programmatically — not by an AI model judging a screenshot, since that reintroduces the exact bias being measured
+- [x] Run the script against the landing page, pricing page, login page, and registration page; report which patterns trigger on each
+- [x] Re-run the script after fixes are applied and confirm each page now triggers zero or one pattern (the research's "clean" threshold), not four or more ("heavy slop")
+- [x] Keep the script in the repo permanently and re-run it before any future public-facing page ships
+
+**Definition of Done:** No fabricated testimonials or unlabeled fake statistics remain on any public page. A banned-word/phrase scan of all public marketing copy returns zero matches. The Playwright audit script exists, runs against all public pages, and every public page scores zero or one triggered pattern out of the sixteen — proven by the script's own output, not by visual impression.

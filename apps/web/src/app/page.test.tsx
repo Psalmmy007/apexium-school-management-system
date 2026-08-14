@@ -7,7 +7,7 @@ describe("Milestone 35 — Public Marketing Landing Page Audit", () => {
     const { container } = render(<HomePage />);
 
     // Value Proposition Headline
-    expect(screen.getByText(/African Excellence/i)).toBeDefined();
+    expect(screen.getByText(/School Management Software for Primary and Secondary Schools/i)).toBeDefined();
     
     // Differentiators
     const pageText = container.textContent || "";
@@ -19,15 +19,15 @@ describe("Milestone 35 — Public Marketing Landing Page Audit", () => {
   });
 
   it("provides distinct role-based entry points for admins and portal users", () => {
-    render(<HomePage />);
+    const { container } = render(<HomePage />);
 
     // Role A: School Owner / Admin Registration
-    const adminRegisterLink = screen.getByRole("link", { name: /Register Your School →/i });
-    expect(adminRegisterLink.getAttribute("href")).toBe("/register");
+    const adminRegisterLink = container.querySelector("#role-admin-register-link");
+    expect(adminRegisterLink?.getAttribute("href")).toBe("/register");
 
     // Role B: Portal Login for Teachers/Parents/Students
-    const portalLoginLink = screen.getByRole("link", { name: /Sign In to Your School Portal →/i });
-    expect(portalLoginLink.getAttribute("href")).toBe("/auth/login");
+    const portalLoginLink = container.querySelector("#role-portal-login-link");
+    expect(portalLoginLink?.getAttribute("href")).toBe("/auth/login");
   });
 
   it("features a single dominant primary CTA and visible Naira pricing", () => {
@@ -37,7 +37,7 @@ describe("Milestone 35 — Public Marketing Landing Page Audit", () => {
     const primaryCta = container.querySelector("#hero-primary-cta");
     expect(primaryCta).toBeDefined();
     expect(primaryCta?.getAttribute("href")).toBe("/register");
-    expect(primaryCta?.className).toContain("from-indigo-600");
+    expect(primaryCta?.className).toContain("bg-indigo-600");
 
     // Visible Naira Pricing Section
     expect(screen.getAllByText(/₦50,000/i).length).toBeGreaterThan(0);

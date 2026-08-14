@@ -160,7 +160,7 @@ export function SetupClient({ initialStatus, initialSchool, currentUser }: Props
         }
       }
 
-      // Complete Onboarding & Unlock ERP Modules
+      // Complete Onboarding & Activate ERP Modules
       const res2 = await fetch("/api/setup/complete", { method: "POST" });
       const json2 = await res2.json();
 

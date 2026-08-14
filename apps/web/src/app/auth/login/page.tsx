@@ -3,6 +3,7 @@
 import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { School, AlertCircle, Sparkles, ArrowRight, ChevronDown } from "lucide-react";
 
 function LoginFormContent() {
   const router = useRouter();
@@ -19,19 +20,19 @@ function LoginFormContent() {
     if (demoRole === "admin") {
       setEmail("admin@apexium.edu");
       setPassword("DemoAdmin123!");
-      setDemoNotice("✨ Pre-filled demo credentials for School Administrator. Click Sign In below.");
+      setDemoNotice("Pre-filled demo credentials for School Administrator. Click Sign In below.");
     } else if (demoRole === "teacher") {
       setEmail("teacher@apexium.edu");
       setPassword("DemoTeacher123!");
-      setDemoNotice("✨ Pre-filled demo credentials for Teacher Portal. Click Sign In below.");
+      setDemoNotice("Pre-filled demo credentials for Teacher Portal. Click Sign In below.");
     } else if (demoRole === "parent") {
       setEmail("parent@apexium.edu");
       setPassword("DemoParent123!");
-      setDemoNotice("✨ Pre-filled demo credentials for Parent Portal. Click Sign In below.");
+      setDemoNotice("Pre-filled demo credentials for Parent Portal. Click Sign In below.");
     } else if (demoRole === "student") {
       setEmail("student@apexium.edu");
       setPassword("DemoStudent123!");
-      setDemoNotice("✨ Pre-filled demo credentials for Student Portal. Click Sign In below.");
+      setDemoNotice("Pre-filled demo credentials for Student Portal. Click Sign In below.");
     }
   }, [demoRole]);
 
@@ -66,25 +67,8 @@ function LoginFormContent() {
     <div className="w-full max-w-md animate-slide-up">
       {/* Mobile Brand Header */}
       <div className="flex items-center gap-3 mb-8 lg:hidden">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-indigo-400 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-          <svg
-            className="w-6 h-6 text-white"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 14l9-5-9-5-9 5 9 5z"
-            />
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0112 20.055a11.952 11.952 0 01-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"
-            />
-          </svg>
+        <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center shadow-md">
+          <School className="w-5 h-5 text-white" />
         </div>
         <span className="font-extrabold text-xl text-slate-900 tracking-tight">
           Apexium<span className="text-indigo-600">ERP</span>
@@ -99,9 +83,10 @@ function LoginFormContent() {
       {demoNotice && (
         <div
           id="demo-banner"
-          className="mb-6 p-3.5 rounded-xl bg-indigo-50 border border-indigo-200 text-xs font-semibold text-indigo-800"
+          className="mb-6 p-3.5 rounded-xl bg-indigo-50 border border-indigo-200 text-xs font-semibold text-indigo-800 flex items-center gap-2"
         >
-          {demoNotice}
+          <Sparkles className="w-4 h-4 text-indigo-600 shrink-0" />
+          <span>{demoNotice}</span>
         </div>
       )}
 
@@ -119,7 +104,7 @@ function LoginFormContent() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none text-slate-900 text-sm transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-slate-900 text-sm transition-all"
             placeholder="you@yourschool.edu"
           />
         </div>
@@ -141,7 +126,7 @@ function LoginFormContent() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none text-slate-900 text-sm transition-all"
+            className="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-slate-900 text-sm transition-all"
             placeholder="••••••••"
           />
         </div>
@@ -150,9 +135,10 @@ function LoginFormContent() {
           <div
             id="login-error"
             role="alert"
-            className="rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-700 font-medium"
+            className="rounded-xl bg-red-50 border border-red-200 p-4 text-sm text-red-700 font-medium flex items-center gap-2"
           >
-            ⚠️ {error}
+            <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+            <span>{error}</span>
           </div>
         )}
 
@@ -160,7 +146,7 @@ function LoginFormContent() {
           id="login-submit"
           type="submit"
           disabled={loading}
-          className="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/25 hover:shadow-indigo-500/40 transition-all text-sm cursor-pointer disabled:opacity-50 flex items-center justify-center"
+          className="w-full py-3.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-md transition-all text-sm cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2"
         >
           {loading ? (
             <>
@@ -183,10 +169,13 @@ function LoginFormContent() {
                   d="M4 12a8 8 0 018-8V0C5.373 0 12 0 12 0v4a4 4 0 100 8v4z"
                 />
               </svg>
-              Signing in…
+              <span>Signing in…</span>
             </>
           ) : (
-            "Sign in"
+            <>
+              <span>Sign in</span>
+              <ArrowRight className="w-4 h-4" />
+            </>
           )}
         </button>
       </form>
@@ -194,9 +183,10 @@ function LoginFormContent() {
       {/* School Subdomain Portal Lookup (Helpful helper for multi-tenant schools) */}
       <div className="mt-6 pt-6 border-t border-slate-100 text-center">
         <details className="group text-xs text-slate-500">
-          <summary className="cursor-pointer font-medium hover:text-indigo-600 transition-colors list-none flex items-center justify-center gap-1">
-            <span>🏫 Have a custom school portal URL?</span>
-            <span className="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+          <summary className="cursor-pointer font-medium hover:text-indigo-600 transition-colors list-none flex items-center justify-center gap-1.5">
+            <School className="w-3.5 h-3.5 text-slate-400" />
+            <span>Have a custom school portal URL?</span>
+            <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform" />
           </summary>
           <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-left space-y-2">
             <p className="text-[11px] text-slate-500">
@@ -225,7 +215,7 @@ function LoginFormContent() {
                 }}
                 className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold transition"
               >
-                Go →
+                Go
               </button>
             </div>
           </div>

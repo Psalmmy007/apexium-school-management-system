@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
+import { ArrowRight, Check } from "lucide-react";
 
 interface Plan {
   id: string;
@@ -31,7 +32,7 @@ export default function PricingPage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 py-16 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto text-center">
-        <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400 bg-clip-text text-transparent">
+        <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl text-white">
           Simple, Termly Subscription Pricing
         </h1>
         <p className="mt-4 text-lg text-slate-400 max-w-2xl mx-auto">
@@ -48,7 +49,7 @@ export default function PricingPage() {
           {plans.map((plan) => (
             <div
               key={plan.id}
-              className="bg-slate-900/80 border border-slate-800 rounded-3xl p-8 flex flex-col justify-between hover:border-indigo-500/50 transition-all duration-300 shadow-xl hover:shadow-indigo-500/10"
+              className="bg-slate-900 border border-slate-800 rounded-2xl p-8 flex flex-col justify-between shadow-md"
             >
               <div>
                 <h3 className="text-2xl font-bold text-white">{plan.name}</h3>
@@ -64,9 +65,10 @@ export default function PricingPage() {
               <div className="mt-8">
                 <Link
                   href={`/subscribe?planId=${plan.id}`}
-                  className="block w-full text-center py-3.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-medium rounded-xl transition-all duration-200 text-sm shadow-lg shadow-indigo-600/20"
+                  className="w-full text-center py-3.5 px-4 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl transition-all text-sm flex items-center justify-center gap-2"
                 >
-                  Select {plan.name} Plan →
+                  <span>Select {plan.name} Plan</span>
+                  <ArrowRight className="w-4 h-4" />
                 </Link>
               </div>
             </div>

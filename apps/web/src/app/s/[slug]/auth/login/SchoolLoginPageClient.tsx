@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { School, MapPin, Phone, AlertCircle, ArrowRight } from "lucide-react";
 
 interface SchoolInfo {
   id: string;
@@ -50,22 +51,35 @@ export default function SchoolLoginPageClient({ school }: { school: SchoolInfo }
   return (
     <div className="w-full max-w-md animate-slide-up space-y-6">
       {/* School Branded Header */}
-      <div className="bg-slate-900 text-white p-6 rounded-3xl shadow-xl border border-slate-800 space-y-2">
+      <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-lg border border-slate-800 space-y-2">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-indigo-600 flex items-center justify-center font-bold text-lg text-white shadow-md">
-            🏫
+            <School className="w-5 h-5 text-white" />
           </div>
           <div>
             <h1 className="font-extrabold text-base leading-tight text-white">{school.name}</h1>
-            <p className="text-xs text-indigo-300 font-medium">{school.motto}</p>
+            {school.motto && <p className="text-xs text-indigo-300 font-medium">{school.motto}</p>}
           </div>
         </div>
-        <p className="text-[11px] text-slate-400 border-t border-slate-800 pt-2 mt-2">
-          📍 {school.address} • 📞 {school.phone}
-        </p>
+        {(school.address || school.phone) && (
+          <div className="text-[11px] text-slate-400 border-t border-slate-800 pt-2 mt-2 flex flex-wrap items-center gap-3">
+            {school.address && (
+              <span className="flex items-center gap-1">
+                <MapPin className="w-3 h-3 text-slate-500" />
+                <span>{school.address}</span>
+              </span>
+            )}
+            {school.phone && (
+              <span className="flex items-center gap-1">
+                <Phone className="w-3 h-3 text-slate-500" />
+                <span>{school.phone}</span>
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
-      <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-200 space-y-5">
+      <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 space-y-5">
         <div>
           <h2 className="text-xl font-bold text-slate-900 tracking-tight">Portal Login</h2>
           <p className="text-xs text-slate-500 mt-0.5">
@@ -86,7 +100,7 @@ export default function SchoolLoginPageClient({ school }: { school: SchoolInfo }
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none text-slate-900 text-sm transition-all"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-slate-900 text-sm transition-all"
               placeholder="user@school.edu.ng"
             />
           </div>
@@ -108,7 +122,7 @@ export default function SchoolLoginPageClient({ school }: { school: SchoolInfo }
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 outline-none text-slate-900 text-sm transition-all"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none text-slate-900 text-sm transition-all"
               placeholder="••••••••"
             />
           </div>
@@ -117,9 +131,10 @@ export default function SchoolLoginPageClient({ school }: { school: SchoolInfo }
             <div
               id="login-error"
               role="alert"
-              className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700 font-medium"
+              className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700 font-medium flex items-center gap-2"
             >
-              ⚠️ {error}
+              <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+              <span>{error}</span>
             </div>
           )}
 
@@ -127,9 +142,10 @@ export default function SchoolLoginPageClient({ school }: { school: SchoolInfo }
             id="login-submit"
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow-md cursor-pointer disabled:opacity-50 flex items-center justify-center text-sm"
+            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl transition shadow-md cursor-pointer disabled:opacity-50 flex items-center justify-center gap-2 text-sm"
           >
-            {loading ? "Signing in..." : `Sign In to ${school.name}`}
+            <span>{loading ? "Signing in..." : `Sign In to ${school.name}`}</span>
+            <ArrowRight className="w-4 h-4" />
           </button>
         </form>
 
