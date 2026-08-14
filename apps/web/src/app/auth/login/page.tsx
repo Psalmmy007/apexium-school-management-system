@@ -66,14 +66,14 @@ function LoginFormContent() {
   }
 
   return (
-    <div className={tokens.authCard}>
+    <div className="w-full max-w-md p-6 sm:p-10 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl mx-auto">
       {/* Mobile Brand Header */}
-      <div className="flex items-center gap-3 mb-8 lg:hidden">
+      <div className="flex items-center gap-3 mb-6 sm:mb-8 lg:hidden">
         <BrandLogo />
       </div>
 
       <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight mb-2">Welcome back</h1>
-      <p className="text-slate-400 text-sm mb-8">
+      <p className="text-slate-400 text-sm mb-6 sm:mb-8">
         Sign in to your school account to continue.
       </p>
 
@@ -88,7 +88,7 @@ function LoginFormContent() {
       )}
 
       {/* Clean Single-Purpose Login Form */}
-      <form id="login-form" onSubmit={handleLogin} className="space-y-5">
+      <form id="login-form" onSubmit={handleLogin} className="space-y-4 sm:space-y-5">
         <div>
           <label htmlFor="email" className={tokens.label}>
             Email Address
@@ -101,7 +101,7 @@ function LoginFormContent() {
             required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className={tokens.input}
+            className={tokens.input + " min-h-[44px]"}
             placeholder="you@yourschool.edu"
           />
         </div>
@@ -111,7 +111,7 @@ function LoginFormContent() {
             <label htmlFor="password" className={tokens.label + " mb-0"}>
               Password
             </label>
-            <a href="#forgot-password" className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors">
+            <a href="#forgot-password" className="text-xs font-semibold text-indigo-400 hover:text-indigo-300 transition-colors py-1">
               Forgot password?
             </a>
           </div>
@@ -123,7 +123,7 @@ function LoginFormContent() {
             required
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className={tokens.input}
+            className={tokens.input + " min-h-[44px]"}
             placeholder="••••••••"
           />
         </div>
@@ -143,7 +143,7 @@ function LoginFormContent() {
           id="login-submit"
           type="submit"
           disabled={loading}
-          className={tokens.btnPrimary + " w-full py-4"}
+          className={tokens.btnPrimary + " w-full min-h-[48px] py-3.5 sm:py-4 mt-2"}
         >
           {loading ? (
             <>
@@ -180,21 +180,21 @@ function LoginFormContent() {
       {/* School Subdomain Portal Lookup (Helpful helper for multi-tenant schools) */}
       <div className="mt-8 pt-6 border-t border-slate-800 text-center">
         <details className="group text-xs text-slate-400">
-          <summary className="cursor-pointer font-medium hover:text-indigo-400 transition-colors list-none flex items-center justify-center gap-1.5">
+          <summary className="cursor-pointer font-medium hover:text-indigo-400 transition-colors list-none flex items-center justify-center gap-1.5 py-1">
             <School className="w-3.5 h-3.5 text-slate-400" />
             <span>Have a custom school portal URL?</span>
             <ChevronDown className="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform" />
           </summary>
-          <div className="mt-3 p-3.5 bg-slate-950 rounded-xl border border-slate-800 text-left space-y-2">
+          <div className="mt-3 p-3.5 bg-slate-950 rounded-xl border border-slate-800 text-left space-y-2.5">
             <p className="text-[11px] text-slate-400 leading-relaxed">
               If your school has a dedicated Apexium portal (e.g., <code>schoolname.apexium.app</code> or <code>/s/schoolname</code>), you can enter your school code below to navigate there directly:
             </p>
-            <div className="flex gap-2">
+            <div className="flex flex-col sm:flex-row gap-2">
               <input
                 type="text"
                 id="school-slug-input"
                 placeholder="school-code (e.g. stjude)"
-                className="flex-1 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-white placeholder-slate-500 text-xs focus:ring-1 focus:ring-indigo-500 outline-none"
+                className="flex-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-white placeholder-slate-500 text-xs focus:ring-1 focus:ring-indigo-500 outline-none min-h-[38px]"
                 onKeyDown={(e) => {
                   if (e.key === "Enter") {
                     e.preventDefault();
@@ -210,7 +210,7 @@ function LoginFormContent() {
                   const val = (input?.value || "").trim().toLowerCase();
                   if (val) router.push(`/s/${val}/auth/login`);
                 }}
-                className="px-3.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold transition border border-slate-700"
+                className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold transition border border-slate-700 min-h-[38px] flex items-center justify-center"
               >
                 Go
               </button>

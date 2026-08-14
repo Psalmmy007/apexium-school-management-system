@@ -13,7 +13,7 @@ export default function AuthLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className={tokens.pageContainer}>
+    <div className={tokens.pageContainer + " overflow-x-hidden"}>
       <div className="min-h-screen flex flex-col lg:flex-row">
         {/* Left panel — consistent dark branding with feature highlights */}
         <div className="hidden lg:flex flex-col w-1/2 bg-slate-900 border-r border-slate-800 p-12 lg:p-16 text-white justify-between">
@@ -26,7 +26,7 @@ export default function AuthLayout({
               Every student deserves a well-run school.
             </h2>
             <p className="text-slate-300 text-base sm:text-lg leading-relaxed mb-8 font-normal">
-              Manage students, attendance, timetables, grades, and report cards — all in one secure platform.
+              Manage students, attendance, timetables, grades, and report cards in one secure platform.
             </p>
 
             {/* Feature tags styled with shared design tokens */}
@@ -55,7 +55,7 @@ export default function AuthLayout({
         </div>
 
         {/* Right panel — auth form */}
-        <div className="flex-1 flex items-center justify-center p-6 sm:p-10 lg:p-16 bg-slate-950 min-h-screen">
+        <div className="flex-1 flex items-center justify-center p-4 sm:p-8 lg:p-16 bg-slate-950 min-h-screen">
           {children}
         </div>
       </div>
