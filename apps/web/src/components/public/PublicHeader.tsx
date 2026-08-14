@@ -75,7 +75,7 @@ export function PublicHeader() {
 
       {/* Mobile Drawer Menu */}
       {mobileMenuOpen && (
-        <div className="sm:hidden bg-slate-950/95 backdrop-blur-lg border-b border-slate-800 px-4 pt-3 pb-6 space-y-4 animate-slide-up">
+        <div className="sm:hidden bg-slate-950 border-b border-slate-800 shadow-2xl px-4 pt-3 pb-6 space-y-4 animate-slide-up">
           <nav className="flex flex-col space-y-3 text-sm font-medium text-slate-300">
             <a
               href="#features"

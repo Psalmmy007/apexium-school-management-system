@@ -129,7 +129,7 @@ export default function HomePage() {
       <PublicHeader />
 
       {/* ── 2. Hero Section ───────────────────────────────────────────────────── */}
-      <section className="pt-28 pb-16 sm:pt-36 sm:pb-24 lg:pt-40 lg:pb-32">
+      <section className="pt-36 pb-16 sm:pt-44 sm:pb-24 lg:pt-48 lg:pb-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-extrabold text-white tracking-tight max-w-5xl mx-auto leading-[1.2] sm:leading-[1.15]">
             School Management Software for Primary and Secondary Schools
