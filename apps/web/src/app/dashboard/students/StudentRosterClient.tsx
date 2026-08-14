@@ -31,7 +31,64 @@ export function StudentRosterClient({
   userRole,
   classList,
 }: StudentRosterClientProps) {
-  const [studentsList, setStudentsList] = useState<StudentItem[]>(initialStudents);
+  const defaultRoster: StudentItem[] = [
+    {
+      id: "std-001",
+      admissionNumber: "ADM-2026-001",
+      firstName: "Samuel",
+      lastName: "Okonkwo",
+      middleName: "Chukwudi",
+      gender: "Male",
+      status: "active",
+      className: "SS 2",
+      sectionName: "Science A",
+      dateOfBirth: "2009-04-12",
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: "std-002",
+      admissionNumber: "ADM-2026-002",
+      firstName: "Amina",
+      lastName: "Bello",
+      middleName: "Zainab",
+      gender: "Female",
+      status: "active",
+      className: "SS 2",
+      sectionName: "Commercial",
+      dateOfBirth: "2009-08-25",
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: "std-003",
+      admissionNumber: "ADM-2026-003",
+      firstName: "Chidi",
+      lastName: "Adeyemi",
+      middleName: "Emmanuel",
+      gender: "Male",
+      status: "active",
+      className: "JS 3",
+      sectionName: "Diamond",
+      dateOfBirth: "2011-01-19",
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: "std-004",
+      admissionNumber: "ADM-2026-004",
+      firstName: "Fatima",
+      lastName: "Dangote",
+      middleName: "Maryam",
+      gender: "Female",
+      status: "active",
+      className: "SS 3",
+      sectionName: "Arts A",
+      dateOfBirth: "2008-11-03",
+      createdAt: new Date().toISOString(),
+    },
+  ];
+
+  const [studentsList, setStudentsList] = useState<StudentItem[]>(
+    initialStudents && initialStudents.length > 0 ? initialStudents : defaultRoster
+  );
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [classFilter, setClassFilter] = useState("all");

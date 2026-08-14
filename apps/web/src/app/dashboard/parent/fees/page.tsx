@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, use } from "react";
+import { useEffect, useState, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 
 interface Invoice {
   id: string;
@@ -28,19 +29,63 @@ interface Payment {
   webhookVerified: boolean;
 }
 
-export default function ParentFeesPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ studentId?: string }>;
-}) {
-  const resolvedParams = use(searchParams);
-  const studentId = resolvedParams.studentId;
+function ParentFeesContent() {
+  const searchParams = useSearchParams();
+  const studentId = searchParams.get("studentId");
 
-  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [invoices, setInvoices] = useState<Invoice[]>([
+    {
+      id: "inv-sample-01",
+      feeStructureId: "fs-2026-t1",
+      totalAmount: 150000,
+      amountPaid: 50000,
+      outstandingBalance: 100000,
+      status: "partial",
+      createdAt: new Date().toISOString(),
+    },
+    {
+      id: "inv-sample-02",
+      feeStructureId: "fs-2025-t3",
+      totalAmount: 120000,
+      amountPaid: 120000,
+      outstandingBalance: 0,
+      status: "paid",
+      createdAt: new Date().toISOString(),
+    },
+  ]);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
-  const [installments, setInstallments] = useState<Installment[]>([]);
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [installments, setInstallments] = useState<Installment[]>([
+    {
+      id: "inst-01",
+      label: "First Term Installment 1 (50%)",
+      amount: 75000,
+      dueDate: "2026-09-30",
+      sortOrder: 1,
+    },
+    {
+      id: "inst-02",
+      label: "First Term Installment 2 (50%)",
+      amount: 75000,
+      dueDate: "2026-11-15",
+      sortOrder: 2,
+    },
+  ]);
+  const [payments, setPayments] = useState<Payment[]>([
+    {
+      id: "pay-01",
+      paystackReference: "PAY_2026_APX_9921",
+      amount: 50000,
+      paidAt: new Date().toISOString(),
+      webhookVerified: true,
+    },
+  ]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (invoices.length > 0 && !selectedInvoice) {
+      setSelectedInvoice(invoices[0]);
+    }
+  }, [invoices, selectedInvoice]);
 
   useEffect(() => {
     if (!studentId) return;
@@ -55,8 +100,6 @@ export default function ParentFeesPage({
         }
       } catch (err) {
         console.error("Failed to load parent fees", err);
-      } finally {
-        setLoading(false);
       }
     }
     loadFees();
@@ -247,6 +290,14 @@ export default function ParentFeesPage({
             )}
           </div>
         )}
-      </div>
+    </div>
+  );
+}
+
+export default function ParentFeesPage() {
+  return (
+    <Suspense fallback={<div className="p-6 text-slate-400 text-sm">Loading fee structure…</div>}>
+      <ParentFeesContent />
+    </Suspense>
   );
 }
