@@ -14,8 +14,25 @@ interface CbtExam {
 
 export default function CbtDashboardPage() {
   const router = useRouter();
-  const [exams, setExams] = useState<CbtExam[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [exams, setExams] = useState<CbtExam[]>([
+    {
+      id: "cbt-exam-01",
+      title: "SS2 Mathematics Mid-Term CBT Examination",
+      durationMinutes: 45,
+      totalMarks: 50,
+      passMarks: 25,
+      status: "published",
+    },
+    {
+      id: "cbt-exam-02",
+      title: "SS3 English Language WAEC Mock Prep",
+      durationMinutes: 60,
+      totalMarks: 100,
+      passMarks: 50,
+      status: "published",
+    },
+  ]);
+  const [loading, setLoading] = useState<boolean>(false);
   const [starting, setStarting] = useState<string | null>(null);
 
   useEffect(() => {
