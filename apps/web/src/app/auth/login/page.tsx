@@ -191,7 +191,48 @@ function LoginFormContent() {
         </button>
       </form>
 
-      <p className="mt-8 text-center text-xs text-slate-400">
+      {/* School Subdomain Portal Lookup (Helpful helper for multi-tenant schools) */}
+      <div className="mt-6 pt-6 border-t border-slate-100 text-center">
+        <details className="group text-xs text-slate-500">
+          <summary className="cursor-pointer font-medium hover:text-indigo-600 transition-colors list-none flex items-center justify-center gap-1">
+            <span>🏫 Have a custom school portal URL?</span>
+            <span className="text-slate-400 group-open:rotate-180 transition-transform">▼</span>
+          </summary>
+          <div className="mt-3 p-3 bg-slate-50 rounded-xl border border-slate-200 text-left space-y-2">
+            <p className="text-[11px] text-slate-500">
+              If your school has a dedicated Apexium portal (e.g., <code>schoolname.apexium.app</code> or <code>/s/schoolname</code>), you can enter your school code below to navigate there directly:
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="text"
+                id="school-slug-input"
+                placeholder="school-code (e.g. stjude)"
+                className="flex-1 px-3 py-1.5 rounded-lg border border-slate-300 text-xs focus:ring-1 focus:ring-indigo-500 outline-none"
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    const val = (e.currentTarget.value || "").trim().toLowerCase();
+                    if (val) router.push(`/s/${val}/auth/login`);
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const input = document.getElementById("school-slug-input") as HTMLInputElement;
+                  const val = (input?.value || "").trim().toLowerCase();
+                  if (val) router.push(`/s/${val}/auth/login`);
+                }}
+                className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-semibold transition"
+              >
+                Go →
+              </button>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <p className="mt-6 text-center text-xs text-slate-400">
         Apexium School ERP • Multi-Tenant Enterprise Education System
       </p>
     </div>

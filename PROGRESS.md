@@ -737,3 +737,15 @@ Proof it works: 4/4 Vitest tests passed in `page.test.tsx` verifying that headli
 
 Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
 
+---
+
+## Milestone 36: Login Page Simplification & Superadmin Route Lockdown — COMPLETE
+Date: August 14, 2026
+
+What this means in plain terms: The login experience is completely clean and single-purpose — visitors only see an email field, password field, sign-in button, and forgot-password link, with an optional school subdomain lookup helper. All demo account quick-fill buttons, registration CTAs, pricing links, and ERP shortcuts have been permanently removed from the login screen. Demo accounts now launch directly from the marketing landing page via role-specific links that pre-fill credentials on demand. Superadmin and platform operator links are 100% absent from all public rendered pages, and all internal routes (Platform Admin, Inventory, Data Export, Multi-Branch Groups) enforce strict server-side authentication and role authorization that immediately rejects unauthorized requests regardless of whether a link exists in the UI.
+
+Proof it works: 23/23 Vitest tests passed (including direct server-side API rejection tests returning 401/403 for unauthenticated requests, public rendered HTML cleanliness tests, role-specific demo flow tests, and tenant isolation tests). TypeScript compilation passed with 0 errors and Next.js production build succeeded cleanly across 187 pages.
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+

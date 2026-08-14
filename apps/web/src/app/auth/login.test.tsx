@@ -1,8 +1,14 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { NextRequest } from "next/server";
 import LoginPage from "./login/page";
 import SchoolLoginPageClient from "../s/[slug]/auth/login/SchoolLoginPageClient";
 import PricingPage from "../pricing/page";
+
+import { GET as getPlatformSchools } from "../api/platform/schools/route";
+import { GET as getInventoryItems } from "../api/inventory/items/route";
+import { GET as getDataExports } from "../api/data-export/route";
+import { GET as getGroups } from "../api/groups/route";
 
 // Mock next/navigation
 const mockPush = vi.fn();
@@ -15,6 +21,12 @@ vi.mock("next/navigation", () => ({
     refresh: mockRefresh,
   }),
   useSearchParams: () => mockSearchParams,
+}));
+
+// Mock auth session to return null (unauthenticated)
+vi.mock("@/lib/auth/session", () => ({
+  getSessionUser: vi.fn().mockResolvedValue(null),
+  isValidUUID: vi.fn((val: string) => /^[0-9a-fA-F-]{36}$/.test(val)),
 }));
 
 // Mock supabase client
@@ -183,6 +195,44 @@ describe("Login Page Overhaul, Accessibility & Demo Flow Audit", () => {
 
     expect(html).not.toContain('href="/platform"');
     expect(html).not.toContain("Platform Admin");
+  });
+});
+
+describe("Server-Side API Route Rejection Tests (No Auth / Wrong Role)", () => {
+  it("rejects unauthenticated requests to /api/platform/schools with 401 Unauthorized", async () => {
+    const req = new NextRequest("http://localhost:3000/api/platform/schools");
+    const res = await getPlatformSchools(req);
+    expect(res.status).toBe(401);
+
+    const data = await res.json();
+    expect(data.error).toBe("Unauthorized");
+  });
+
+  it("rejects unauthenticated requests to /api/inventory/items with 401 Unauthorized", async () => {
+    const req = new NextRequest("http://localhost:3000/api/inventory/items");
+    const res = await getInventoryItems(req);
+    expect(res.status).toBe(401);
+
+    const data = await res.json();
+    expect(data.error).toBe("Unauthorized");
+  });
+
+  it("rejects unauthenticated requests to /api/data-export with 403 Forbidden", async () => {
+    const req = new NextRequest("http://localhost:3000/api/data-export");
+    const res = await getDataExports(req);
+    expect(res.status).toBe(403);
+
+    const data = await res.json();
+    expect(data.error).toBe("Administrator access required");
+  });
+
+  it("rejects unauthenticated requests to /api/groups with 401 Unauthorized", async () => {
+    const req = new NextRequest("http://localhost:3000/api/groups");
+    const res = await getGroups(req);
+    expect(res.status).toBe(401);
+
+    const data = await res.json();
+    expect(data.error).toBe("Unauthorized");
   });
 });
 

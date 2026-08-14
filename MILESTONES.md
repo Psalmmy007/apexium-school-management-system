@@ -549,3 +549,20 @@ Rules for how to use this file are in `AGENTS.md`. Work top to bottom, one unche
 - [x] Automated test: verify the superadmin route returns no link/reference anywhere in the public-facing marketing pages' rendered HTML, and verify each role-based call-to-action routes to the correct signup or login flow
 
 **Definition of Done:** A first-time visitor immediately understands what Apexium is, who it's for, and can find the correct entry point for their role without confusion — and no internal or superadmin routes are discoverable from the public site, verified by test.
+
+---
+
+## Milestone 36: Login Page Simplification & Superadmin Route Lockdown — [x] COMPLETE
+
+- [x] Strip the shared/generic login page down to its one job: email field, password field, "Sign in" button, and a "forgot password" link. Nothing else.
+- [x] Remove the demo account quick-fill buttons (Demo Admin/Teacher/Parent/Student) from the login page entirely — every real school user currently sees these on every login. Relocate demo access to a "Try a Live Demo" button on the marketing landing page (Milestone 35) instead.
+- [x] Remove "Register School Tenant" and "Subscription Plans" links from the login page — relocate both to the marketing landing page. A person entering a password already has an account; they don't need a signup funnel in front of them.
+- [x] Remove the "Enterprise ERP Module Quick Access" section (Inventory, Data Export, Multi-Branch shortcuts) from the login page entirely — these are authenticated-only modules and have no reason to appear before login.
+- [x] **Superadmin/Platform Admin lockdown, done properly this time:** the link must not exist in the rendered HTML of any public-facing page — not the marketing landing page (Milestone 35), not the login page, not anywhere reachable without authentication. Move it to a completely separate, unlisted URL not linked from any public page.
+- [x] **Server-side enforcement, independent of any UI link:** this exact leak happened twice through a visible link, which means the real gap may be that these routes only relied on not being linked, rather than actually rejecting unauthenticated requests. Audit the superadmin/platform-admin route and the Inventory/Data Export/Multi-Branch routes specifically — confirm each one rejects an unauthenticated or wrong-role request at the server/API level, regardless of whether any UI link points to it.
+- [x] Clarify subdomain-login behavior: since Milestone 28 built per-school subdomain routing, determine and implement the intended relationship — does a real user normally log in through their own school's subdomain, with this generic shared page existing only as a fallback for someone who doesn't know their school's URL yet (e.g., a "find your school" lookup)? Design the generic login page's scope around that answer rather than duplicating full functionality on both.
+- [x] Preserve the existing left-panel messaging (headline, feature tags, "Offline Support" mention) by relocating it to the marketing landing page content from Milestone 35, rather than losing it.
+- [x] Automated test: verify the rendered HTML of the login page (and the marketing landing page) contains no reference to the superadmin/platform-admin URL anywhere, under any circumstance.
+- [x] Automated test: send unauthenticated requests directly to the superadmin routes and to Inventory/Data Export/Multi-Branch API routes and assert each is rejected server-side — this must pass even with no UI link present, proving the protection isn't just a hidden button.
+
+**Definition of Done:** The login page contains only sign-in functionality with no demo, registration, pricing, or superadmin links reachable from it or present in its HTML; every gated route rejects unauthenticated access at the server level independent of any UI link; and this is proven by automated test rather than visual inspection — since visual inspection alone already missed this twice.
