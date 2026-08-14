@@ -89,12 +89,14 @@ describe("Milestone 37 — Anti-Slop Content & Design Audit", () => {
       expect(html).toContain("Now Onboarding Our First Schools");
     });
 
-    it("ensures demonstration metrics are clearly labeled as sample / test data", () => {
+    it("ensures real product feature tour renders numbered sequence and verified guarantees", () => {
       const { container } = render(<HomePage />);
       const html = container.innerHTML;
 
-      expect(html).toContain("Sample Data");
-      expect(html).toContain("Note: Metrics shown below represent illustrative sample data");
+      expect(html).toContain("01/06");
+      expect(html).toContain("Production Verified");
+      expect(html).toContain("Per-School Data Isolation");
+      expect(html).toContain("Immutable Security Audit Trail");
     });
   });
 

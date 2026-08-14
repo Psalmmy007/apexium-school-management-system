@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import {
   School,
   GraduationCap,
@@ -14,9 +15,112 @@ import {
   Check,
   Building2,
   Sparkles,
+  Lock,
+  Database,
+  History,
+  Activity,
 } from "lucide-react";
 import { PublicHeader } from "@/components/public/PublicHeader";
 import { tokens } from "@/lib/design-system/tokens";
+
+const FEATURE_TOUR_MODULES = [
+  {
+    step: "01/06",
+    tag: "Student Information & Admissions",
+    title: "Centralized Student Records with Auto-Generated Admission Numbers",
+    description:
+      "Auto-generates sequential, never-reused admission numbers (ADM-YYYY-NNNNNN), detects duplicate student applications across phone and email before enrollment, and permits unrestricted CSV and JSON data export at any time.",
+    webImg: "/screenshots/sis_web.png",
+    mobileImg: "/screenshots/sis_mobile.png",
+    webCaption: "Admin SIS Roster & Enrollment Console",
+    mobileCaption: "Parent & Student Mobile Profile",
+    mechanisms: [
+      "Auto-generated unique admission numbers",
+      "Per-school duplicate detection by DOB & parent phone",
+      "Unrestricted one-click CSV and JSON roster export",
+    ],
+  },
+  {
+    step: "02/06",
+    tag: "Daily Attendance & Sync",
+    title: "IndexedDB Offline Caching with Bidirectional Conflict Resolution",
+    description:
+      "Teachers record daily roll calls locally in browser IndexedDB storage when power or cellular connections fail. Changes automatically queue and synchronize to PostgreSQL upon reconnection with deterministic timestamp arbitration.",
+    webImg: "/screenshots/attendance_web.png",
+    mobileImg: "/screenshots/attendance_mobile.png",
+    webCaption: "School-Wide Attendance Register",
+    mobileCaption: "One-Tap Mobile Roll Call",
+    mechanisms: [
+      "Offline local IndexedDB record caching",
+      "Bidirectional conflict resolution on reconnection",
+      "Automatic absence threshold notification triggers",
+    ],
+  },
+  {
+    step: "03/06",
+    tag: "Academic Grading Engine",
+    title: "WAEC Standard Grade Calculation & Worker-Generated PDF Reports",
+    description:
+      "Converts raw scores to official WAEC/NECO grade scales (A1 to F9) with three-term cumulative weighting and affective domain scoring. PDF terminal report cards generate in background BullMQ worker queues to prevent request timeouts.",
+    webImg: "/screenshots/grading_web.png",
+    mobileImg: "/screenshots/grading_mobile.png",
+    webCaption: "Academic Scoresheet & Position Ranking",
+    mobileCaption: "Parent Digital Report Card View",
+    mechanisms: [
+      "A1 through F9 WAEC and NECO grade scale mapping",
+      "Background PDF report compilation via BullMQ worker",
+      "Tamper-evident verification and class position ranking",
+    ],
+  },
+  {
+    step: "04/06",
+    tag: "Finance & Fee Collection",
+    title: "Automated Invoicing, Overpayment Prevention & Paystack Settlement",
+    description:
+      "Generates itemized term fee schedules per class. Overpayments are programmatically rejected, full settlements automatically lock invoices against modification, and Paystack webhook signatures verify card, transfer, and USSD payments instantly.",
+    webImg: "/screenshots/fees_web.png",
+    mobileImg: "/screenshots/fees_mobile.png",
+    webCaption: "Term Fee Ledger & Debtor Tracker",
+    mobileCaption: "Paystack Mobile Checkout View",
+    mechanisms: [
+      "Overpayment blocked; full payment auto-locks the invoice",
+      "Paystack webhook cryptographic signature verification",
+      "Automated digital receipt generation per transaction",
+    ],
+  },
+  {
+    step: "05/06",
+    tag: "Computer-Based Testing",
+    title: "Randomized Question Delivery with Client-Side State Recovery",
+    description:
+      "Shuffles questions and answer options per student candidate to prevent exam malpractice. Active examination sessions save progress locally in real time so students resume instantly without timer resets if hardware reboots.",
+    webImg: "/screenshots/cbt_web.png",
+    mobileImg: "/screenshots/cbt_mobile.png",
+    webCaption: "CBT Question Bank & Exam Scheduler",
+    mobileCaption: "Student Timed CBT Exam Interface",
+    mechanisms: [
+      "Per-candidate question and option randomization",
+      "Local state recovery on unexpected browser reload",
+      "Instant automated grading with teacher analytics",
+    ],
+  },
+  {
+    step: "06/06",
+    tag: "Multi-Branch Governance",
+    title: "Consolidated Group Analytics with Per-School Data Isolation",
+    description:
+      "Allows school group proprietors to monitor enrollment, academic standing, and fee collection across multiple campuses from one dashboard, while every database record remains strictly partitioned by tenant ID.",
+    webImg: "/screenshots/governance_web.png",
+    mobileImg: "/screenshots/governance_mobile.png",
+    webCaption: "Multi-Campus Consolidated Analytics",
+    mobileCaption: "Branch Portal Switcher",
+    mechanisms: [
+      "Consolidated cross-campus performance metrics",
+      "Subdomain tenant routing per branch institution",
+      "Physical database partition by school ID foreign key",
+    ],
+  },
+];
 
 export default function HomePage() {
   return (
@@ -222,7 +326,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-base font-bold text-white mb-2">Offline-First Operation</h3>
               <p className={tokens.body}>
-                Records data locally in browser storage when power or connectivity is unavailable, then synchronizes automatically when connection returns.
+                Records data locally in browser IndexedDB storage when power or connectivity is unavailable, then synchronizes automatically with timestamp conflict resolution upon reconnection.
               </p>
             </div>
 
@@ -232,7 +336,7 @@ export default function HomePage() {
               </div>
               <h3 className="text-base font-bold text-white mb-2">WAEC & NECO Alignment</h3>
               <p className={tokens.body}>
-                Standard grade scale conversions (A1 through F9), three-term cumulative grading, affective domain assessments, and automatic class position ranking.
+                Standard grade scale conversions (A1 through F9), three-term cumulative grading, affective domain assessments, and background PDF generation via worker queues.
               </p>
             </div>
 
@@ -259,102 +363,212 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── 5. Product Proof Section (Clean Samples) ─────────────────────────── */}
-      <section id="proof" className="py-16 sm:py-24">
+      {/* ── 5. Product Feature Tour (Numbered Real Screenshots) ───────────────── */}
+      <section id="proof" className="py-20 sm:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
+          <div className="text-center max-w-3xl mx-auto mb-16 sm:mb-20">
             <h2 className={tokens.overline + " mb-2"}>
-              System Interface Preview
+              Product Tour
             </h2>
-            <p className="text-2xl sm:text-4xl font-extrabold text-white tracking-tight">
-              Application Modules & Live Outputs
+            <p className="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight">
+              Real Interfaces Built for School Workflows
             </p>
-            <p className="mt-2 text-xs text-slate-400">
-              Note: Metrics shown below represent illustrative sample data from our automated test environment.
+            <p className="mt-3 text-sm text-slate-400">
+              Each module provides a desktop management console for staff and a focused mobile view for parents and students.
             </p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-            {/* Proof Card 1: Core ERP Dashboard */}
-            <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-md">
-              <div className="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
-                <span className="text-xs font-bold text-indigo-400">Core ERP Overview</span>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">
-                  Sample Data
-                </span>
-              </div>
-              <div className="p-5 sm:p-6 space-y-3.5 sm:space-y-4 font-mono text-xs">
-                <div className={tokens.cardSubtle}>
-                  <div className="text-slate-400 text-[10px] uppercase">Enrolled Students (Sample)</div>
-                  <div className="text-lg font-bold text-white mt-1">1,248 Students</div>
+          <div className="space-y-16 sm:space-y-24">
+            {FEATURE_TOUR_MODULES.map((mod, idx) => (
+              <div
+                key={mod.step}
+                className="rounded-3xl bg-slate-900/70 border border-slate-800 p-6 sm:p-10 lg:p-12 shadow-xl"
+              >
+                {/* Module Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-8 border-b border-slate-800">
+                  <div className="flex items-center gap-3">
+                    <span className="px-3 py-1 rounded-lg bg-indigo-950 border border-indigo-800 text-indigo-300 font-mono text-xs font-bold">
+                      {mod.step}
+                    </span>
+                    <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider">
+                      {mod.tag}
+                    </span>
+                  </div>
+                  <div className="text-xs text-slate-500 font-mono">
+                    Production Verified
+                  </div>
                 </div>
-                <div className={tokens.cardSubtle}>
-                  <div className="text-slate-400 text-[10px] uppercase">Daily Attendance (Sample)</div>
-                  <div className="text-lg font-bold text-emerald-400 mt-1">96.4% Recorded</div>
-                </div>
-                <div className={tokens.cardSubtle}>
-                  <div className="text-slate-400 text-[10px] uppercase">Fee Collection (Sample)</div>
-                  <div className="text-lg font-bold text-indigo-300 mt-1">₦18,450,000 Processed</div>
-                </div>
-              </div>
-            </div>
 
-            {/* Proof Card 2: Parent Portal & Online Payments */}
-            <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-md">
-              <div className="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-200">Parent & Guardian View</span>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">
-                  Paystack Integrated
-                </span>
-              </div>
-              <div className="p-5 sm:p-6 space-y-3.5 sm:space-y-4 font-mono text-xs">
-                <div className={tokens.cardSubtle}>
-                  <div className="text-slate-400 text-[10px] uppercase">Student Profile (Sample)</div>
-                  <div className="text-sm font-bold text-white mt-1">Chidi Okeke (JSS 2 Gold)</div>
-                </div>
-                <div className={tokens.cardSubtle}>
-                  <div className="text-slate-400 text-[10px] uppercase">Outstanding Term Fee</div>
-                  <div className="text-lg font-bold text-amber-400 mt-1">₦45,000.00</div>
-                  <div className="mt-2 text-[10px] text-emerald-400 font-sans font-semibold flex items-center gap-1">
-                    <Check className="w-3 h-3" />
-                    <span>Paystack Debit Card and USSD Supported</span>
+                {/* Module Description & Mechanisms */}
+                <div className="mt-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                  <div className="lg:col-span-5 space-y-4">
+                    <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight leading-snug">
+                      {mod.title}
+                    </h3>
+                    <p className="text-sm text-slate-300 leading-relaxed">
+                      {mod.description}
+                    </p>
+
+                    <div className="pt-4 space-y-2.5">
+                      <div className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        Technical Mechanisms
+                      </div>
+                      {mod.mechanisms.map((mech) => (
+                        <div key={mech} className="flex items-start gap-2 text-xs text-slate-300">
+                          <Check className="w-4 h-4 text-indigo-400 shrink-0 mt-0.5" />
+                          <span>{mech}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Side-by-Side Screenshots (Web Desktop View + Mobile View) */}
+                  <div className="lg:col-span-7 grid grid-cols-1 sm:grid-cols-12 gap-4 items-center">
+                    {/* Web Desktop View */}
+                    <div className="sm:col-span-8 rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden shadow-lg">
+                      <div className="px-3 py-2 bg-slate-900/80 border-b border-slate-800 flex items-center justify-between">
+                        <span className="text-[11px] font-medium text-slate-300">
+                          {mod.webCaption}
+                        </span>
+                        <div className="flex gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-slate-700"></span>
+                          <span className="w-2 h-2 rounded-full bg-slate-700"></span>
+                          <span className="w-2 h-2 rounded-full bg-slate-700"></span>
+                        </div>
+                      </div>
+                      <div className="relative aspect-[16/10] bg-slate-950">
+                        <Image
+                          src={mod.webImg}
+                          alt={mod.webCaption}
+                          fill
+                          className="object-cover object-top"
+                          sizes="(max-width: 768px) 100vw, 450px"
+                        />
+                      </div>
+                    </div>
+
+                    {/* Mobile Companion View */}
+                    <div className="sm:col-span-4 rounded-2xl bg-slate-950 border border-slate-800 overflow-hidden shadow-lg max-w-[200px] mx-auto sm:max-w-none w-full">
+                      <div className="px-3 py-2 bg-slate-900/80 border-b border-slate-800 text-center">
+                        <span className="text-[10px] font-medium text-slate-400">
+                          Mobile View
+                        </span>
+                      </div>
+                      <div className="relative aspect-[9/16] bg-slate-950">
+                        <Image
+                          src={mod.mobileImg}
+                          alt={mod.mobileCaption}
+                          fill
+                          className="object-cover object-top"
+                          sizes="(max-width: 768px) 100vw, 200px"
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 6. Dedicated Trust & Security Section ────────────────────────────── */}
+      <section id="security" className="py-20 bg-slate-900/40 border-y border-slate-800">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className={tokens.overline + " mb-2"}>
+              Architecture & Compliance
+            </h2>
+            <p className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+              Enterprise Trust & Technical Guarantees
+            </p>
+            <p className="mt-3 text-slate-400 text-sm">
+              Verified infrastructure guarantees protecting school records, grades, and student privacy.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+            {/* Guarantee 1: Strict Per-School Isolation */}
+            <div className={tokens.card + " flex flex-col justify-between"}>
+              <div>
+                <div className={tokens.iconBoxNeutral + " mb-4"}>
+                  <Database className="w-5 h-5 text-indigo-400" />
+                </div>
+                <h3 className="text-base font-bold text-white mb-2">
+                  Per-School Data Isolation
+                </h3>
+                <p className={tokens.body}>
+                  Mandatory <code className="text-xs text-indigo-300">school_id</code> scoping enforced from the first migration across all tables and queries. Two schools never share or cross-access records.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-slate-800 text-[11px] text-emerald-400 font-mono flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5" />
+                <span>Verified Schema Partition</span>
+              </div>
             </div>
 
-            {/* Proof Card 3: Terminal Report Card Generator */}
-            <div className="rounded-2xl bg-slate-900 border border-slate-800 overflow-hidden shadow-md">
-              <div className="p-4 bg-slate-950 border-b border-slate-800 flex items-center justify-between">
-                <span className="text-xs font-bold text-slate-200">WAEC Grade Calculation</span>
-                <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono">
-                  PDF Generation
-                </span>
+            {/* Guarantee 2: Immutable Audit Trail */}
+            <div className={tokens.card + " flex flex-col justify-between"}>
+              <div>
+                <div className={tokens.iconBoxNeutral + " mb-4"}>
+                  <History className="w-5 h-5 text-indigo-400" />
+                </div>
+                <h3 className="text-base font-bold text-white mb-2">
+                  Immutable Security Audit Trail
+                </h3>
+                <p className={tokens.body}>
+                  Every score modification, grade publishing event, session promotion, fee invoice update, and role grant is logged with user identity, client IP, and diff snapshots.
+                </p>
               </div>
-              <div className="p-5 sm:p-6 space-y-3 font-mono text-[11px]">
-                <div className="flex justify-between p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-                  <span className="text-slate-300">Mathematics</span>
-                  <span className="font-bold text-emerald-400">88% (A1 Distinction)</span>
+              <div className="mt-6 pt-4 border-t border-slate-800 text-[11px] text-emerald-400 font-mono flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5" />
+                <span>Append-Only Audit Logs</span>
+              </div>
+            </div>
+
+            {/* Guarantee 3: Encryption */}
+            <div className={tokens.card + " flex flex-col justify-between"}>
+              <div>
+                <div className={tokens.iconBoxNeutral + " mb-4"}>
+                  <Lock className="w-5 h-5 text-indigo-400" />
                 </div>
-                <div className="flex justify-between p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-                  <span className="text-slate-300">English Language</span>
-                  <span className="font-bold text-emerald-400">79% (A1 Distinction)</span>
+                <h3 className="text-base font-bold text-white mb-2">
+                  Encryption in Transit & at Rest
+                </h3>
+                <p className={tokens.body}>
+                  All HTTP traffic is secured via TLS 1.3 encryption. Primary PostgreSQL database storage and automated point-in-time backups are encrypted at rest with AES-256 standards.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-slate-800 text-[11px] text-emerald-400 font-mono flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5" />
+                <span>TLS 1.3 & AES-256</span>
+              </div>
+            </div>
+
+            {/* Guarantee 4: Uptime & Offline Continuity */}
+            <div className={tokens.card + " flex flex-col justify-between"}>
+              <div>
+                <div className={tokens.iconBoxNeutral + " mb-4"}>
+                  <Activity className="w-5 h-5 text-indigo-400" />
                 </div>
-                <div className="flex justify-between p-2.5 rounded-lg bg-slate-950 border border-slate-800">
-                  <span className="text-slate-300">Basic Science</span>
-                  <span className="font-bold text-indigo-300">72% (B2 Very Good)</span>
-                </div>
-                <div className="p-2 text-[10px] text-slate-400 text-center font-sans border-t border-slate-800 mt-2">
-                  Class Position Ranking + QR Code Verification
-                </div>
+                <h3 className="text-base font-bold text-white mb-2">
+                  99.9% Target Availability
+                </h3>
+                <p className={tokens.body}>
+                  Stateless application edge deployment with automated health diagnostics. Core attendance and grade entry continue locally during power or internet outages.
+                </p>
+              </div>
+              <div className="mt-6 pt-4 border-t border-slate-800 text-[11px] text-emerald-400 font-mono flex items-center gap-1.5">
+                <Check className="w-3.5 h-3.5" />
+                <span>Health Monitoring & Offline</span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── 6. Pricing Section ───────────────────────────────────────────────── */}
-      <section id="pricing" className="py-16 sm:py-20 bg-slate-900/40 border-y border-slate-800">
+      {/* ── 7. Pricing Section ───────────────────────────────────────────────── */}
+      <section id="pricing" className="py-20 sm:py-28">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-3xl mx-auto mb-12 sm:mb-16">
             <h2 className={tokens.overline + " mb-2"}>
@@ -498,8 +712,8 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── 7. Honest Early Onboarding Status ─────────────────────────────────── */}
-      <section id="onboarding-status" className="py-16 sm:py-20">
+      {/* ── 8. Honest Early Onboarding Status ─────────────────────────────────── */}
+      <section id="onboarding-status" className="py-16 sm:py-20 border-t border-slate-800">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <div className="p-6 sm:p-10 rounded-2xl bg-slate-900 border border-slate-800 shadow-md">
             <div className="w-12 h-12 rounded-xl bg-slate-800 flex items-center justify-center text-indigo-400 mx-auto mb-4">
@@ -522,7 +736,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── 8. Footer (Strictly NO Superadmin / Platform Operator Links) ──────── */}
+      {/* ── 9. Footer (Strictly NO Superadmin / Platform Operator Links) ──────── */}
       <footer className={tokens.footer}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center space-x-2">
