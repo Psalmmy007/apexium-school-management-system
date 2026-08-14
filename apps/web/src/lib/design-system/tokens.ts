@@ -12,7 +12,7 @@
 export const tokens = {
   // Page & Surface Containers
   pageContainer: "min-h-screen bg-slate-950 text-slate-100 font-sans antialiased",
-  header: "sticky top-0 z-50 backdrop-blur-md bg-slate-950/90 border-b border-slate-800",
+  header: "fixed top-0 left-0 right-0 z-50 backdrop-blur-md bg-slate-950/75 border-b border-slate-800/80 transition-all",
   footer: "py-12 bg-slate-950 border-t border-slate-900 text-xs text-slate-500",
 
   // Cards & Panels
