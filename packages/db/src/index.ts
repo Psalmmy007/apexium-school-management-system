@@ -43,3 +43,4 @@ export * from "./services/privacy";
 export { db } from "./client";
 export type { Db } from "./client";
 export * from "./services/admissions";
+export * from "./services/platform-operator";

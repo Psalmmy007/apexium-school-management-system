@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/auth/session";
+import { getSessionUser, verifyPlatformOperator } from "@/lib/auth/session";
 import { getCacheStats, runPlatformLoadBenchmark } from "@apexium/db";
 
 export async function GET(req: Request) {
-  // 1. Authenticate & Authorize User (Admin Only)
+  // 1. Authenticate & Authorize Platform Operator
   const user = await getSessionUser();
-  if (!user || user.role !== "admin") {
-    return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
+  const isOperator = await verifyPlatformOperator(user);
+  if (!user || !isOperator || user.role !== "platform_operator") {
+    return NextResponse.json({ error: "Forbidden: Platform Operator authorization required" }, { status: 403 });
   }
 
   try {
@@ -34,10 +35,11 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  // 1. Authenticate & Authorize User (Admin Only)
+  // 1. Authenticate & Authorize Platform Operator
   const user = await getSessionUser();
-  if (!user || user.role !== "admin") {
-    return NextResponse.json({ error: "Unauthorized access" }, { status: 401 });
+  const isOperator = await verifyPlatformOperator(user);
+  if (!user || !isOperator || user.role !== "platform_operator") {
+    return NextResponse.json({ error: "Forbidden: Platform Operator authorization required" }, { status: 403 });
   }
 
   try {

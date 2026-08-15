@@ -1,18 +1,19 @@
 import { NextResponse } from "next/server";
 import { getPlatformHealthReport, simulateProductionDeployment, testMigrationRollbackSafety, runBackupVerification, checkMigrationIntegrity } from "@apexium/db";
-import { getSessionUser } from "@/lib/auth/session";
+import { getSessionUser, verifyPlatformOperator } from "@/lib/auth/session";
 
 /**
  * GET /api/operations/diagnostics
- * Full platform diagnostics — superadmin only.
+ * Full platform diagnostics — platform operator only.
  * Returns the complete health report including env vars, DB health,
  * migration integrity, active incidents, and uptime metrics.
  */
 export async function GET(req: Request) {
   try {
     const user = await getSessionUser();
-    if (!user || user.role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    const isOperator = await verifyPlatformOperator(user);
+    if (!user || !isOperator || user.role !== "platform_operator") {
+      return NextResponse.json({ error: "Forbidden: Platform Operator authorization required" }, { status: 403 });
     }
 
     const report = await getPlatformHealthReport();
@@ -33,8 +34,9 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const user = await getSessionUser();
-    if (!user || user.role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    const isOperator = await verifyPlatformOperator(user);
+    if (!user || !isOperator || user.role !== "platform_operator") {
+      return NextResponse.json({ error: "Forbidden: Platform Operator authorization required" }, { status: 403 });
     }
 
     const body = await req.json();

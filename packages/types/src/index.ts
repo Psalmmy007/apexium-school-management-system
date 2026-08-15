@@ -4,9 +4,13 @@
 // ============================================================
 
 // ── Roles ────────────────────────────────────────────────────
-export type UserRole = "admin" | "teacher" | "parent" | "student";
+export type SchoolUserRole = "admin" | "teacher" | "parent" | "student";
+export type PlatformUserRole = "platform_operator";
+export type UserRole = SchoolUserRole | PlatformUserRole;
 
-export const USER_ROLES: UserRole[] = ["admin", "teacher", "parent", "student"];
+export const SCHOOL_USER_ROLES: SchoolUserRole[] = ["admin", "teacher", "parent", "student"];
+export const PLATFORM_USER_ROLES: PlatformUserRole[] = ["platform_operator"];
+export const USER_ROLES: UserRole[] = ["admin", "teacher", "parent", "student", "platform_operator"];
 
 // ── Enums ────────────────────────────────────────────────────
 export type Gender = "male" | "female" | "other";
@@ -266,7 +270,7 @@ export interface AttendanceRecord {
 // ── Auth session ──────────────────────────────────────────────
 export interface SessionUser {
   id: string;
-  schoolId: string;
+  schoolId?: string | null;
   email: string;
   role: UserRole;
   firstName: string;

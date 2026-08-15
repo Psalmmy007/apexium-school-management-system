@@ -12,9 +12,11 @@
     "test:e2e": "pnpm --filter @apexium/web run test:e2e",
     "db:generate": "pnpm --filter @apexium/db run generate",
     "db:migrate": "pnpm --filter @apexium/db run migrate",
-    "db:studio": "pnpm --filter @apexium/db run studio"
+    "db:studio": "pnpm --filter @apexium/db run studio",
+    "platform:operator": "tsx scripts/provision-platform-operator.ts"
   },
   "devDependencies": {
+    "tsx": "^4.17.0",
     "typescript": "^5.5.4"
   },
   "engines": {

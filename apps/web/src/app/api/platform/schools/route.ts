@@ -1,19 +1,18 @@
 /**
  * GET /api/platform/schools
  *
- * Returns list of all registered schools for Platform Administrators.
+ * Returns list of all registered schools for Platform Operators.
+ * Strictly restricted to verified platform_operator role.
  */
 import { NextRequest, NextResponse } from "next/server";
-import { getSessionUser } from "@/lib/auth/session";
+import { getSessionUser, verifyPlatformOperator } from "@/lib/auth/session";
 import {
   db,
   schools,
   saasSchoolSubscriptions,
   saasOnboardingSessions,
   saasSchoolDomains,
-  saasSchoolMemberships,
 } from "@apexium/db";
-import { eq, and } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
   try {
@@ -22,21 +21,13 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Verify platform_admin membership
-    const [membership] = await db
-      .select()
-      .from(saasSchoolMemberships)
-      .where(
-        and(
-          eq(saasSchoolMemberships.userId, user.id),
-          eq(saasSchoolMemberships.role, "platform_admin"),
-          eq(saasSchoolMemberships.status, "active")
-        )
-      )
-      .limit(1);
-
-    if (!membership && process.env.NODE_ENV !== "development" && !process.env.VITEST) {
-      return NextResponse.json({ error: "Platform Administrator authorization required" }, { status: 403 });
+    // Verify platform_operator role (School admins and lower roles MUST be rejected with 403)
+    const isOperator = await verifyPlatformOperator(user);
+    if (!isOperator || user.role !== "platform_operator") {
+      return NextResponse.json(
+        { error: "Forbidden: Platform Operator authorization required" },
+        { status: 403 }
+      );
     }
 
     const allSchools = await db.select().from(schools);

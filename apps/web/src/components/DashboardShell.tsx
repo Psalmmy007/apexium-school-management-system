@@ -159,7 +159,6 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
               <p className="nav-group-label mt-4">SaaS & Group Governance</p>
               <NavItem href="/dashboard/group" id="nav-group" label="Multi-Branch School Group" icon={<IconDashboard />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/settings/data-export" id="nav-data-export" label="Data Portability & Export" icon={<IconSettings />} onClick={() => setIsMobileMenuOpen(false)} />
-              <NavItem href="/platform" id="nav-platform" label="SaaS Platform Operator" icon={<IconLicense />} onClick={() => setIsMobileMenuOpen(false)} />
 
               <p className="nav-group-label mt-4">System</p>
               <NavItem href="/dashboard/setup" id="nav-setup-wizard" label="School Setup Wizard" icon={<IconPromotion />} onClick={() => setIsMobileMenuOpen(false)} />

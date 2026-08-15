@@ -3735,3 +3735,23 @@ export const admissionDocumentsRelations = relations(admissionDocuments, ({ one 
   school: one(schools, { fields: [admissionDocuments.schoolId], references: [schools.id] }),
   verifiedBy: one(users, { fields: [admissionDocuments.verifiedBy], references: [users.id] }),
 }));
+
+// ── Table: saas_platform_operators ────────────────────────────
+// Platform Operators — separate from school tenancies
+export const saasPlatformOperators = pgTable(
+  "saas_platform_operators",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    userId: uuid("user_id").notNull().unique(),
+    email: varchar("email", { length: 255 }).notNull().unique(),
+    role: varchar("role", { length: 50 }).notNull().default("platform_operator"),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => ({
+    operatorUserIdx: index("idx_saas_operator_user").on(table.userId),
+    operatorEmailIdx: index("idx_saas_operator_email").on(table.email),
+  })
+);
+

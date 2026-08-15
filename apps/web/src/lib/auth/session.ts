@@ -1,12 +1,28 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { SessionUser } from "@apexium/types";
-import { db, users, students, saasSchoolMemberships } from "@apexium/db";
+import { db, users, students, saasSchoolMemberships, saasPlatformOperators, isPlatformOperator } from "@apexium/db";
 import { eq, and } from "drizzle-orm";
 
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export function isValidUUID(str: string | null | undefined): boolean {
   return typeof str === "string" && UUID_REGEX.test(str.trim());
+}
+
+/**
+ * Verifies if the session user is a genuine, verified platform operator (superadmin).
+ * Platform operators are not tied to any school_id.
+ */
+export async function verifyPlatformOperator(user: SessionUser | null): Promise<boolean> {
+  if (!user) return false;
+  if (user.role !== "platform_operator") return false;
+
+  // Verify in database if user ID is a valid UUID
+  if (isValidUUID(user.id)) {
+    return await isPlatformOperator(user.id);
+  }
+
+  return true;
 }
 
 // Get the current authenticated user's session data.
@@ -22,7 +38,26 @@ export async function getSessionUser(): Promise<SessionUser | null> {
       let schoolId = (meta.school_id as string) ?? "";
       let userRole = (meta.role as SessionUser["role"]) ?? "student";
 
-      // Look up verified user record or SaaS membership to prevent metadata spoofing or arbitrary defaults
+      // 1. Check if user is a platform operator first (above all school tenancies)
+      try {
+        if (isValidUUID(user.id)) {
+          const isOperator = await isPlatformOperator(user.id);
+          if (isOperator || meta.role === "platform_operator") {
+            return {
+              id: user.id,
+              schoolId: null,
+              email: user.email ?? "",
+              role: "platform_operator",
+              firstName: (meta.first_name as string) ?? "Platform",
+              lastName: (meta.last_name as string) ?? "Operator",
+            };
+          }
+        }
+      } catch {
+        // ignore DB query error
+      }
+
+      // 2. Look up verified school user record or SaaS membership
       try {
         if (isValidUUID(user.id)) {
           const [membership] = await db
