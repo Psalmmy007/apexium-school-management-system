@@ -100,3 +100,10 @@ This file records every technical decision made during development. It exists so
 **Date:** 2026-08-15
 **Context:** Browser history back is unreliable across deep links, login redirects, and tab restores. Subpages need a deterministic in-UI parent destination while root dashboard homepages must not display empty back elements.
 **Decision:** Implement `<BackNavigation href="..." label="..." />` adhering to design tokens (`bg-slate-800 border-slate-700` with Lucide `ArrowLeft`), strict min 44x44px touch targets for mobile accessibility, and explicit hierarchical routing (subpage -> parent section -> root dashboard). Root dashboard homepages (`/`, `/dashboard`, `/dashboard/teacher`, `/dashboard/parent`, `/dashboard/student`) do not render a back button. Login page `/auth/login` renders a dedicated "Back to Home" button targeting `/`.
+
+---
+
+## Decision 018 — Platform Operator Role Model Separation & Server-Side Security Isolation
+**Date:** 2026-08-15
+**Context:** School administrators (`role: "admin"`) are tenant-scoped users bound to a single school (`school_id`). Platform operators (superadmins) manage the global SaaS multi-tenant infrastructure and must not be bound to any school tenancy or conflated with school admins.
+**Decision:** Defined `PlatformUserRole = "platform_operator"` as distinct from `SchoolUserRole = "admin" | "teacher" | "parent" | "student"`. Created an authoritative `saas_platform_operators` table. Locked down `/platform` routes and API endpoints (`/api/platform/schools`, `/api/saas/analytics`, `/api/operations/diagnostics`, `/api/performance/benchmark`) on the server to reject school admins with HTTP 403 Forbidden. Removed `/platform` from `PUBLIC_ROUTES` and removed all links from the school admin dashboard navigation. Built a dedicated server-only CLI provisioning tool (`scripts/provision-platform-operator.ts`) for founders/operators.
