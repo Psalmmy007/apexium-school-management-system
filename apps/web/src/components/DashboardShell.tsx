@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
+import { Search } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { GlobalSearch } from "./GlobalSearch";
 import { NotificationBell } from "./NotificationBell";
@@ -51,7 +52,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
   };
 
   return (
-    <div className="flex min-h-screen bg-surface relative w-full">
+    <div className="flex min-h-screen bg-slate-950 text-slate-100 relative w-full">
 
       {/* ── Mobile Overlay Backdrop ──────────────────────── */}
       {isMobileMenuOpen && (
@@ -210,7 +211,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
         {/* Responsive Top Bar */}
         <header
           id="topbar"
-          className="bg-white border-b border-slate-100 shadow-elevation-1 px-4 sm:px-6 sticky top-0 z-30 flex-shrink-0"
+          className="bg-slate-900 border-b border-slate-800 shadow-md px-4 sm:px-6 sticky top-0 z-30 flex-shrink-0"
           style={{ height: "var(--topbar-height)" }}
         >
           <div className="flex items-center justify-between h-full">
@@ -221,15 +222,15 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
                 id="mobile-menu-toggle"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 aria-label="Toggle Navigation Menu"
-                className="lg:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 active:bg-slate-200 transition-colors focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                className="lg:hidden p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 active:bg-slate-700 transition-colors focus:ring-2 focus:ring-indigo-500 cursor-pointer"
               >
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               </button>
 
-              <div id="breadcrumb" className="flex items-center gap-2 text-sm text-slate-500">
-                <span className="font-bold text-slate-900 text-base sm:text-sm capitalize tracking-tight">
+              <div id="breadcrumb" className="flex items-center gap-2 text-sm text-slate-400">
+                <span className="font-bold text-white text-base sm:text-sm capitalize tracking-tight">
                   {user.role} Portal
                 </span>
               </div>
@@ -242,20 +243,20 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
                 onClick={() => {
                   window.dispatchEvent(new KeyboardEvent("keydown", { key: "k", ctrlKey: true }));
                 }}
-                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium text-slate-500 bg-slate-100 hover:bg-slate-200 border border-slate-200 transition cursor-pointer"
+                className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-xl text-xs font-medium text-slate-300 bg-slate-800 hover:bg-slate-750 border border-slate-700 hover:border-slate-600 transition cursor-pointer"
                 title="Search ERP (Ctrl+K)"
               >
-                <span>🔍</span>
+                <Search className="w-3.5 h-3.5 text-slate-400" />
                 <span>Search...</span>
-                <kbd className="bg-white px-1.5 py-0.5 rounded text-[10px] font-mono text-slate-400 border border-slate-200">⌘K</kbd>
+                <kbd className="bg-slate-900 px-1.5 py-0.5 rounded text-[10px] font-mono text-slate-400 border border-slate-750">⌘K</kbd>
               </button>
 
               <GlobalSearch />
               <NotificationBell />
 
-              <div className="flex items-center gap-2 pl-2 border-l border-slate-200">
-                <div className="w-9 h-9 rounded-xl bg-indigo-100 flex items-center justify-center border border-indigo-200 shadow-xs">
-                  <span className="text-sm font-bold text-indigo-700">
+              <div className="flex items-center gap-2 pl-2 border-l border-slate-800">
+                <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center border border-indigo-500 shadow-md">
+                  <span className="text-sm font-bold text-white">
                     {user.firstName.charAt(0)}{user.lastName.charAt(0)}
                   </span>
                 </div>
@@ -264,10 +265,10 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
                   id="topbar-signout-btn"
                   onClick={handleSignOut}
                   disabled={isSigningOut}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-600 hover:text-red-600 hover:bg-red-50 border border-slate-200 hover:border-red-200 transition-all cursor-pointer disabled:opacity-50"
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-slate-400 hover:text-red-400 hover:bg-slate-800 border border-slate-700 hover:border-red-900/50 transition-all cursor-pointer disabled:opacity-50"
                   aria-label="Sign Out"
                 >
-                  <IconSignOut className="w-4 h-4 text-slate-500 hover:text-red-600" />
+                  <IconSignOut className="w-4 h-4 text-slate-400 hover:text-red-400" />
                   <span className="hidden sm:inline">{isSigningOut ? "Signing Out..." : "Sign Out"}</span>
                 </button>
               </div>
@@ -277,7 +278,7 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
         </header>
 
         {/* Page Content Canvas */}
-        <main id="main-content" className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 lg:p-8 animate-fade-in">
+        <main id="main-content" className="flex-1 overflow-y-auto overflow-x-hidden p-3 sm:p-6 lg:p-8 animate-fade-in bg-slate-950">
           {children}
         </main>
       </div>

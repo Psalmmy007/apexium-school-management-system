@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Bell } from "lucide-react";
 
 interface NotificationItem {
   id: string;
@@ -56,10 +57,10 @@ export function NotificationBell() {
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="relative p-2 rounded-xl text-slate-600 hover:bg-slate-100 transition focus:outline-none"
+        className="relative p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition focus:outline-none cursor-pointer"
         aria-label="Notifications"
       >
-        <span className="text-xl">🔔</span>
+        <Bell className="w-5 h-5 text-slate-400 hover:text-white transition-colors" />
         {unreadCount > 0 && (
           <span className="absolute top-1 right-1 flex h-4 w-4 items-center justify-center rounded-full bg-rose-500 text-[10px] font-bold text-white shadow-sm">
             {unreadCount > 9 ? "9+" : unreadCount}
@@ -68,30 +69,32 @@ export function NotificationBell() {
       </button>
 
       {isOpen && (
-        <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-white shadow-2xl border border-slate-200 z-50 overflow-hidden animate-slide-up">
-          <div className="p-3 bg-slate-900 text-white flex items-center justify-between text-xs">
+        <div className="absolute right-0 mt-2 w-80 rounded-2xl bg-slate-900 shadow-2xl border border-slate-800 z-50 overflow-hidden animate-slide-up">
+          <div className="p-3 bg-slate-950 border-b border-slate-800 text-white flex items-center justify-between text-xs">
             <span className="font-bold">Notifications</span>
-            <span className="badge-indigo text-[10px]">{unreadCount} Unread</span>
+            <span className="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2 py-0.5 rounded-full text-[10px] font-semibold">
+              {unreadCount} Unread
+            </span>
           </div>
 
-          <div className="max-h-80 overflow-y-auto divide-y divide-slate-100 text-xs">
+          <div className="max-h-80 overflow-y-auto divide-y divide-slate-800/60 text-xs">
             {notifications.length === 0 ? (
-              <div className="p-6 text-center text-slate-400 text-xs">No notifications yet.</div>
+              <div className="p-6 text-center text-slate-500 text-xs">No notifications yet.</div>
             ) : (
               notifications.slice(0, 10).map((n) => (
                 <div
                   key={n.id}
                   onClick={() => handleMarkRead(n.id)}
                   className={`p-3 space-y-1 cursor-pointer transition ${
-                    n.status !== "Read" ? "bg-indigo-50/50 hover:bg-indigo-50" : "hover:bg-slate-50 opacity-75"
+                    n.status !== "Read" ? "bg-slate-800/50 hover:bg-slate-800 text-white" : "hover:bg-slate-800/30 text-slate-400 opacity-80"
                   }`}
                 >
                   <div className="flex items-center justify-between">
-                    <strong className="text-slate-900 font-semibold">{n.title}</strong>
-                    {n.status !== "Read" && <span className="w-2 h-2 rounded-full bg-indigo-600" />}
+                    <strong className="text-white font-semibold">{n.title}</strong>
+                    {n.status !== "Read" && <span className="w-2 h-2 rounded-full bg-indigo-500" />}
                   </div>
-                  <p className="text-slate-600 text-[11px] line-clamp-2">{n.message}</p>
-                  <span className="text-[9px] text-slate-400 block font-mono">
+                  <p className="text-slate-400 text-[11px] line-clamp-2">{n.message}</p>
+                  <span className="text-[9px] text-slate-500 block font-mono">
                     {new Date(n.createdAt).toLocaleTimeString("en-NG")}
                   </span>
                 </div>

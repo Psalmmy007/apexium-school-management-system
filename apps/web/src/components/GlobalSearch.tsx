@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { Search } from "lucide-react";
 
 export function GlobalSearch() {
   const router = useRouter();
@@ -51,29 +52,29 @@ export function GlobalSearch() {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-start justify-center pt-20 px-4 animate-fade-in">
-      <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-2xl overflow-hidden space-y-0">
-        <div className="p-4 border-b border-slate-100 flex items-center gap-3">
-          <span className="text-slate-400 text-lg">🔍</span>
+    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-start justify-center pt-20 px-4 animate-fade-in">
+      <div className="bg-slate-900 rounded-3xl shadow-2xl border border-slate-800 w-full max-w-2xl overflow-hidden space-y-0 text-white">
+        <div className="p-4 border-b border-slate-800 flex items-center gap-3 bg-slate-950">
+          <Search className="w-4 h-4 text-slate-400 shrink-0" />
           <input
             type="text"
             placeholder="Search students, teachers, classes, books, routes... (Cmd/Ctrl + K)"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full text-slate-900 placeholder:text-slate-400 text-sm font-medium focus:outline-none"
+            className="w-full bg-transparent text-white placeholder:text-slate-500 text-sm font-medium focus:outline-none"
             autoFocus
           />
           <button
             type="button"
             onClick={() => setOpen(false)}
-            className="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold px-2.5 py-1 rounded-lg"
+            className="text-xs bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white font-bold px-2.5 py-1 rounded-lg transition-colors cursor-pointer"
           >
             ESC
           </button>
         </div>
 
-        <div className="max-h-96 overflow-y-auto p-2">
-          {loading && <div className="p-4 text-xs text-slate-400 text-center font-medium">Searching ERP entities...</div>}
+        <div className="max-h-96 overflow-y-auto p-2 divide-y divide-slate-800/40">
+          {loading && <div className="p-6 text-xs text-slate-400 text-center font-medium">Searching ERP entities...</div>}
 
           {!loading && results.length === 0 && query.length >= 2 && (
             <div className="p-6 text-xs text-slate-500 text-center">No matching entities found for &quot;{query}&quot;.</div>
@@ -87,15 +88,17 @@ export function GlobalSearch() {
                   setOpen(false);
                   router.push(item.url);
                 }}
-                className="p-3 hover:bg-indigo-50/80 rounded-2xl cursor-pointer transition flex items-center justify-between group"
+                className="p-3 hover:bg-slate-800/60 rounded-2xl cursor-pointer transition flex items-center justify-between group"
               >
                 <div>
-                  <div className="text-xs font-bold text-slate-900 group-hover:text-indigo-600 transition">
+                  <div className="text-xs font-bold text-white group-hover:text-indigo-400 transition">
                     {item.title}
                   </div>
-                  {item.subtitle && <div className="text-[11px] text-slate-500">{item.subtitle}</div>}
+                  {item.subtitle && <div className="text-[11px] text-slate-400">{item.subtitle}</div>}
                 </div>
-                <span className="badge-indigo text-[10px] font-bold">{item.type}</span>
+                <span className="bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 text-[10px] font-bold px-2.5 py-0.5 rounded-full">
+                  {item.type}
+                </span>
               </div>
             ))}
         </div>
