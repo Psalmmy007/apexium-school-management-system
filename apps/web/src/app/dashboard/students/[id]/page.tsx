@@ -3,6 +3,8 @@
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
+import { Pencil } from "lucide-react";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 
 interface TimelineEvent {
   id: string;
@@ -323,11 +325,13 @@ export default function StudentProfilePage() {
     <div className="max-w-6xl mx-auto space-y-6 animate-fade-in">
       {/* Back navigation */}
       <div className="flex items-center justify-between gap-4">
-        <Link href="/dashboard/students" className="btn-ghost btn-sm text-slate-500">
-          ← Back to Students
-        </Link>
-        <Link href={`/dashboard/students/${student.id}/edit`} className="btn-secondary btn-sm">
-          ✏️ Edit Profile
+        <BackNavigation href="/dashboard/students" label="Back to Students" />
+        <Link
+          href={`/dashboard/students/${student.id}/edit`}
+          className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors"
+        >
+          <Pencil className="w-3.5 h-3.5" />
+          <span>Edit Profile</span>
         </Link>
       </div>
 

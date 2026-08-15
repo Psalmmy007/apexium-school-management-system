@@ -7,6 +7,7 @@ import { ArrowRight, School } from "lucide-react";
 import { PublicHeader } from "@/components/public/PublicHeader";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { PasswordField } from "@/components/ui/PasswordField";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 import { tokens } from "@/lib/design-system/tokens";
 
 export default function RegisterSchoolPage() {
@@ -62,6 +63,9 @@ export default function RegisterSchoolPage() {
 
       {/* ── Registration Content Area ─────────────────────────────────────── */}
       <main className="pt-36 pb-20 sm:pt-44 sm:pb-28 px-4 sm:px-6 lg:px-8 flex flex-col justify-center">
+        <div className="sm:mx-auto sm:w-full sm:max-w-xl mb-4">
+          <BackNavigation href="/" label="Back to Home" />
+        </div>
         <div className="sm:mx-auto sm:w-full sm:max-w-md">
           <div className="text-center">
             <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-indigo-600 text-white mb-3 shadow-sm">

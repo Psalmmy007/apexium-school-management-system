@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { MessageSquarePlus } from "lucide-react";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 import type { MessageThread, Message } from "@apexium/types";
 
 interface StudentItem {
@@ -180,19 +182,23 @@ export default function TeacherMessagesPage() {
 
   return (
     <div className="space-y-6">
+      {/* Back to Teacher Dashboard Navigation */}
+      <BackNavigation href="/dashboard/teacher" label="Back to Teacher Dashboard" />
+
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Parent & Admin Messaging</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="text-2xl font-bold text-white tracking-tight">Parent & Admin Messaging</h1>
+          <p className="text-sm text-slate-400 mt-1">
             Secure, tenant-isolated message threads tied to verified student guardian relationships.
           </p>
         </div>
         <button
           onClick={handleOpenCreateModal}
-          className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm rounded-xl shadow-sm flex items-center justify-center gap-2"
+          className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm rounded-xl shadow-sm flex items-center justify-center gap-2"
         >
-          💬 New Conversation Thread
+          <MessageSquarePlus className="w-4 h-4" />
+          <span>New Conversation Thread</span>
         </button>
       </div>
 

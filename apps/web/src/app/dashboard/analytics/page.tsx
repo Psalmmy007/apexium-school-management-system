@@ -7,6 +7,7 @@ import {
   calculateStudentRiskScores,
 } from "@apexium/db";
 import type { Metadata } from "next";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 import { AnalyticsClient } from "./AnalyticsClient";
 
 export const metadata: Metadata = {
@@ -37,12 +38,15 @@ export default async function AnalyticsDashboardPage() {
 
   return (
     <div className="animate-fade-in space-y-6">
+      {/* Back to Dashboard Navigation */}
+      <BackNavigation href="/dashboard" label="Back to Dashboard" />
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-bold text-white tracking-tight">
             Analytics & Executive Dashboard
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-400 mt-1">
             Real-time institution-wide KPIs covering enrolment, attendance, academics, finances, operations, predictive at-risk indicators, and exportable reports.
           </p>
         </div>

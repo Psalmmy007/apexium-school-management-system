@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 
 interface ScoreRecord {
   id: string;
@@ -36,10 +37,13 @@ export default function StudentAcademicsPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 pb-4">
+      {/* Back to Student Dashboard Navigation */}
+      <BackNavigation href="/dashboard/student" label="Back to Student Dashboard" />
+
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Academic Results & Report Cards</h1>
-          <p className="text-sm text-gray-500">View your term subject grades, CA/Exam score breakdown, and download PDF report cards</p>
+          <h1 className="text-2xl font-bold text-white">Academic Results & Report Cards</h1>
+          <p className="text-sm text-slate-400">View your term subject grades, CA/Exam score breakdown, and download PDF report cards</p>
         </div>
         <a
           href="/api/reports/download"

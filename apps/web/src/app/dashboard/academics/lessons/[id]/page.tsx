@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 import type { LmsLesson } from "@apexium/types";
 
 export default function LessonDetailPage() {
@@ -53,12 +54,7 @@ export default function LessonDetailPage() {
   return (
     <div className="max-w-4xl mx-auto space-y-6">
       {/* Back Button */}
-      <button
-        onClick={() => router.push("/dashboard/academics/lessons")}
-        className="text-xs font-bold text-slate-500 hover:text-slate-800 flex items-center gap-1"
-      >
-        ← Back to Lessons
-      </button>
+      <BackNavigation href="/dashboard/academics/lessons" label="Back to Lessons" />
 
       {/* Header */}
       <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-3">

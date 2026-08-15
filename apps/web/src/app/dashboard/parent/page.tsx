@@ -1,7 +1,19 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { NotificationBell } from "@/components/NotificationBell";
+import {
+  Users,
+  CreditCard,
+  CalendarCheck,
+  Award,
+  Bell,
+  ArrowRight,
+  AlertCircle,
+  GraduationCap,
+} from "lucide-react";
+import { tokens } from "@/lib/design-system/tokens";
 
 interface Child {
   id: string;
@@ -89,159 +101,177 @@ export default function ParentDashboardPage() {
   const selectedChild = children.find((c) => c.id === selectedChildId);
 
   return (
-    <div className="p-6 max-w-7xl mx-auto space-y-6">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-gray-200 pb-4">
-          <div className="flex items-center justify-between w-full md:w-auto">
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Parent Portal</h1>
-              <p className="text-sm text-gray-500">Monitor academic performance, attendance, and fee status</p>
-            </div>
-            <div className="md:hidden">
-              <NotificationBell />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="hidden md:block">
-              <NotificationBell />
-            </div>
-
-            {/* Multi-Child Switcher */}
-            {children.length > 1 && (
-              <div className="flex items-center space-x-2 bg-gray-100 p-1.5 rounded-lg border border-gray-200">
-                <span className="text-xs font-semibold text-gray-600 px-2">Select Child:</span>
-                {children.map((child) => (
-                  <button
-                    key={child.id}
-                    onClick={() => setSelectedChildId(child.id)}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
-                      selectedChildId === child.id
-                        ? "bg-white text-indigo-600 shadow-sm"
-                        : "text-gray-600 hover:text-gray-900"
-                    }`}
-                  >
-                    {child.firstName}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+    <div className="max-w-7xl mx-auto space-y-8 animate-slide-up">
+      {/* ── Page Header ───────────────────────────────── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+        <div>
+          <h1 className={tokens.h2}>Parent Portal</h1>
+          <p className="text-slate-400 text-sm mt-1">
+            Monitor academic progress, daily attendance, fee invoices, and school notices.
+          </p>
         </div>
 
-        {loading ? (
-          <div className="text-center py-12 text-gray-500">Loading parent workspace...</div>
-        ) : children.length === 0 ? (
-          <div className="bg-yellow-50 border border-yellow-200 text-yellow-800 p-4 rounded-lg flex items-center gap-3">
-            <span className="font-semibold">Notice:</span>
-            <span>No student records are linked to your parent account. Please contact school administration.</span>
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Main Stats Column */}
-            <div className="lg:col-span-2 space-y-6">
-              {/* Selected Child Header */}
-              <div className="bg-gradient-to-r from-indigo-900 to-slate-900 text-white p-6 rounded-xl shadow-sm">
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h2 className="text-xl font-bold">
-                      {selectedChild?.firstName} {selectedChild?.lastName}
-                    </h2>
-                    <p className="text-xs text-indigo-200 mt-1">
-                      Admission Number: {selectedChild?.admissionNumber}
+        <div className="flex items-center gap-3">
+          {/* Multi-Child Switcher */}
+          {children.length > 1 && (
+            <div className="flex items-center gap-1.5 bg-slate-900 p-1.5 rounded-xl border border-slate-800">
+              <span className="text-xs font-semibold text-slate-400 px-2">Ward:</span>
+              {children.map((child) => (
+                <button
+                  key={child.id}
+                  onClick={() => setSelectedChildId(child.id)}
+                  className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-colors min-h-[36px] ${
+                    selectedChildId === child.id
+                      ? "bg-indigo-600 text-white shadow-sm"
+                      : "text-slate-400 hover:text-white"
+                  }`}
+                >
+                  {child.firstName}
+                </button>
+              ))}
+            </div>
+          )}
+          <NotificationBell />
+        </div>
+      </div>
+
+      {loading ? (
+        <div className="p-12 text-center text-slate-400 font-medium animate-pulse">
+          Loading parent workspace...
+        </div>
+      ) : children.length === 0 ? (
+        <div className="p-6 rounded-2xl bg-amber-950/40 border border-amber-800/60 text-amber-300 flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 shrink-0 text-amber-400" />
+          <span className="text-sm font-medium">
+            No student records are currently linked to your parent account. Please contact school administration.
+          </span>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Main Content Column */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Selected Child Profile Header */}
+            <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-md space-y-5">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-xl font-bold text-white flex items-center gap-2">
+                    <GraduationCap className="w-5 h-5 text-indigo-400" />
+                    {selectedChild?.firstName} {selectedChild?.lastName}
+                  </h2>
+                  <p className="text-xs text-slate-400 mt-1 font-mono">
+                    Admission Number: {selectedChild?.admissionNumber}
+                  </p>
+                </div>
+                <Link
+                  href={`/dashboard/parent/fees?studentId=${selectedChildId}`}
+                  className="inline-flex items-center gap-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl transition shadow-sm"
+                >
+                  <CreditCard className="w-4 h-4" />
+                  <span>Fee Invoices & Pay</span>
+                </Link>
+              </div>
+
+              {/* Attendance Quick Counters */}
+              {attendance && (
+                <div className="grid grid-cols-3 gap-4 pt-4 border-t border-slate-800">
+                  <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800 text-center">
+                    <p className="text-xs font-medium text-slate-400">Present</p>
+                    <p className="text-2xl font-extrabold text-emerald-400 mt-0.5">
+                      {attendance.present} <span className="text-xs text-slate-500 font-normal">Days</span>
                     </p>
                   </div>
-                  <a
-                    href={`/dashboard/parent/fees?studentId=${selectedChildId}`}
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold bg-indigo-500 hover:bg-indigo-600 text-white px-3 py-2 rounded-lg transition"
-                  >
-                    View Fees & Pay
-                  </a>
+                  <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800 text-center">
+                    <p className="text-xs font-medium text-slate-400">Absent</p>
+                    <p className="text-2xl font-extrabold text-red-400 mt-0.5">
+                      {attendance.absent} <span className="text-xs text-slate-500 font-normal">Days</span>
+                    </p>
+                  </div>
+                  <div className="p-3.5 bg-slate-950 rounded-xl border border-slate-800 text-center">
+                    <p className="text-xs font-medium text-slate-400">Late</p>
+                    <p className="text-2xl font-extrabold text-amber-400 mt-0.5">
+                      {attendance.late} <span className="text-xs text-slate-500 font-normal">Days</span>
+                    </p>
+                  </div>
                 </div>
-
-                {/* Quick Attendance Counters */}
-                {attendance && (
-                  <div className="grid grid-cols-3 gap-4 mt-6 pt-4 border-t border-indigo-800/60">
-                    <div>
-                      <p className="text-xs text-indigo-200">Present</p>
-                      <p className="text-xl font-extrabold text-green-400">{attendance.present} Days</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-indigo-200">Absent</p>
-                      <p className="text-xl font-extrabold text-red-400">{attendance.absent} Days</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-indigo-200">Late</p>
-                      <p className="text-xl font-extrabold text-amber-400">{attendance.late} Days</p>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Academic Overview */}
-              <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-4">
-                <h3 className="text-lg font-bold text-gray-900">
-                  Recent Grades & Scores
-                </h3>
-
-                {scores.length === 0 ? (
-                  <p className="text-sm text-gray-500 py-4">No recorded scores available for this term.</p>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-sm text-gray-600">
-                      <thead className="bg-gray-50 text-xs font-semibold text-gray-500 uppercase">
-                        <tr>
-                          <th className="py-2.5 px-3">CA (40%)</th>
-                          <th className="py-2.5 px-3">Exam (60%)</th>
-                          <th className="py-2.5 px-3">Total</th>
-                          <th className="py-2.5 px-3">Grade</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-100">
-                        {scores.slice(0, 10).map((s) => (
-                          <tr key={s.id} className="hover:bg-gray-50">
-                            <td className="py-2.5 px-3">{s.caScore}</td>
-                            <td className="py-2.5 px-3">{s.examScore}</td>
-                            <td className="py-2.5 px-3 font-semibold text-gray-900">{s.totalScore}</td>
-                            <td className="py-2.5 px-3">
-                              <span className="inline-block px-2 py-0.5 text-xs font-bold rounded bg-indigo-50 text-indigo-700 border border-indigo-200">
-                                {s.grade}
-                              </span>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </div>
+              )}
             </div>
 
-            {/* Announcements Sidebar */}
-            <div className="space-y-6">
-              <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-4">
-                <h3 className="text-lg font-bold text-gray-900">
-                  Announcements & Events
+            {/* Academic Overview Scores */}
+            <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-md space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <Award className="w-4 h-4 text-indigo-400" />
+                  Recent Academic Scores
                 </h3>
-
-                {announcements.length === 0 ? (
-                  <p className="text-sm text-gray-500 py-2">No active announcements.</p>
-                ) : (
-                  <div className="space-y-3">
-                    {announcements.map((ann) => (
-                      <div key={ann.id} className="p-3 bg-gray-50 rounded-lg border border-gray-100 space-y-1">
-                        <h4 className="text-sm font-semibold text-gray-900">{ann.title}</h4>
-                        <p className="text-xs text-gray-600 leading-relaxed">{ann.body}</p>
-                        <p className="text-[10px] text-gray-400">
-                          {new Date(ann.publishedAt).toLocaleDateString()}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
               </div>
+
+              {scores.length === 0 ? (
+                <p className="text-xs text-slate-400 py-4 text-center border border-dashed border-slate-800 rounded-xl">
+                  No recorded assessment scores published for this term yet.
+                </p>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left text-xs text-slate-300">
+                    <thead className="bg-slate-950 text-slate-400 font-semibold uppercase tracking-wider">
+                      <tr>
+                        <th className="py-3 px-4 rounded-l-lg">Continuous Assessment (40%)</th>
+                        <th className="py-3 px-4">Exam (60%)</th>
+                        <th className="py-3 px-4">Cumulative Total</th>
+                        <th className="py-3 px-4 rounded-r-lg">Grade</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800">
+                      {scores.slice(0, 10).map((s) => (
+                        <tr key={s.id} className="hover:bg-slate-800/50 transition-colors">
+                          <td className="py-3 px-4">{s.caScore}</td>
+                          <td className="py-3 px-4">{s.examScore}</td>
+                          <td className="py-3 px-4 font-bold text-white">{s.totalScore}</td>
+                          <td className="py-3 px-4">
+                            <span className="inline-block px-2 py-0.5 text-xs font-bold rounded-md bg-indigo-950/80 text-indigo-300 border border-indigo-800">
+                              {s.grade}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
-        )}
-      </div>
+
+          {/* Announcements Sidebar */}
+          <div className="space-y-6">
+            <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 shadow-md space-y-4">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Bell className="w-4 h-4 text-indigo-400" />
+                School Notices
+              </h3>
+
+              {announcements.length === 0 ? (
+                <p className="text-xs text-slate-400 py-4 text-center border border-dashed border-slate-800 rounded-xl">
+                  No active announcements from school administration.
+                </p>
+              ) : (
+                <div className="space-y-3">
+                  {announcements.map((ann) => (
+                    <div
+                      key={ann.id}
+                      className="p-4 bg-slate-950 rounded-xl border border-slate-800 space-y-1.5"
+                    >
+                      <h4 className="text-xs font-bold text-white">{ann.title}</h4>
+                      <p className="text-xs text-slate-300 leading-relaxed">{ann.body}</p>
+                      <p className="text-[10px] text-slate-500">
+                        {new Date(ann.publishedAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 import type { LmsAssignment, LmsSubmission } from "@apexium/types";
 
 interface OptionItem {
@@ -206,11 +207,14 @@ export default function LmsAssignmentsPage() {
 
   return (
     <div className="space-y-6">
+      {/* Back to Dashboard Navigation */}
+      <BackNavigation href="/dashboard" label="Back to Dashboard" />
+
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-sm">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Assignments & Submissions</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="text-2xl font-bold text-white tracking-tight">Assignments & Submissions</h1>
+          <p className="text-sm text-slate-400 mt-1">
             Create tasks, submit student work, and grade directly into the core Academic Gradebook.
           </p>
         </div>

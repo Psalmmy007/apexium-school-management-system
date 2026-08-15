@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 
 interface ExportItem {
   id: string;
@@ -82,9 +83,12 @@ export default function DataExportClient() {
   };
 
   return (
-    <div className="p-6 bg-slate-950 min-h-screen text-slate-100 space-y-8">
+    <div className="p-6 bg-slate-950 min-h-screen text-slate-100 space-y-6">
+      {/* Back to Dashboard Navigation */}
+      <BackNavigation href="/dashboard" label="Back to Dashboard" />
+
       <div className="border-b border-slate-800 pb-6">
-        <h1 className="text-3xl font-extrabold bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400 bg-clip-text text-transparent">
+        <h1 className="text-2xl font-bold text-white tracking-tight">
           Data Portability & Self-Service Export
         </h1>
         <p className="text-sm text-slate-400 mt-1">

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 
 interface AdmissionStat {
   total: number;
@@ -165,7 +166,11 @@ export default function AdminAdmissionsDashboard() {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-var(--topbar-height))] -m-3 sm:-m-6 lg:-m-8 p-3 sm:p-6 lg:p-8 space-y-6 overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-var(--topbar-height))] -m-3 sm:-m-6 lg:-m-8 p-3 sm:p-6 lg:p-8 space-y-4 overflow-hidden">
+      {/* Back to Dashboard Navigation */}
+      <div className="flex-shrink-0">
+        <BackNavigation href="/dashboard" label="Back to Dashboard" />
+      </div>
       
       {/* Stats Header */}
       <div className="grid grid-cols-2 md:grid-cols-6 gap-4 flex-shrink-0">

@@ -649,3 +649,37 @@ Applies to every button that triggers a network request and every form across th
 - [x] Manual pass across every public and authenticated page confirming every submit-style button shows a loading state, and every password field on the app follows the pattern above — list every page checked
 
 **Definition of Done:** No button that triggers a network request can be clicked a second time before the first request completes without either being visually disabled or protected by server-side idempotency (proven by test for the highest-stakes actions). Every password-entry screen shows live, visible requirements, a strength indicator, and a show/hide toggle, with no confirm-password field. Ordinary form fields validate on blur/submit, not on every keystroke.
+
+---
+
+## Milestone 39: Dashboard Design Unification & Standard Back Navigation — [x] COMPLETE
+Date: August 15, 2026
+
+### Extend the shared design system into every dashboard
+
+- [x] Apply the shared design token system (colors, typography scale, spacing, button styles, card styles, icon set) already established for the landing and login pages to all four dashboards: Admin, Teacher, Parent, Student. These were built across many separate milestones — audit each one and replace any ad-hoc or inconsistent styling that drifted from the shared tokens.
+- [x] Apply the Milestone 37 anti-slop checks (real icon set, no emoji, no default purple-gradient-by-accident, no decorative colored card borders) inside the dashboards too — those checks were originally scoped to public pages only; extend them here, since dashboard UI was built module-by-module and is the most likely place for inconsistency to have crept in unnoticed.
+- [x] **Fix static/no-feedback buttons across every dashboard as part of this same pass.** Currently, buttons app-wide show no loading state at all — clicking looks and feels like nothing happened, which invites repeat clicks. Do not write a new spec for this here — apply Milestone 38 in full (visible loading state on every button that triggers a request, disabled state during the request, re-enable on error, and server-side idempotency on high-stakes actions) across all four dashboards specifically as part of this design unification pass, since it's the same buttons already being touched for visual consistency. If Milestone 38 has not been executed yet at all, do it now, scoped first to the dashboards, then confirm it also covers the public pages per its original spec.
+- [x] Confirm the visual transition from the public landing page → login → into any dashboard feels like one continuous product, not a seam between "marketing site" and "internal tool."
+
+### Standard back navigation, every page
+
+- [x] Add an explicit in-UI "back" element to every non-root page across the entire app — public and authenticated. Browser back alone is not reliable inside this kind of app (it breaks after a login redirect, a deep link, or a new tab), so this must be a real UI element, not a reliance on the browser.
+- [x] Define back-button behavior as returning to a specific, predictable parent page in that section's hierarchy — not just "whatever page the browser happened to show before." For example: a specific student's detail/edit page goes back to the student list, not to wherever the user was three clicks ago. This is more predictable for users than raw browser-history behavior.
+- [x] Do NOT show a back button on top-level root pages where there's nowhere meaningful to go (each role's main dashboard home) — a back button with no sensible destination is its own confusing bug.
+- [x] Add a "Back to Home" link/button on the login page specifically, returning to the public marketing landing page.
+- [x] Keep the back element visually consistent with the shared design system (same button/link styling as everything else), not a one-off style.
+
+### Mobile responsiveness (applies to all of the above)
+
+- [x] Re-run the same 5-viewport audit methodology used for the landing/login responsiveness fix (375px, 390px, 768px, 1024px, 1440px) against all four dashboards after the design unification.
+- [x] Specifically check the back button's tap-target size on mobile — icon-only back buttons are a common place for touch targets to end up too small to reliably tap; confirm it meets a comfortable minimum tap size, not just visually present.
+- [x] Confirm dashboard sidebars/navigation collapse to a usable mobile pattern (not overflow or disappearance) consistently with how the landing page nav was already fixed.
+
+### Verification
+
+- [x] Extend the Milestone 37 Playwright audit script to also run against one representative page from each of the four dashboards, checking the same 16 design patterns.
+- [x] Add an automated check confirming every non-root page in the app renders a back-navigation element, and every root/home page does not.
+- [x] Screenshot proof: show before-and-after for at least one page per dashboard role, at both desktop and mobile width, plus the login page's new "Back to Home" button.
+
+**Definition of Done:** All four dashboards visually match the shared design system established for the public pages — verified by the extended audit script, not visual impression. Every button across all four dashboards shows a visible loading state on click, per Milestone 38, with high-stakes actions verified idempotent by test. Every non-root page across the entire app has a working, correctly-destined back button; the login page has a working back-to-home link; root/home pages correctly have none. All of the above holds at every tested viewport width, with screenshot proof provided rather than a written claim.

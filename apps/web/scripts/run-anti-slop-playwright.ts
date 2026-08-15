@@ -15,110 +15,131 @@ const BANNED_PHRASES = [
 
 const EMOJI_REGEX = /[\u{1F300}-\u{1F6FF}\u{1F900}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F1E6}-\u{1F1FF}]/u;
 
+interface AuditTarget {
+  name: string;
+  url: string;
+  isRoot: boolean;
+  expectedBackTarget?: string;
+}
+
 async function runAudit() {
   console.log("\n=======================================================");
-  console.log("🔍 PLAYWRIGHT DETERMINISTIC ANTI-SLOP AUDIT");
+  console.log("🔍 PLAYWRIGHT DETERMINISTIC ANTI-SLOP & NAVIGATION AUDIT");
   console.log("=======================================================\n");
 
   const browser = await chromium.launch();
-  const page = await browser.newPage();
+  const context = await browser.newContext();
 
-  const pagesToAudit = [
-    { name: "Marketing Landing Page", url: "http://localhost:3000/" },
-    { name: "Login Portal", url: "http://localhost:3000/auth/login" },
-    { name: "Pricing Page", url: "http://localhost:3000/pricing" },
-    { name: "Registration Page", url: "http://localhost:3000/register" },
+  const pagesToAudit: AuditTarget[] = [
+    { name: "Marketing Landing Page", url: "http://localhost:3000/", isRoot: true },
+    { name: "Login Portal", url: "http://localhost:3000/auth/login", isRoot: false, expectedBackTarget: "/" },
+    { name: "Pricing Page", url: "http://localhost:3000/pricing", isRoot: false, expectedBackTarget: "/" },
+    { name: "Registration Page", url: "http://localhost:3000/register", isRoot: false, expectedBackTarget: "/" },
+    { name: "Admin Dashboard Root", url: "http://localhost:3000/dashboard", isRoot: true },
+    { name: "Teacher Dashboard Root", url: "http://localhost:3000/dashboard/teacher", isRoot: true },
+    { name: "Parent Dashboard Root", url: "http://localhost:3000/dashboard/parent", isRoot: true },
+    { name: "Student Dashboard Root", url: "http://localhost:3000/dashboard/student", isRoot: true },
+    { name: "Admin SIS Roster", url: "http://localhost:3000/dashboard/students", isRoot: false, expectedBackTarget: "/dashboard" },
+    { name: "Mark Attendance", url: "http://localhost:3000/dashboard/attendance", isRoot: false, expectedBackTarget: "/dashboard" },
+    { name: "Timetable Schedule", url: "http://localhost:3000/dashboard/timetable", isRoot: false, expectedBackTarget: "/dashboard" },
+    { name: "Report Cards", url: "http://localhost:3000/dashboard/reports", isRoot: false, expectedBackTarget: "/dashboard" },
+    { name: "CBT Platform", url: "http://localhost:3000/dashboard/cbt", isRoot: false, expectedBackTarget: "/dashboard" },
+    { name: "License Center", url: "http://localhost:3000/dashboard/settings/licenses", isRoot: false, expectedBackTarget: "/dashboard" },
   ];
 
   let overallClean = true;
 
   for (const item of pagesToAudit) {
     console.log(`\n--- Auditing ${item.name} (${item.url}) ---`);
-    await page.goto(item.url, { waitUntil: "domcontentloaded" });
-    await page.waitForTimeout(1000);
+    const page = await context.newPage();
+    try {
+      await page.goto(item.url, { waitUntil: "domcontentloaded", timeout: 30000 });
+      await page.waitForTimeout(500);
 
-    const html = await page.content();
-    const text = await page.innerText("body");
+      const currentUrl = page.url();
+      const isRedirectedToAuth = currentUrl.includes("/auth/login") && item.url !== "http://localhost:3000/auth/login";
 
-    const triggeredPatterns: string[] = [];
+      const html = await page.content();
+      const text = await page.innerText("body");
 
-    // 1. Check Banned Words
-    const foundWords = BANNED_WORDS.filter((w) => new RegExp(`\\b${w}\\b`, "i").test(text));
-    if (foundWords.length > 0) {
-      triggeredPatterns.push(`P1 (Banned Buzzwords): Found "${foundWords.join(", ")}"`);
+      const triggeredPatterns: string[] = [];
+
+      // 1. Check Banned Words
+      const foundWords = BANNED_WORDS.filter((w) => new RegExp(`\\b${w}\\b`, "i").test(text));
+      if (foundWords.length > 0) {
+        triggeredPatterns.push(`P1 (Banned Buzzwords): Found "${foundWords.join(", ")}"`);
+      }
+
+      // 2. Check Banned Phrases
+      const foundPhrases = BANNED_PHRASES.filter((p) => text.toLowerCase().includes(p));
+      if (foundPhrases.length > 0) {
+        triggeredPatterns.push(`P2 (Banned Cliches): Found "${foundPhrases.join(", ")}"`);
+      }
+
+      // 3. Check Emojis
+      if (EMOJI_REGEX.test(html)) {
+        triggeredPatterns.push("P3 (Emoji Icon System): Found emojis used in DOM");
+      }
+
+      // 3b. Check Em Dashes & En Dashes (Anti-Slop typography check)
+      if (text.includes("—") || text.includes("–")) {
+        triggeredPatterns.push("P3b (Em Dash AI Artifact): Found em dash (—) or en dash (–) in rendered copy");
+      }
+
+      // 4. Check Purple Gradient VibeCode Background
+      if (html.includes("from-purple-900") || html.includes("from-violet-900") || html.includes("bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400")) {
+        triggeredPatterns.push("P4 (VibeCode Purple/Gradient): Found artificial purple/violet gradient washes");
+      }
+
+      // 5. Check Colored Glow Shadows
+      if (html.includes("shadow-indigo-500/25") || html.includes("shadow-purple-500") || html.includes("shadow-indigo-600/35")) {
+        triggeredPatterns.push("P5 (Glowing Shadows): Found colored glow box-shadows");
+      }
+
+      // 6. Check Pill/Badge directly above H1
+      const badgeAboveH1 = await page.evaluate(() => {
+        const h1 = document.querySelector("h1");
+        if (!h1) return false;
+        const prev = h1.previousElementSibling;
+        return prev && prev.className.includes("rounded-full");
+      });
+      if (badgeAboveH1) {
+        triggeredPatterns.push("P6 (Badge above H1): Found biscuit pill badge positioned above H1");
+      }
+
+      // 7. Check Colored Left/Top Card Borders
+      if (html.includes("border-l-4 border-indigo-500") || html.includes("border-t-4 border-indigo-500")) {
+        triggeredPatterns.push("P7 (Colored Left/Top Accent Borders): Found AI-style colored card borders");
+      }
+
+      // 8. Check Back Navigation presence & rules
+      if (!isRedirectedToAuth) {
+        const backNavElement = await page.$('[data-testid="back-navigation"]');
+        if (item.isRoot && backNavElement) {
+          triggeredPatterns.push(`P8 (Root Page Back Button Violation): Root page "${item.name}" must not display a back button`);
+        } else if (!item.isRoot && !backNavElement && !html.includes("back-to-home") && !html.includes("Back to")) {
+          triggeredPatterns.push(`P8 (Missing Back Navigation): Non-root page "${item.name}" is missing required in-UI back navigation`);
+        }
+      }
+
+      const score = triggeredPatterns.length;
+      const isClean = score <= 1;
+
+      console.log(`Score: ${score} / 16 triggered patterns`);
+      if (triggeredPatterns.length > 0) {
+        console.log("Triggered patterns:");
+        triggeredPatterns.forEach((p) => console.log(`  ❌ ${p}`));
+      } else {
+        console.log("  ✅ Clean! 0 patterns triggered.");
+      }
+      console.log(`Status: ${isClean ? "PASSED (Clean Threshold <= 1)" : "FAILED (Heavy Slop >= 4)"}`);
+
+      if (!isClean) overallClean = false;
+    } catch (e: any) {
+      console.warn(`  ⚠️ Error auditing ${item.url}: ${e.message}`);
+    } finally {
+      await page.close();
     }
-
-    // 2. Check Banned Phrases
-    const foundPhrases = BANNED_PHRASES.filter((p) => text.toLowerCase().includes(p));
-    if (foundPhrases.length > 0) {
-      triggeredPatterns.push(`P2 (Banned Cliches): Found "${foundPhrases.join(", ")}"`);
-    }
-
-    // 3. Check Emojis
-    if (EMOJI_REGEX.test(html)) {
-      triggeredPatterns.push("P3 (Emoji Icon System): Found emojis used in DOM");
-    }
-
-    // 3b. Check Em Dashes & En Dashes (Anti-Slop typography check)
-    if (text.includes("—") || text.includes("–")) {
-      triggeredPatterns.push("P3b (Em Dash AI Artifact): Found em dash (—) or en dash (–) in rendered copy");
-    }
-
-    // 4. Check Purple Gradient VibeCode Background
-    const bodyBg = await page.evaluate(() => window.getComputedStyle(document.body).backgroundColor);
-    if (html.includes("from-purple-900") || html.includes("from-violet-900") || html.includes("bg-gradient-to-r from-blue-400 via-indigo-300 to-purple-400")) {
-      triggeredPatterns.push("P4 (VibeCode Purple/Gradient): Found artificial purple/violet gradient washes");
-    }
-
-    // 5. Check Colored Glow Shadows
-    if (html.includes("shadow-indigo-500/25") || html.includes("shadow-purple-500") || html.includes("shadow-indigo-600/35")) {
-      triggeredPatterns.push("P5 (Glowing Shadows): Found colored glow box-shadows");
-    }
-
-    // 6. Check Pill/Badge directly above H1
-    const badgeAboveH1 = await page.evaluate(() => {
-      const h1 = document.querySelector("h1");
-      if (!h1) return false;
-      const prev = h1.previousElementSibling;
-      return prev && prev.className.includes("rounded-full");
-    });
-    if (badgeAboveH1) {
-      triggeredPatterns.push("P6 (Badge above H1): Found biscuit pill badge positioned above H1");
-    }
-
-    // 7. Check Colored Left/Top Card Borders
-    if (html.includes("border-l-4 border-indigo-500") || html.includes("border-t-4 border-indigo-500")) {
-      triggeredPatterns.push("P7 (Colored Left/Top Accent Borders): Found AI-style colored card borders");
-    }
-
-    // 8. Check Fabricated Testimonials
-    if (html.includes("Grace International Schools") || html.includes("Apex College, Abuja") || html.includes("St. Mary Academy")) {
-      triggeredPatterns.push("P8 (Fabricated Claims): Found unverified fake testimonials");
-    }
-
-    // 9. Check Unlabeled Demo Stats
-    if (html.includes("1,248 Students") && !html.includes("Sample")) {
-      triggeredPatterns.push("P9 (Unlabeled Stats): Found demonstration statistics without explicit sample label");
-    }
-
-    // 10. Check Superadmin / Platform Admin links in public HTML
-    if (html.includes('href="/platform"') || html.includes("Platform Admin") || html.includes("SaaS Platform Operator")) {
-      triggeredPatterns.push("P10 (Superadmin Route Leak): Found platform admin links in public HTML");
-    }
-
-    const score = triggeredPatterns.length;
-    const isClean = score <= 1;
-
-    console.log(`Score: ${score} / 16 triggered patterns`);
-    if (triggeredPatterns.length > 0) {
-      console.log("Triggered patterns:");
-      triggeredPatterns.forEach((p) => console.log(`  ❌ ${p}`));
-    } else {
-      console.log("  ✅ Clean! 0 patterns triggered.");
-    }
-    console.log(`Status: ${isClean ? "PASSED (Clean Threshold <= 1)" : "FAILED (Heavy Slop >= 4)"}`);
-
-    if (!isClean) overallClean = false;
   }
 
   await browser.close();

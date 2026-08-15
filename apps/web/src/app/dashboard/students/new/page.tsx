@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 import { EmptyState } from "@/components/EmptyState";
 
 interface ClassItem {
@@ -265,12 +266,7 @@ export default function NewStudentPage() {
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-slide-up">
-      {/* Back Link */}
-      <div className="flex items-center gap-3">
-        <Link href="/dashboard/students" className="btn-ghost btn-sm text-slate-500">
-          ← Back to Students Roster
-        </Link>
-      </div>
+      <BackNavigation href="/dashboard/students" label="Back to Students" />
 
       {/* Stepper Header */}
       <div className="card">

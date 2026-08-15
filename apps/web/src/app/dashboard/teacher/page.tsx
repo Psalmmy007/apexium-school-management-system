@@ -3,6 +3,18 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { NotificationBell } from "@/components/NotificationBell";
+import {
+  Clock,
+  BookOpen,
+  Laptop,
+  MessageSquare,
+  FileEdit,
+  CalendarCheck,
+  BookMarked,
+  ArrowRight,
+  GraduationCap,
+} from "lucide-react";
+import { tokens } from "@/lib/design-system/tokens";
 
 interface OverviewData {
   todayTimetableCount: number;
@@ -34,127 +46,185 @@ export default function TeacherHomePage() {
   }, []);
 
   return (
-    <div className="space-y-6">
-      {/* Header Banner */}
-      <div className="bg-gradient-to-r from-indigo-950 via-slate-900 to-indigo-900 text-white p-8 rounded-3xl shadow-lg border border-indigo-900/50 flex flex-col md:flex-row md:items-center justify-between gap-6">
-        <div className="flex items-start justify-between">
-          <div>
-            <span className="px-3 py-1 bg-indigo-500/20 text-indigo-300 font-bold text-xs rounded-full uppercase tracking-wider">
-              Teacher Portal Dashboard
-            </span>
-            <h1 className="text-3xl font-extrabold tracking-tight mt-2 text-white">
-              Welcome back, Teacher
-            </h1>
-            <p className="text-indigo-200 text-sm mt-1">
-              Manage your assigned classes, daily timetable, student assessments, and messages.
-            </p>
-          </div>
-          <div className="bg-white/10 p-1.5 rounded-xl backdrop-blur-sm">
-            <NotificationBell />
-          </div>
+    <div className="max-w-7xl mx-auto space-y-8 animate-slide-up">
+      {/* ── Header Area ───────────────────────────────── */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-6">
+        <div>
+          <h1 className={tokens.h2}>Teacher Portal</h1>
+          <p className="text-slate-400 text-sm mt-1">
+            Manage your assigned classes, daily timetable, student assessments, and messages.
+          </p>
         </div>
-
-        <div className="flex flex-wrap gap-3">
+        <div className="flex items-center gap-3">
           <Link
             href="/dashboard/academics/scores"
-            className="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-sm rounded-xl shadow transition-all flex items-center gap-2"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-xs sm:text-sm rounded-xl shadow-md transition-all"
           >
-            📝 Fast Bulk Score Entry
+            <FileEdit className="w-4 h-4" />
+            <span>Fast Score Entry</span>
           </Link>
           <Link
             href="/dashboard/attendance"
-            className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold text-sm rounded-xl border border-slate-700 transition-all flex items-center gap-2"
+            className="inline-flex items-center gap-2 px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold text-xs sm:text-sm rounded-xl border border-slate-700 transition-all"
           >
-            📅 Class Attendance
+            <CalendarCheck className="w-4 h-4" />
+            <span>Class Attendance</span>
           </Link>
+          <NotificationBell />
         </div>
       </div>
 
-      {/* Metrics Grid */}
+      {/* ── Metrics Grid ───────────────────────────────── */}
       {loading ? (
-        <div className="p-12 text-center text-slate-400 font-medium animate-pulse">Loading teacher dashboard...</div>
+        <div className="p-12 text-center text-slate-400 font-medium animate-pulse">
+          Loading teacher workspace...
+        </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {/* Widget 1: Today's Timetable */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+          <Link
+            href="/dashboard/timetable"
+            className="p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 shadow-md transition-all group flex flex-col justify-between space-y-3"
+          >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Today&apos;s Periods</span>
-              <span className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">⏰</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Today&apos;s Periods
+              </span>
+              <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-indigo-400">
+                <Clock className="w-4 h-4" />
+              </div>
             </div>
-            <p className="text-3xl font-black text-slate-900">{overview?.todayTimetableCount ?? 0}</p>
-            <Link href="/dashboard/timetable" className="text-xs font-bold text-indigo-600 hover:underline inline-block pt-1">
-              View Schedule →
-            </Link>
-          </div>
+            <div>
+              <p className="text-3xl font-extrabold text-white">
+                {overview?.todayTimetableCount ?? 0}
+              </p>
+              <span className="text-xs text-indigo-400 font-medium inline-flex items-center gap-1 mt-1">
+                View Schedule <ArrowRight className="w-3 h-3" />
+              </span>
+            </div>
+          </Link>
 
           {/* Widget 2: Pending LMS Grading */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+          <Link
+            href="/dashboard/academics/assignments"
+            className="p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 shadow-md transition-all group flex flex-col justify-between space-y-3"
+          >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Pending Submissions</span>
-              <span className="p-2 bg-amber-50 text-amber-600 rounded-xl">📚</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Submissions to Grade
+              </span>
+              <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-amber-400">
+                <BookOpen className="w-4 h-4" />
+              </div>
             </div>
-            <p className="text-3xl font-black text-slate-900">{overview?.pendingLmsGradingCount ?? 0}</p>
-            <Link href="/dashboard/academics/assignments" className="text-xs font-bold text-indigo-600 hover:underline inline-block pt-1">
-              Grade Assignments →
-            </Link>
-          </div>
+            <div>
+              <p className="text-3xl font-extrabold text-white">
+                {overview?.pendingLmsGradingCount ?? 0}
+              </p>
+              <span className="text-xs text-amber-400 font-medium inline-flex items-center gap-1 mt-1">
+                Grade Assignments <ArrowRight className="w-3 h-3" />
+              </span>
+            </div>
+          </Link>
 
           {/* Widget 3: Pending CBT Exams */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+          <Link
+            href="/dashboard/cbt"
+            className="p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 shadow-md transition-all group flex flex-col justify-between space-y-3"
+          >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Active CBT Exams</span>
-              <span className="p-2 bg-emerald-50 text-emerald-600 rounded-xl">💻</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Active CBT Exams
+              </span>
+              <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-emerald-400">
+                <Laptop className="w-4 h-4" />
+              </div>
             </div>
-            <p className="text-3xl font-black text-slate-900">{overview?.pendingCbtGradingCount ?? 0}</p>
-            <Link href="/dashboard/cbt" className="text-xs font-bold text-indigo-600 hover:underline inline-block pt-1">
-              Manage CBT Portal →
-            </Link>
-          </div>
+            <div>
+              <p className="text-3xl font-extrabold text-white">
+                {overview?.pendingCbtGradingCount ?? 0}
+              </p>
+              <span className="text-xs text-emerald-400 font-medium inline-flex items-center gap-1 mt-1">
+                Manage CBT <ArrowRight className="w-3 h-3" />
+              </span>
+            </div>
+          </Link>
 
           {/* Widget 4: Messages */}
-          <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+          <Link
+            href="/dashboard/teacher/messages"
+            className="p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 shadow-md transition-all group flex flex-col justify-between space-y-3"
+          >
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Unread Messages</span>
-              <span className="p-2 bg-purple-50 text-purple-600 rounded-xl">💬</span>
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Unread Messages
+              </span>
+              <div className="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-sky-400">
+                <MessageSquare className="w-4 h-4" />
+              </div>
             </div>
-            <p className="text-3xl font-black text-slate-900">{overview?.unreadMessagesCount ?? 0}</p>
-            <Link href="/dashboard/teacher/messages" className="text-xs font-bold text-indigo-600 hover:underline inline-block pt-1">
-              Open Messages →
-            </Link>
-          </div>
+            <div>
+              <p className="text-3xl font-extrabold text-white">
+                {overview?.unreadMessagesCount ?? 0}
+              </p>
+              <span className="text-xs text-sky-400 font-medium inline-flex items-center gap-1 mt-1">
+                Open Messages <ArrowRight className="w-3 h-3" />
+              </span>
+            </div>
+          </Link>
         </div>
       )}
 
-      {/* Quick Action Navigation Grid */}
-      <div className="bg-white p-6 rounded-2xl border border-slate-200 shadow-sm space-y-4">
-        <h2 className="text-lg font-bold text-slate-900">Teacher Workspace Tools</h2>
+      {/* ── Quick Action Navigation Grid ─────────────────── */}
+      <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
+        <h2 className="text-sm font-bold text-white uppercase tracking-wider">
+          Teacher Workspace Tools
+        </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link
             href="/dashboard/academics/lessons"
-            className="p-5 bg-slate-50 hover:bg-indigo-50/50 border border-slate-200 hover:border-indigo-200 rounded-xl transition-all group"
+            className="p-5 bg-slate-950 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 rounded-xl transition-all group"
           >
-            <div className="text-xl mb-1">📖</div>
-            <h3 className="font-bold text-slate-900 group-hover:text-indigo-600">Lesson Notes & Curriculum</h3>
-            <p className="text-xs text-slate-500 mt-1">Publish scheme-of-work topics with low-bandwidth video & audio notes.</p>
+            <div className="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-indigo-400 mb-3">
+              <BookMarked className="w-4 h-4" />
+            </div>
+            <h3 className="font-bold text-white group-hover:text-indigo-300 transition-colors">
+              Lesson Notes & Curriculum
+            </h3>
+            <p className="text-xs text-slate-400 mt-1">
+              Publish scheme-of-work topics with low-bandwidth video and audio notes.
+            </p>
           </Link>
 
           <Link
             href="/dashboard/academics/assignments"
-            className="p-5 bg-slate-50 hover:bg-indigo-50/50 border border-slate-200 hover:border-indigo-200 rounded-xl transition-all group"
+            className="p-5 bg-slate-950 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 rounded-xl transition-all group"
           >
-            <div className="text-xl mb-1">✍️</div>
-            <h3 className="font-bold text-slate-900 group-hover:text-indigo-600">Assignments & Grading</h3>
-            <p className="text-xs text-slate-500 mt-1">Create assignments, review student submissions, and sync CA grades.</p>
+            <div className="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-indigo-400 mb-3">
+              <FileEdit className="w-4 h-4" />
+            </div>
+            <h3 className="font-bold text-white group-hover:text-indigo-300 transition-colors">
+              Assignments & Grading
+            </h3>
+            <p className="text-xs text-slate-400 mt-1">
+              Create homework assignments, review student submissions, and sync CA grades.
+            </p>
           </Link>
 
           <Link
             href="/dashboard/teacher/messages"
-            className="p-5 bg-slate-50 hover:bg-indigo-50/50 border border-slate-200 hover:border-indigo-200 rounded-xl transition-all group"
+            className="p-5 bg-slate-950 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 rounded-xl transition-all group"
           >
-            <div className="text-xl mb-1">💬</div>
-            <h3 className="font-bold text-slate-900 group-hover:text-indigo-600">Parent & Admin Messaging</h3>
-            <p className="text-xs text-slate-500 mt-1">Send secure threaded messages to verified student guardians.</p>
+            <div className="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-indigo-400 mb-3">
+              <MessageSquare className="w-4 h-4" />
+            </div>
+            <h3 className="font-bold text-white group-hover:text-indigo-300 transition-colors">
+              Parent & Admin Messaging
+            </h3>
+            <p className="text-xs text-slate-400 mt-1">
+              Send secure threaded messages to verified student guardians.
+            </p>
           </Link>
         </div>
       </div>

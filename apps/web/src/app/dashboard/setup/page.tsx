@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { getSchoolOnboardingStatus, db, schools } from "@apexium/db";
 import { eq } from "drizzle-orm";
 import type { Metadata } from "next";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 import { SetupClient } from "./SetupClient";
 
 export const metadata: Metadata = {
@@ -36,11 +37,14 @@ export default async function SetupPage() {
 
   return (
     <div className="animate-fade-in space-y-6">
-      <div className="border-b border-slate-200 pb-4">
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+      {/* Back to Dashboard Navigation */}
+      <BackNavigation href="/dashboard" label="Back to Dashboard" />
+
+      <div className="border-b border-slate-800 pb-4">
+        <h1 className="text-2xl font-bold text-white tracking-tight">
           School Onboarding & Setup Wizard
         </h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <p className="text-sm text-slate-400 mt-1">
           Create and configure your school institution, setup academic sessions, terms, classes, departments, and activate all ERP modules.
         </p>
       </div>

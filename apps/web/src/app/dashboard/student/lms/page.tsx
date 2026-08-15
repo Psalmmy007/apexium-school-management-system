@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 
 interface Lesson {
   id: string;
@@ -42,9 +43,12 @@ export default function StudentLmsPage() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
-      <div className="border-b border-gray-200 pb-4">
-        <h1 className="text-2xl font-bold text-gray-900">Learning Portal (LMS)</h1>
-        <p className="text-sm text-gray-500">Access scheme-of-work lesson notes, video embeds, and homework assignments</p>
+      {/* Back to Student Dashboard Navigation */}
+      <BackNavigation href="/dashboard/student" label="Back to Student Dashboard" />
+
+      <div className="border-b border-slate-800 pb-4">
+        <h1 className="text-2xl font-bold text-white">Learning Portal (LMS)</h1>
+        <p className="text-sm text-slate-400">Access scheme-of-work lesson notes, video embeds, and homework assignments</p>
       </div>
 
       {loading ? (

@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useParams } from "next/navigation";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 
 interface School {
   id: string;
@@ -124,7 +125,11 @@ export default function TrackApplicationPage() {
     <div className="min-h-screen bg-slate-950 text-slate-200 flex flex-col relative">
       <div className="absolute inset-0 opacity-10 pointer-events-none" style={{ background: `radial-gradient(circle at top left, ${school?.brandColor || '#4f46e5'} 0%, transparent 50%)` }} />
       
-      <header className="p-6 md:p-10 relative z-10 flex flex-col items-center">
+      <div className="p-4 sm:p-6 relative z-20 max-w-4xl w-full mx-auto">
+        <BackNavigation href={`/s/${slug}/admissions`} label="Back to Admissions" />
+      </div>
+
+      <header className="p-4 md:p-8 relative z-10 flex flex-col items-center">
         {school?.logoUrl ? (
           <img src={school.logoUrl} alt={school.name} className="h-16 mb-4" />
         ) : (

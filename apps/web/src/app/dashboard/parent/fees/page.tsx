@@ -2,6 +2,7 @@
 
 import { useEffect, useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 
 interface Invoice {
   id: string;
@@ -128,12 +129,15 @@ function ParentFeesContent() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
-        <div className="border-b border-gray-200 pb-4">
-          <h1 className="text-2xl font-bold text-gray-900">Fee Invoices & Payments</h1>
-          <p className="text-sm text-gray-500">
-            View breakdown, schedule installment payments, and review verified receipts
-          </p>
-        </div>
+      {/* Back to Parent Dashboard Navigation */}
+      <BackNavigation href="/dashboard/parent" label="Back to Parent Dashboard" />
+
+      <div className="border-b border-slate-800 pb-4">
+        <h1 className="text-2xl font-bold text-white">Fee Invoices & Payments</h1>
+        <p className="text-sm text-slate-400">
+          View breakdown, schedule installment payments, and review verified receipts
+        </p>
+      </div>
 
         {loading ? (
           <div className="text-center py-12 text-gray-500">Loading fee records...</div>

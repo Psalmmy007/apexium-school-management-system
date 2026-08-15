@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 
 interface StaffMember {
   userId: string;
@@ -88,10 +89,12 @@ export default function StaffAttendancePage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      <BackNavigation href="/dashboard/attendance" label="Back to Attendance" />
+
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Staff & Teacher Attendance</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="text-2xl font-bold text-white">Staff & Teacher Attendance</h1>
+          <p className="text-sm text-slate-400 mt-1">
             Track daily attendance register for teachers and school administrative staff.
           </p>
         </div>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 
 interface TimetableEntry {
   id: string;
@@ -265,19 +266,22 @@ export default function TimetablePage() {
   const selectedClass = classesList.find((c) => c.id === selectedClassId);
 
   return (
-    <div className="max-w-7xl mx-auto animate-fade-in space-y-6">
-      {/* ── Page Header ───────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200 pb-5">
+    <div className="space-y-6 animate-fade-in">
+      {/* Back to Dashboard Navigation */}
+      <BackNavigation href="/dashboard" label="Back to Dashboard" />
+
+      {/* Header Bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
-            <span className="w-8 h-8 rounded-lg bg-indigo-600/10 text-indigo-600 flex items-center justify-center">
+          <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
+            <span className="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </span>
             Class Timetable & Schedule
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-400 mt-1">
             Build and manage weekly period schedules with conflict prevention.
           </p>
         </div>

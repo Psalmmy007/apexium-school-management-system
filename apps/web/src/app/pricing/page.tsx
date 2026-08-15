@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { ArrowRight, Check } from "lucide-react";
 import { PublicHeader } from "@/components/public/PublicHeader";
+import { BrandLogo } from "@/components/public/BrandLogo";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 import { tokens } from "@/lib/design-system/tokens";
 
 interface Plan {
@@ -38,6 +40,9 @@ export default function PricingPage() {
 
       {/* ── Pricing Content Area with Proper Top Padding ───────────────────── */}
       <main className="pt-36 pb-20 sm:pt-44 sm:pb-28 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto mb-6">
+          <BackNavigation href="/" label="Back to Home" />
+        </div>
         <div className="max-w-7xl mx-auto text-center">
           <h1 className="text-3xl sm:text-5xl font-extrabold tracking-tight text-white">
             Simple, Termly Subscription Pricing

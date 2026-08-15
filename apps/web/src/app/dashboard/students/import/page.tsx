@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 
 interface RowError {
   rowNumber: number;
@@ -76,11 +77,7 @@ ADM/2026/102,Emeka,Okafor,Chidi,male,2010-08-22,"45 Victoria Island, Lagos",JSS 
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 animate-slide-up">
-      <div className="flex items-center justify-between">
-        <Link href="/dashboard/students" className="btn-ghost btn-sm text-slate-500">
-          ← Back to Roster
-        </Link>
-      </div>
+      <BackNavigation href="/dashboard/students" label="Back to Students" />
 
       <div className="card space-y-6">
         <div>

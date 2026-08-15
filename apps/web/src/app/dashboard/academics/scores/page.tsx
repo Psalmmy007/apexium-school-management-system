@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 
 interface ClassItem {
   id: string;
@@ -139,9 +140,12 @@ export default function ScoreEntryPage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Back to Dashboard Navigation */}
+      <BackNavigation href="/dashboard" label="Back to Dashboard" />
+
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Score & Assessment Entry</h1>
-        <p className="text-sm text-slate-500 mt-1">
+        <h1 className="text-2xl font-bold text-white">Score & Assessment Entry</h1>
+        <p className="text-sm text-slate-400 mt-1">
           Record Continuous Assessment (CA max 40) and Examination (Exam max 60) scores per subject and term.
         </p>
       </div>

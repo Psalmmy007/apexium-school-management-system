@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { PasswordField } from "@/components/ui/PasswordField";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 import { BrandLogo } from "@/components/public/BrandLogo";
 import { tokens } from "@/lib/design-system/tokens";
 
@@ -75,6 +76,9 @@ function LoginFormContent() {
 
   return (
     <div className="w-full max-w-md p-6 sm:p-10 rounded-2xl bg-slate-900 border border-slate-800 shadow-xl mx-auto">
+      {/* Back to Home Navigation */}
+      <BackNavigation href="/" label="Back to Home" id="login-back-to-home" />
+
       {/* Mobile Brand Header */}
       <div className="flex items-center gap-3 mb-6 sm:mb-8 lg:hidden">
         <BrandLogo />

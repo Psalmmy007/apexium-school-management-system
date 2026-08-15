@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 
 interface Hostel {
   id: string;
@@ -87,12 +88,15 @@ export default function HostelDashboardPage() {
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-gray-200 pb-4 gap-4">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Hostel Management System</h1>
-            <p className="text-sm text-gray-500">Manage hostels, rooms, physical beds, student room allocations & room transfers</p>
-          </div>
+      {/* Back to Dashboard Navigation */}
+      <BackNavigation href="/dashboard" label="Back to Dashboard" />
+
+      {/* Header */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-slate-800 pb-4 gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-white">Hostel Management System</h1>
+          <p className="text-sm text-slate-400">Manage hostels, rooms, physical beds, student room allocations & room transfers</p>
+        </div>
           <button
             onClick={() => setShowAddModal(true)}
             className="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-xs rounded-lg transition"

@@ -9,6 +9,7 @@ import {
 } from "@apexium/db";
 import { eq, desc } from "drizzle-orm";
 import type { Metadata } from "next";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 import { CommunicationClient } from "./CommunicationClient";
 
 export const metadata: Metadata = {
@@ -68,12 +69,15 @@ export default async function CommunicationDashboardPage() {
 
   return (
     <div className="animate-fade-in space-y-6">
+      {/* Back to Dashboard Navigation */}
+      <BackNavigation href="/dashboard" label="Back to Dashboard" />
+
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-bold text-white tracking-tight">
             Communication & Notification Centre
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-400 mt-1">
             Event-driven multi-channel notification platform, school announcements, dynamic template placeholders, delivery queue logs, and analytics.
           </p>
         </div>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { School, MapPin, Phone, AlertCircle, ArrowRight } from "lucide-react";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { PasswordField } from "@/components/ui/PasswordField";
 
@@ -52,6 +53,8 @@ export default function SchoolLoginPageClient({ school }: { school: SchoolInfo }
 
   return (
     <div className="w-full max-w-md animate-slide-up space-y-6">
+      <BackNavigation href={`/s/${school.slug}/admissions`} label="Back to Admissions" />
+
       {/* School Branded Header */}
       <div className="bg-slate-900 text-white p-6 rounded-2xl shadow-lg border border-slate-800 space-y-2">
         <div className="flex items-center gap-3">

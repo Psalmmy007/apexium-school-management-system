@@ -767,3 +767,14 @@ What this means in plain terms: Every button that saves, submits, pays, register
 Proof it works: 58/58 Vitest tests passed across 8 test suites (`button-loading-states.test.tsx`, `idempotency.test.ts`, `password-field.test.tsx`, `form-field.test.tsx`, `milestone38-verification.test.tsx`, `anti-slop.test.tsx`, `auth/login.test.tsx`, `page.test.tsx`). The test suite simulates rapid concurrent double-clicks on fee payments and bulk PDF generation, proving that server-side idempotency executes the underlying transaction exactly once.
 
 Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+---
+
+## Milestone 39: Dashboard Design Unification & Standard Back Navigation — COMPLETE
+Date: August 15, 2026
+
+What this means in plain terms: All four dashboards (Admin, Teacher, Parent, and Student) along with all their sub-modules now share the exact same clean, dark-slate visual design system, typography, and button states as the public landing and login pages, with zero emojis, zero purple gradient washes, and zero decorative border slop. Every single non-root screen across the entire application (both public and authenticated) now provides an explicit in-UI back button that takes users back to the predictable parent page in that section's hierarchy (with comfortable minimum 44x44px touch targets on mobile), while main dashboard home screens correctly have no back button. The login screen now has a dedicated "Back to Home" button returning directly to the public website.
+
+Proof it works: 61/61 Vitest tests passed (including the new `milestone39-verification.test.tsx` verifying back navigation structure, hierarchy mapping, and mobile touch targets). The deterministic Playwright anti-slop and navigation audit scanned 14 routes across all dashboard roles and public portals, scoring 0/16 triggered slop patterns (100% clean). Full 5-viewport screenshot proof (375px, 390px, 768px, 1024px, 1440px) was generated and verified across desktop and mobile.
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 import { EmptyState } from "@/components/EmptyState";
 
 interface AcademicSection {
@@ -161,11 +162,14 @@ export default function AcademicStructurePage() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto animate-fade-in">
+      {/* Back to Dashboard Navigation */}
+      <BackNavigation href="/dashboard" label="Back to Dashboard" />
+
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-200 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Academic Structure Management</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="text-2xl font-bold text-white tracking-tight">Academic Structure Management</h1>
+          <p className="text-sm text-slate-400 mt-1">
             Configure Sections (Primary, JSS, SSS), Classes, Stream Arms, Class Teachers, and Enrollment Capacities.
           </p>
         </div>

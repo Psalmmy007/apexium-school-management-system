@@ -2,6 +2,17 @@
 
 import { useEffect, useState, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { BackNavigation } from "@/components/ui/BackNavigation";
+import { ActionButton } from "@/components/ui/ActionButton";
+import {
+  Clock,
+  AlertTriangle,
+  CheckCircle2,
+  ArrowLeft,
+  ArrowRight,
+  Send,
+} from "lucide-react";
+import { tokens } from "@/lib/design-system/tokens";
 
 interface Option {
   id: string;
@@ -63,80 +74,81 @@ export default function TakeExamPage() {
         setSession(json.data.session);
         setQuestions(json.data.questions || []);
 
-        // Load saved server answers
-        const serverAns = json.data.session.answers || {};
+        const savedLocal = typeof window !== "undefined" ? localStorage.getItem(localStorageKey) : null;
+        const initialAnswers = savedLocal ? JSON.parse(savedLocal) : json.data.session.answers || {};
+        setAnswers(initialAnswers);
 
-        // Merge with local offline cache if available
-        let localAns: Record<string, string> = {};
-        try {
-          const stored = localStorage.getItem(localStorageKey);
-          if (stored) localAns = JSON.parse(stored);
-        } catch (e) {
-          console.warn("Failed reading local CBT cache", e);
-        }
-
-        const merged = { ...serverAns, ...localAns };
-        setAnswers(merged);
-
-        // Calculate timer remaining seconds
+        // Calculate remaining seconds based on duration
         const startTime = new Date(json.data.session.startedAt).getTime();
-        const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
-        const totalSeconds = (json.data.exam.durationMinutes || 60) * 60;
-        const rem = Math.max(0, totalSeconds - elapsedSeconds);
-        setRemainingSeconds(rem);
+        const durationSec = json.data.exam.durationMinutes * 60;
+        const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+        const left = Math.max(0, durationSec - elapsedSec);
+        setRemainingSeconds(left);
       }
     } catch (err) {
-      console.error("Error loading CBT exam session", err);
+      console.error("Failed to load CBT session", err);
     } finally {
       setLoading(false);
     }
   }, [sessionId, localStorageKey]);
 
   useEffect(() => {
-    if (sessionId) fetchSession();
-  }, [sessionId, fetchSession]);
+    fetchSession();
+  }, [fetchSession]);
 
-  // Anti-cheat tab switch listener
+  // Anti-cheat: Listen to page visibility / blur
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.hidden) {
+    const handleVisibility = () => {
+      if (document.hidden && session?.status === "in_progress") {
         setTabSwitches((prev) => prev + 1);
       }
     };
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
-  }, []);
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [session]);
 
-  const handleSubmitExam = useCallback(async (isTimeout = false) => {
+  const handleSubmitExam = useCallback(async (isAuto = false) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
       const res = await fetch("/api/cbt/sessions", {
-        method: "POST",
+        method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "submit", sessionId }),
+        body: JSON.stringify({
+          sessionId,
+          answers,
+          tabSwitches,
+          isAutoSubmit: isAuto,
+        }),
       });
       const json = await res.json();
-      if (json.success) {
-        localStorage.removeItem(localStorageKey);
-        setSession(json.data);
+      if (json.success && json.data) {
+        setSession(json.data.session);
+        if (typeof window !== "undefined") {
+          localStorage.removeItem(localStorageKey);
+        }
       }
     } catch (err) {
-      console.error("Exam submission failed", err);
+      console.error("Failed to submit exam", err);
     } finally {
       setIsSubmitting(false);
     }
-  }, [isSubmitting, sessionId, localStorageKey]);
+  }, [isSubmitting, sessionId, answers, tabSwitches, localStorageKey]);
 
-  // Timer Countdown Effect with Auto-submit
+  // Countdown timer
   useEffect(() => {
-    if (!session || session.status !== "in_progress" || remainingSeconds <= 0) return;
+    if (loading || !session || session.status !== "in_progress") return;
+
+    if (remainingSeconds <= 0) {
+      handleSubmitExam(true);
+      return;
+    }
 
     const timer = setInterval(() => {
       setRemainingSeconds((prev) => {
         if (prev <= 1) {
           clearInterval(timer);
-          handleSubmitExam(true); // Auto-submit on timeout
+          handleSubmitExam(true);
           return 0;
         }
         return prev - 1;
@@ -144,82 +156,78 @@ export default function TakeExamPage() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [session, remainingSeconds, handleSubmitExam]);
+  }, [loading, session, remainingSeconds, handleSubmitExam]);
 
-  // Continuous Local Auto-Save + Server Sync
-  const handleSelectAnswer = async (questionId: string, answerValue: string) => {
-    const updated = { ...answers, [questionId]: answerValue };
-    setAnswers(updated);
-
-    // 1. Immediately persist locally (RxDB/IndexedDB/localStorage fallback)
-    try {
-      localStorage.setItem(localStorageKey, JSON.stringify(updated));
-    } catch (e) {
-      console.warn("Local storage write error", e);
+  // Save answer locally & sync
+  const handleSelectOption = (questionId: string, optionId: string) => {
+    const nextAnswers = { ...answers, [questionId]: optionId };
+    setAnswers(nextAnswers);
+    if (typeof window !== "undefined") {
+      localStorage.setItem(localStorageKey, JSON.stringify(nextAnswers));
     }
 
-    // 2. Continuous background sync to server API
+    // Debounced sync
     setSyncing(true);
-    try {
-      await fetch("/api/cbt/sessions", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "save-answer",
-          sessionId,
-          questionId,
-          answer: answerValue,
-        }),
-      });
-    } catch (err) {
-      console.warn("Background server sync failed (will retry online)", err);
-    } finally {
-      setSyncing(false);
-    }
+    fetch("/api/cbt/sessions", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sessionId, answers: nextAnswers }),
+    })
+      .catch(console.error)
+      .finally(() => setSyncing(false));
   };
 
   if (loading) {
     return (
-      <div className="p-12 text-center text-gray-500 font-medium animate-pulse">
-        Initializing secure CBT exam environment...
+      <div className="p-16 text-center text-slate-400 font-medium animate-pulse">
+        Initializing CBT testing container...
       </div>
     );
   }
 
   if (!exam || !session) {
     return (
-      <div className="p-8 text-center text-red-600 font-semibold">
-        Exam session not found or invalid.
+      <div className="p-8 max-w-lg mx-auto bg-slate-900 rounded-2xl border border-slate-800 text-center space-y-4">
+        <p className="text-slate-300">Exam session could not be retrieved.</p>
+        <button
+          onClick={() => router.push("/dashboard/cbt")}
+          className={tokens.btnPrimary}
+        >
+          Return to CBT Portal
+        </button>
       </div>
     );
   }
 
-  // Submitted view
   if (session.status === "submitted" || session.status === "timed_out") {
     return (
-      <div className="p-8 max-w-2xl mx-auto space-y-6 bg-white rounded-xl border border-gray-200 shadow-sm text-center">
-        <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
-          ✓
+      <div className="p-8 max-w-2xl mx-auto space-y-6 bg-slate-900 rounded-2xl border border-slate-800 shadow-xl text-center animate-fade-in">
+        <div className="w-14 h-14 bg-emerald-950/80 border border-emerald-800 text-emerald-400 rounded-2xl flex items-center justify-center mx-auto shadow-md">
+          <CheckCircle2 className="w-7 h-7" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">Exam Completed & Submitted</h1>
-        <p className="text-sm text-gray-600">
-          Your responses have been securely logged and processed by the auto-grading system.
+        <h1 className="text-2xl font-bold text-white">Exam Completed & Submitted</h1>
+        <p className="text-sm text-slate-400 max-w-md mx-auto">
+          Your responses have been securely logged and processed by the automated grading system.
         </p>
 
-        <div className="grid grid-cols-2 gap-4 bg-gray-50 p-4 rounded-lg">
+        <div className="grid grid-cols-2 gap-4 bg-slate-950 p-5 rounded-xl border border-slate-800">
           <div>
-            <span className="block text-xs uppercase font-semibold text-gray-500">Auto-Graded Score</span>
-            <span className="text-2xl font-bold text-indigo-600">{session.score ?? 0} / {exam.totalMarks}</span>
+            <span className="block text-xs uppercase font-bold text-slate-400">Total Score</span>
+            <span className="text-3xl font-extrabold text-indigo-400 mt-1 block">
+              {session.score ?? 0} / {exam.totalMarks}
+            </span>
           </div>
           <div>
-            <span className="block text-xs uppercase font-semibold text-gray-500">Percentage</span>
-            <span className="text-2xl font-bold text-green-600">{session.percentage ?? "0.00"}%</span>
+            <span className="block text-xs uppercase font-bold text-slate-400">Percentage</span>
+            <span className="text-3xl font-extrabold text-emerald-400 mt-1 block">
+              {session.percentage ?? "0.00"}%
+            </span>
           </div>
         </div>
 
         <button
           onClick={() => router.push("/dashboard/cbt")}
-          className="py-2.5 px-6 rounded-lg text-sm font-semibold bg-indigo-600 text-white hover:bg-indigo-700"
+          className={tokens.btnPrimary + " w-full sm:w-auto"}
         >
           Return to CBT Portal
         </button>
@@ -236,140 +244,151 @@ export default function TakeExamPage() {
   const currentQ = questions[currentIdx];
 
   return (
-    <div className="p-6 max-w-5xl mx-auto space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6 animate-fade-in">
+      <BackNavigation href="/dashboard/cbt" label="Back to CBT Portal" />
+
       {/* Top Bar: Exam Title, Timer, Anti-cheat status */}
-      <div className="bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-10">
+      <div className="bg-slate-900 p-4 sm:p-5 rounded-2xl border border-slate-800 shadow-md flex flex-col md:flex-row md:items-center justify-between gap-4 sticky top-0 z-10">
         <div>
-          <h1 className="text-lg font-bold text-gray-900">{exam.title}</h1>
-          <div className="flex items-center gap-3 text-xs text-gray-500 mt-0.5">
-            <span>Question {currentIdx + 1} of {questions.length}</span>
-            {syncing && <span className="text-indigo-600 animate-pulse font-medium">● Auto-Saving...</span>}
+          <h1 className="text-base sm:text-lg font-bold text-white">{exam.title}</h1>
+          <div className="flex items-center gap-3 text-xs text-slate-400 mt-1">
+            <span>
+              Question {currentIdx + 1} of {questions.length}
+            </span>
+            {syncing && <span className="text-indigo-400 animate-pulse font-medium">● Auto-Saving...</span>}
             {tabSwitches > 0 && (
-              <span className="text-red-600 font-semibold bg-red-50 px-2 py-0.5 rounded">
-                ⚠️ Tab switches: {tabSwitches}
+              <span className="text-amber-400 font-semibold bg-amber-950/60 border border-amber-800 px-2 py-0.5 rounded-md inline-flex items-center gap-1">
+                <AlertTriangle className="w-3 h-3" /> Tab switches: {tabSwitches}
               </span>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           <div
-            className={`px-4 py-2 rounded-lg font-mono text-lg font-bold ${
+            className={`px-3.5 py-1.5 rounded-xl font-mono text-base font-bold flex items-center gap-2 border ${
               remainingSeconds < 300
-                ? "bg-red-100 text-red-700 border border-red-300 animate-pulse"
-                : "bg-indigo-50 text-indigo-700 border border-indigo-200"
+                ? "bg-red-950/80 text-red-400 border-red-800 animate-pulse"
+                : "bg-slate-950 text-indigo-400 border-slate-800"
             }`}
           >
-            ⏱️ {formatTime(remainingSeconds)}
+            <Clock className="w-4 h-4" />
+            <span>{formatTime(remainingSeconds)}</span>
           </div>
 
-          <button
+          <ActionButton
             onClick={() => handleSubmitExam(false)}
-            disabled={isSubmitting}
-            className="py-2 px-4 rounded-lg text-xs font-semibold bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+            loading={isSubmitting}
+            loadingText="Submitting…"
+            variant="primary"
+            className="text-xs py-2 px-4 min-h-[38px]"
+            icon={<Send className="w-3.5 h-3.5" />}
           >
-            {isSubmitting ? "Submitting..." : "Submit Exam"}
-          </button>
+            Submit Exam
+          </ActionButton>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Question Content Area */}
-        <div className="lg:col-span-3 bg-white p-6 rounded-xl border border-gray-200 shadow-sm space-y-6">
+        <div className="lg:col-span-3 bg-slate-900 p-6 sm:p-8 rounded-2xl border border-slate-800 shadow-md space-y-6">
           {currentQ && (
             <>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold uppercase text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded">
-                    Question {currentIdx + 1} ({currentQ.marks} Marks)
-                  </span>
-                  <span className="text-xs text-gray-500 uppercase">{currentQ.questionType}</span>
-                </div>
-                <p className="text-base font-semibold text-gray-900 leading-relaxed">
-                  {currentQ.questionText}
-                </p>
+              <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+                <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  Question {currentIdx + 1} ({currentQ.marks} Mark{currentQ.marks > 1 ? "s" : ""})
+                </span>
+                <span className="text-xs text-slate-500 uppercase">{currentQ.questionType}</span>
               </div>
 
-              {/* MCQ Options */}
-              {currentQ.questionType === "mcq" && currentQ.options && (
+              <div className="text-base sm:text-lg text-white font-medium leading-relaxed">
+                {currentQ.questionText}
+              </div>
+
+              {/* Options */}
+              {currentQ.options && currentQ.options.length > 0 && (
                 <div className="space-y-3 pt-2">
-                  {currentQ.options.map((opt) => {
+                  {currentQ.options.map((opt, idx) => {
                     const isSelected = answers[currentQ.id] === opt.id;
+                    const letter = String.fromCharCode(65 + idx);
                     return (
                       <button
                         key={opt.id}
-                        onClick={() => handleSelectAnswer(currentQ.id, opt.id)}
-                        className={`w-full p-4 rounded-lg text-left text-sm font-medium border transition-all flex items-center justify-between ${
+                        onClick={() => handleSelectOption(currentQ.id, opt.id)}
+                        className={`w-full text-left p-4 rounded-xl border text-sm font-medium transition-all flex items-center gap-3.5 ${
                           isSelected
-                            ? "bg-indigo-50 border-indigo-600 text-indigo-900 shadow-sm ring-1 ring-indigo-600"
-                            : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50"
+                            ? "bg-indigo-600/20 border-indigo-500 text-white shadow-sm"
+                            : "bg-slate-950 border-slate-800 text-slate-300 hover:border-slate-700 hover:bg-slate-800/60"
                         }`}
                       >
-                        <span>{opt.text}</span>
-                        <div
-                          className={`w-5 h-5 rounded-full border flex items-center justify-center ${
-                            isSelected ? "border-indigo-600 bg-indigo-600 text-white text-xs" : "border-gray-300"
+                        <span
+                          className={`w-7 h-7 rounded-lg flex items-center justify-center text-xs font-bold shrink-0 ${
+                            isSelected
+                              ? "bg-indigo-600 text-white"
+                              : "bg-slate-800 text-slate-400 border border-slate-700"
                           }`}
                         >
-                          {isSelected && "✓"}
-                        </div>
+                          {letter}
+                        </span>
+                        <span className="flex-1">{opt.text}</span>
                       </button>
                     );
                   })}
                 </div>
               )}
 
-              {/* Objective / Theory Input */}
-              {(currentQ.questionType === "objective" || currentQ.questionType === "theory") && (
-                <div className="pt-2">
-                  <textarea
-                    rows={4}
-                    placeholder="Type your answer here..."
-                    value={answers[currentQ.id] || ""}
-                    onChange={(e) => handleSelectAnswer(currentQ.id, e.target.value)}
-                    className="w-full p-3 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none"
-                  />
-                </div>
-              )}
-
-              {/* Navigation Controls */}
-              <div className="flex items-center justify-between border-t border-gray-100 pt-4">
+              {/* Navigation buttons */}
+              <div className="flex items-center justify-between pt-6 border-t border-slate-800">
                 <button
                   onClick={() => setCurrentIdx((prev) => Math.max(0, prev - 1))}
                   disabled={currentIdx === 0}
-                  className="px-4 py-2 text-xs font-semibold rounded-md border border-gray-300 text-gray-700 hover:bg-gray-50 disabled:opacity-40"
+                  className="px-4 py-2.5 rounded-xl border border-slate-800 bg-slate-950 text-xs font-semibold text-slate-300 hover:bg-slate-800 hover:text-white disabled:opacity-40 transition flex items-center gap-1.5 min-h-[40px]"
                 >
-                  ← Previous
+                  <ArrowLeft className="w-3.5 h-3.5" /> Previous
                 </button>
-                <button
-                  onClick={() => setCurrentIdx((prev) => Math.min(questions.length - 1, prev + 1))}
-                  disabled={currentIdx === questions.length - 1}
-                  className="px-4 py-2 text-xs font-semibold rounded-md bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-40"
-                >
-                  Next →
-                </button>
+
+                {currentIdx < questions.length - 1 ? (
+                  <button
+                    onClick={() => setCurrentIdx((prev) => Math.min(questions.length - 1, prev + 1))}
+                    className="px-4 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-xs font-semibold text-white transition flex items-center gap-1.5 min-h-[40px]"
+                  >
+                    Next <ArrowRight className="w-3.5 h-3.5" />
+                  </button>
+                ) : (
+                  <ActionButton
+                    onClick={() => handleSubmitExam(false)}
+                    loading={isSubmitting}
+                    loadingText="Submitting…"
+                    variant="primary"
+                    className="text-xs py-2.5 px-5 min-h-[40px]"
+                  >
+                    Finish Exam
+                  </ActionButton>
+                )}
               </div>
             </>
           )}
         </div>
 
         {/* Question Palette Sidebar */}
-        <div className="bg-white p-5 rounded-xl border border-gray-200 shadow-sm space-y-4 h-fit">
-          <h3 className="text-sm font-bold text-gray-900">Question Palette</h3>
+        <div className="bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-md space-y-4 h-fit">
+          <h2 className="text-xs font-bold uppercase tracking-wider text-slate-400">
+            Question Palette
+          </h2>
           <div className="grid grid-cols-5 gap-2">
             {questions.map((q, idx) => {
               const isAnswered = Boolean(answers[q.id]);
-              const isCurrent = idx === currentIdx;
+              const isCurrent = currentIdx === idx;
               return (
                 <button
                   key={q.id}
                   onClick={() => setCurrentIdx(idx)}
-                  className={`w-9 h-9 rounded-lg text-xs font-bold flex items-center justify-center transition-all ${
+                  className={`h-9 rounded-lg font-bold text-xs transition border ${
                     isCurrent
-                      ? "ring-2 ring-indigo-600 ring-offset-1 text-white bg-indigo-700"
+                      ? "ring-2 ring-indigo-500 bg-indigo-600 text-white border-transparent"
                       : isAnswered
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      ? "bg-emerald-950/80 border-emerald-800 text-emerald-400"
+                      : "bg-slate-950 border-slate-800 text-slate-400 hover:bg-slate-800 hover:text-white"
                   }`}
                 >
                   {idx + 1}
@@ -378,14 +397,14 @@ export default function TakeExamPage() {
             })}
           </div>
 
-          <div className="pt-3 border-t border-gray-100 text-xs space-y-1.5 text-gray-600">
+          <div className="pt-3 border-t border-slate-800 space-y-1.5 text-[11px] text-slate-400">
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-green-600 inline-block" />
-              <span>Answered ({Object.keys(answers).length})</span>
+              <span className="w-3 h-3 rounded bg-emerald-950 border border-emerald-800" />
+              <span>Answered</span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="w-3 h-3 rounded-full bg-gray-200 inline-block" />
-              <span>Unanswered ({questions.length - Object.keys(answers).length})</span>
+              <span className="w-3 h-3 rounded bg-slate-950 border border-slate-800" />
+              <span>Unanswered</span>
             </div>
           </div>
         </div>

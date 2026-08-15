@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 
 interface ClassItem {
   id: string;
@@ -129,18 +130,21 @@ export default function PromotionPage() {
 
   return (
     <div className="max-w-6xl mx-auto animate-fade-in space-y-6">
+      {/* Back to Dashboard Navigation */}
+      <BackNavigation href="/dashboard" label="Back to Dashboard" />
+
       {/* ── Page Header ───────────────────────────────────────── */}
-      <div className="border-b border-slate-200 pb-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="border-b border-slate-800 pb-5 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight flex items-center gap-2.5">
-            <span className="w-8 h-8 rounded-lg bg-indigo-600/10 text-indigo-600 flex items-center justify-center">
+          <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
+            <span className="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.75}>
                 <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
             </span>
             Student Promotion & Session Rollover
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-400 mt-1">
             Bulk-promote students, handle class repeats or graduations, while preserving prior-term academic history.
           </p>
         </div>

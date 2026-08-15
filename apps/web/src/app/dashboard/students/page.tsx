@@ -3,7 +3,8 @@ import { getSessionUser } from "@/lib/auth/session";
 import { redirect } from "next/navigation";
 import { db, students, classes, sections } from "@apexium/db";
 import { eq, desc } from "drizzle-orm";
-import type { Metadata } from "next";
+import { Metadata } from "next";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 import { StudentRosterClient } from "./StudentRosterClient";
 
 export const metadata: Metadata = {
@@ -66,13 +67,16 @@ export default async function StudentsListPage() {
 
   return (
     <div className="animate-fade-in space-y-6">
+      {/* Back to Dashboard Navigation */}
+      <BackNavigation href="/dashboard" label="Back to Dashboard" />
+
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-2xl font-bold text-white tracking-tight">
             Student Information System
           </h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <p className="text-sm text-slate-400 mt-1">
             Manage student records, bulk operations, document attachments, and ID cards.
           </p>
         </div>

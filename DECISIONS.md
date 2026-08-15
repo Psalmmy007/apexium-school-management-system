@@ -93,3 +93,10 @@ This file records every technical decision made during development. It exists so
 **Date:** 2026-07-27
 **Context:** We need to extend the `terms` table with a `status` field (active/closed).
 **Decision:** Use `varchar("status", { length: 20 }).notNull().default("active")` instead of a custom PostgreSQL enum. This is highly portable, avoids potential enum-related migration issues across environments, and is straightforward to typecheck using TypeScript union types.
+
+---
+
+## Decision 017 — Unified Standard Back Navigation Component with Strict Hierarchy
+**Date:** 2026-08-15
+**Context:** Browser history back is unreliable across deep links, login redirects, and tab restores. Subpages need a deterministic in-UI parent destination while root dashboard homepages must not display empty back elements.
+**Decision:** Implement `<BackNavigation href="..." label="..." />` adhering to design tokens (`bg-slate-800 border-slate-700` with Lucide `ArrowLeft`), strict min 44x44px touch targets for mobile accessibility, and explicit hierarchical routing (subpage -> parent section -> root dashboard). Root dashboard homepages (`/`, `/dashboard`, `/dashboard/teacher`, `/dashboard/parent`, `/dashboard/student`) do not render a back button. Login page `/auth/login` renders a dedicated "Back to Home" button targeting `/`.

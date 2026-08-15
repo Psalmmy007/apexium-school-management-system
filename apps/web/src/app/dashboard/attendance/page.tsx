@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 import { getRxDB, type RxAttendanceDoc } from "@/lib/rxdb/database";
 
 interface ClassItem {
@@ -236,11 +237,14 @@ export default function MarkAttendancePage() {
 
   return (
     <div className="space-y-6 animate-fade-in">
+      {/* Back to Dashboard Navigation */}
+      <BackNavigation href="/dashboard" label="Back to Dashboard" />
+
       {/* Header & Status Indicator */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Mark Class Attendance</h1>
-          <p className="text-sm text-slate-500 mt-1">
+          <h1 className="text-2xl font-bold text-white">Mark Class Attendance</h1>
+          <p className="text-sm text-slate-400 mt-1">
             Offline-first attendance register powered by RxDB & IndexedDB.
           </p>
         </div>

@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
+import { BackNavigation } from "@/components/ui/BackNavigation";
 
 interface ClassItem {
   id: string;
@@ -217,12 +218,10 @@ export default function EditStudentPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-6 animate-slide-up">
       <div className="flex items-center justify-between">
-        <Link
+        <BackNavigation
           href={`/dashboard/students/${studentId}`}
-          className="btn-ghost btn-sm text-slate-500"
-        >
-          ← Cancel and Return
-        </Link>
+          label="Back to Student Profile"
+        />
         <button
           type="button"
           onClick={handleDelete}
