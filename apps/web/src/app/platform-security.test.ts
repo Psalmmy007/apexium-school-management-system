@@ -246,7 +246,7 @@ describe("Platform Role Separation & Server-Side Security Lockdown", () => {
   describe("3. Acceptance of Verified Platform Operator (role: 'platform_operator')", () => {
     const platformOperatorUser: SessionUser = {
       id: "verified-platform-operator-uuid",
-      schoolId: null, // Platform Operator is not bound to any individual school
+      schoolId: "", // Platform Operator is not bound to any individual school
       email: "founder@apexium.io",
       role: "platform_operator",
       firstName: "Founder",
@@ -309,10 +309,13 @@ describe("Platform Role Separation & Server-Side Security Lockdown", () => {
       };
 
       const html = renderToString(
+        // eslint-disable-next-line react/no-children-prop
         React.createElement(
           DashboardShell,
-          { user: adminUser },
-          React.createElement("div", { id: "test-content" }, "Admin Page Content")
+          {
+            user: adminUser as any,
+            children: React.createElement("div", { id: "test-content" }, "Admin Page Content"),
+          }
         )
       );
 

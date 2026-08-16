@@ -86,7 +86,7 @@ export async function initializeSubscriptionPayment(params: {
     throw new Error(`Paystack initialization failed: ${response.statusText}`);
   }
 
-  const json = await response.json();
+  const json = (await response.json()) as any;
   if (!json.status) throw new Error(json.message || "Paystack error");
 
   return {
@@ -128,7 +128,7 @@ export async function verifySubscriptionPayment(
     throw new Error(`Paystack verification failed: ${response.statusText}`);
   }
 
-  const json = await response.json();
+  const json = (await response.json()) as any;
   if (!json.status) throw new Error(json.message || "Paystack verification error");
 
   const data = json.data;

@@ -144,7 +144,7 @@ describe("Milestone 25 Integrations & Automation Platform Tests", () => {
     expect(gw.schoolId).toBe(schoolAId);
 
     const config = await getSchoolGatewayConfig(schoolAId, "paystack");
-    expect(config.publicKey).toBe("pk_test_12345");
+    expect((config as any)?.publicKey).toBe("pk_test_12345");
   });
 
   // 2. Paystack HMAC Signature Verification & Invoice Settlement

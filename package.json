@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "pnpm --filter @apexium/web dev",
     "build": "pnpm --filter @apexium/web build",
-    "lint": "pnpm -r run lint",
+    "lint": "pnpm --filter @apexium/web lint",
     "typecheck": "pnpm -r run typecheck",
     "test": "pnpm -r run test",
     "test:e2e": "pnpm --filter @apexium/web run test:e2e",

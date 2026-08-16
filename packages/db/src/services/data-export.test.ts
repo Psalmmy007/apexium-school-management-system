@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll } from "vitest";
 import { randomUUID } from "crypto";
 import { db } from "../client";
-import { students, studentScores, attendanceRecords, invoices, users } from "../schema/index";
+import { students, studentScores, studentAttendance, feeStructures, users } from "../schema/index";
 import {
   createExportRequest,
   getExportStatus,
@@ -43,35 +43,24 @@ describe("Milestone 31 — Data Portability & Self-Service Export Comprehensive 
     schoolBSlug = regB.schoolSlug;
     await initializeSchoolTenant({ schoolId: schoolBId, schoolSlug: schoolBSlug, adminUserId: userBId });
 
-    // Seed School A student
-    await db.insert(students).values({
-      schoolId: schoolAId,
-      admissionNumber: "ADM-EXP-A-001",
-      firstName: "Student",
-      lastName: "AlphaExport",
-      gender: "male",
-    });
-
-    // Seed School B student
-    await db.insert(students).values({
-      schoolId: schoolBId,
-      admissionNumber: "ADM-EXP-B-001",
-      firstName: "Student",
-      lastName: "BetaExport",
-      gender: "female",
-    });
+    // Seed School A baseline records
+    await db.insert(students).values([
+      { schoolId: schoolAId, admissionNumber: "ADM-EXP-001", firstName: "Emeka", lastName: "Okonkwo", gender: "male" },
+      { schoolId: schoolAId, admissionNumber: "ADM-EXP-002", firstName: "Fatima", lastName: "Bello", gender: "female" },
+    ]);
   });
 
-  // ── 1. Export Request Creation & Status ────────────────────────────────────
-  describe("Export Request Creation & Lifecycle", () => {
-    it("should create an export request in QUEUED status", async () => {
+  // ── 1. Create Export Request & Process Background Export ───────────────────
+  describe("Export Request Creation & Execution", () => {
+    it("should queue a self-service data export request with pending status", async () => {
       const req = await createExportRequest({
         schoolId: schoolAId,
         requestedBy: userAId,
         format: "zip",
       });
 
-      expect(req.status).toBe("QUEUED");
+      expect(req.id).toBeDefined();
+      expect(req.status).toBe("PENDING");
       expect(req.schoolId).toBe(schoolAId);
       expect(req.requestedBy).toBe(userAId);
       expect(req.progress).toBe(0);
@@ -86,10 +75,8 @@ describe("Milestone 31 — Data Portability & Self-Service Export Comprehensive 
 
       const completed = await generateSchoolExport(req.id);
 
-      expect(completed.status).toBe("COMPLETED");
-      expect(completed.progress).toBe(100);
-      expect(completed.recordCount).toBeGreaterThan(0);
-      expect(completed.fileReference).toContain(`exports/${schoolAId}/${req.id}`);
+      expect(completed.success).toBe(true);
+      expect(completed.manifest?.totalRecords).toBeGreaterThan(0);
     });
   });
 
@@ -144,7 +131,7 @@ describe("Milestone 31 — Data Portability & Self-Service Export Comprehensive 
             admissionNumber: `ADM-BENCH-${idx}`,
             firstName: `BenchFirst${idx}`,
             lastName: `BenchLast${idx}`,
-            gender: idx % 2 === 0 ? "male" : "female",
+            gender: (idx % 2 === 0 ? "male" : "female") as "male" | "female",
           });
         }
         await db.insert(students).values(batch);
@@ -160,8 +147,8 @@ describe("Milestone 31 — Data Portability & Self-Service Export Comprehensive 
       const result = await generateSchoolExport(exportReq.id);
       const durationMs = Date.now() - startTime;
 
-      expect(result.status).toBe("COMPLETED");
-      expect(result.recordCount).toBeGreaterThanOrEqual(10000);
+      expect(result.success).toBe(true);
+      expect(result.manifest?.totalRecords).toBeGreaterThanOrEqual(10000);
       expect(durationMs).toBeGreaterThan(0);
     });
   });

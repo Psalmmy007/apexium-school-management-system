@@ -16,7 +16,7 @@ import {
   assignDefaultRolesAndPermissions,
   activateErpModules,
   getSchoolOnboardingStatus,
-  completeSchoolOnboarding,
+  completeSetupWizardOnboarding,
 } from "./setup";
 import { eq, sql } from "drizzle-orm";
 
@@ -102,7 +102,7 @@ describe("Milestone 22 School Onboarding, Setup Wizard & ERP Activation Tests", 
     expect(modules).toContain("admissions");
     expect(modules).toContain("analytics");
 
-    const result = await completeSchoolOnboarding(schoolAId);
+    const result = await completeSetupWizardOnboarding(schoolAId);
     expect(result.onboardingStatus).toBe("Completed");
 
     const status = await getSchoolOnboardingStatus(schoolAId);

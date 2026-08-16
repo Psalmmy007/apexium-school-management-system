@@ -270,7 +270,7 @@ export interface AttendanceRecord {
 // ── Auth session ──────────────────────────────────────────────
 export interface SessionUser {
   id: string;
-  schoolId?: string | null;
+  schoolId: string;
   email: string;
   role: UserRole;
   firstName: string;

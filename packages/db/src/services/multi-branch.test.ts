@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll } from "vitest";
 import { randomUUID } from "crypto";
 import { db } from "../client";
 import { students, saasInvoices } from "../schema/index";
+import { eq } from "drizzle-orm";
 import {
   createSchoolGroup,
   addBranchToGroup,
@@ -54,7 +55,9 @@ describe("Milestone 32 — Multi-Branch / School Group Support Audit", () => {
     await db.insert(saasInvoices).values({
       schoolId: branch1Id,
       invoiceNumber: "INV-LEKKI-001",
-      amount: 150000,
+      subscriptionId: randomUUID(),
+      subtotal: 150000,
+      totalAmount: 150000,
       status: "paid",
     });
 
@@ -81,7 +84,9 @@ describe("Milestone 32 — Multi-Branch / School Group Support Audit", () => {
     await db.insert(saasInvoices).values({
       schoolId: branch2Id,
       invoiceNumber: "INV-IKEJA-001",
-      amount: 200000,
+      subscriptionId: randomUUID(),
+      subtotal: 200000,
+      totalAmount: 200000,
       status: "paid",
     });
   });

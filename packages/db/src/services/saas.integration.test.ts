@@ -111,7 +111,7 @@ describe("Milestone 28 — Comprehensive End-to-End SaaS & Multi-Tenant Audit", 
       firstName: "Student",
       lastName: "Alpha",
       gender: "male",
-      dateOfBirth: "2010-01-01",
+      dateOfBirth: new Date("2010-01-01"),
     });
 
     // School B class & student
@@ -127,7 +127,7 @@ describe("Milestone 28 — Comprehensive End-to-End SaaS & Multi-Tenant Audit", 
       firstName: "Student",
       lastName: "Beta",
       gender: "female",
-      dateOfBirth: "2010-02-02",
+      dateOfBirth: new Date("2010-02-02"),
     });
   });
 

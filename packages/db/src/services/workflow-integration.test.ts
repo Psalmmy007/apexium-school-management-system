@@ -20,7 +20,7 @@ import {
   provisionTeachersAndStaff,
   provisionStudentsAndClassAssignments,
   getSchoolOnboardingStatus,
-  completeSchoolOnboarding,
+  completeSetupWizardOnboarding,
 } from "./setup";
 import {
   globalSearchEntities,
@@ -93,7 +93,7 @@ beforeAll(async () => {
   studentA2Id = studentsA[1].id;
 
   // Complete Onboarding A
-  await completeSchoolOnboarding(schoolAId);
+  await completeSetupWizardOnboarding(schoolAId);
 
   // ── SCHOOL B SETUP SEQUENCE (ISOLATION TEST TARGET) ──
   const sB = await createSchoolWithTenant({
@@ -146,7 +146,7 @@ beforeAll(async () => {
     status: "pending",
   });
 
-  await completeSchoolOnboarding(schoolBId);
+  await completeSetupWizardOnboarding(schoolBId);
 });
 
 describe("Milestone 24 Production UX, Workflow Completion & Monorepo Integration Tests", () => {
@@ -223,7 +223,7 @@ describe("Milestone 24 Production UX, Workflow Completion & Monorepo Integration
     expect(updateAttempt.length).toBe(0);
   });
 
-  if ("proves School A administrator CANNOT bulk-update School B students", async () => {
+  it("proves School A administrator CANNOT bulk-update School B students", async () => {
     const bulkAttempt = await executeBulkStudentActions(
       schoolAId,
       [studentB1Id],

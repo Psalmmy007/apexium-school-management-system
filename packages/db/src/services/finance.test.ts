@@ -269,6 +269,7 @@ describe("Milestone 19 Finance & Accounting System Integration Tests", () => {
     await expect(
       postJournalEntry({
         schoolId: schoolAId,
+        referenceType: "manual",
         description: "Unbalanced Fee Posting",
         lines: [
           { accountId: bankAcc.id, debitAmount: 100000, creditAmount: 0 },
@@ -280,6 +281,7 @@ describe("Milestone 19 Finance & Accounting System Integration Tests", () => {
     // 2. Success: Balanced entry
     const entry = await postJournalEntry({
       schoolId: schoolAId,
+      referenceType: "manual",
       description: "First Term Tuition Payments Deposit",
       postedById: adminAId,
       lines: [
@@ -306,6 +308,7 @@ describe("Milestone 19 Finance & Accounting System Integration Tests", () => {
 
     const entry = await postJournalEntry({
       schoolId: schoolAId,
+      referenceType: "manual",
       description: "Overpaid Utility Bill",
       postedById: adminAId,
       lines: [

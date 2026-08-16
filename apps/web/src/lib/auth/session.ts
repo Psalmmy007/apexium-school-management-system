@@ -45,7 +45,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
           if (isOperator || meta.role === "platform_operator") {
             return {
               id: user.id,
-              schoolId: null,
+              schoolId: "",
               email: user.email ?? "",
               role: "platform_operator",
               firstName: (meta.first_name as string) ?? "Platform",
