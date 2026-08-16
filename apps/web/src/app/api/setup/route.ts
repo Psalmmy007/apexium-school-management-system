@@ -12,6 +12,7 @@ import {
   createClass,
   createStream,
   executeCoreSchoolSetup,
+  resolveOrProvisionSchoolForAdmin,
 } from "@apexium/db";
 import { eq } from "drizzle-orm";
 
@@ -56,8 +57,8 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const user = await getSessionUser();
-  if (!user || user.role !== "admin") {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  if (!user || (user.role !== "admin" && user.role !== "platform_operator")) {
+    return NextResponse.json({ success: false, error: "Unauthorized. Admin access required." }, { status: 401 });
   }
 
   try {
@@ -65,8 +66,13 @@ export async function POST(request: NextRequest) {
     const {
       sessionName = "2025/2026",
       schoolName,
+      schoolEmail,
       address,
       phone,
+      motto,
+      adminFirstName,
+      adminLastName,
+      adminEmail,
       terms: customTerms,
       classNames,
       departmentNames,
@@ -74,31 +80,21 @@ export async function POST(request: NextRequest) {
       gradeBands,
     } = body;
 
-    let activeSchoolId = user.schoolId;
-    if (!activeSchoolId || !isValidUUID(activeSchoolId)) {
-      return NextResponse.json({ success: false, error: "No school associated with user session" }, { status: 400 });
-    }
-
-    let [school] = await db.select().from(schools).where(eq(schools.id, activeSchoolId)).limit(1);
-
-    if (!school) {
-      return NextResponse.json({ success: false, error: "School not found" }, { status: 404 });
-    }
-
-    if (schoolName) {
-      await db
-        .update(schools)
-        .set({
-          name: schoolName,
-          ...(address && { address }),
-          ...(phone && { phone }),
-          updatedAt: new Date(),
-        })
-        .where(eq(schools.id, activeSchoolId));
-    }
+    const school = await resolveOrProvisionSchoolForAdmin({
+      userId: user.id,
+      currentSchoolId: user.schoolId,
+      schoolName,
+      schoolEmail,
+      address,
+      phone,
+      motto,
+      adminFirstName: adminFirstName || user.firstName,
+      adminLastName: adminLastName || user.lastName,
+      adminEmail: adminEmail || user.email,
+    });
 
     const result = await executeCoreSchoolSetup({
-      schoolId: activeSchoolId,
+      schoolId: school.id,
       sessionName,
       terms: customTerms,
       classNames,
@@ -110,6 +106,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: "First-time school setup completed successfully!",
+      schoolId: school.id,
+      school,
       data: result,
       summary: result,
     });

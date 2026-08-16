@@ -9,6 +9,7 @@ import {
   schoolSettings,
   subjects,
   gradingScales,
+  saasSchoolMemberships,
 } from "../index";
 import { eq, and } from "drizzle-orm";
 import crypto from "crypto";
@@ -22,6 +23,19 @@ export interface ProvisionSchoolParams {
   phone?: string;
   address?: string;
   motto?: string;
+}
+
+export interface ResolveSchoolParams {
+  userId?: string;
+  currentSchoolId?: string | null;
+  schoolName?: string;
+  schoolEmail?: string;
+  address?: string;
+  phone?: string;
+  motto?: string;
+  adminFirstName?: string;
+  adminLastName?: string;
+  adminEmail?: string;
 }
 
 export interface AdminUserParams {
@@ -126,6 +140,120 @@ export async function createSchoolWithTenant(params: ProvisionSchoolParams) {
     .onConflictDoNothing();
 
   return school;
+}
+
+// ── 1b. Resolve or Provision School For Admin ────────────────
+export async function resolveOrProvisionSchoolForAdmin(params: ResolveSchoolParams) {
+  const { userId, currentSchoolId, schoolName, schoolEmail, address, phone, motto } = params;
+
+  // 1. If valid schoolId is provided, check if school exists
+  if (
+    currentSchoolId &&
+    typeof currentSchoolId === "string" &&
+    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(currentSchoolId.trim())
+  ) {
+    const [existingSchool] = await db
+      .select()
+      .from(schools)
+      .where(eq(schools.id, currentSchoolId.trim()))
+      .limit(1);
+
+    if (existingSchool) {
+      if (schoolName && schoolName.trim() !== "") {
+        const [updated] = await db
+          .update(schools)
+          .set({
+            name: schoolName.trim(),
+            ...(address && { address: address.trim() }),
+            ...(phone && { phone: phone.trim() }),
+            ...(schoolEmail && { email: schoolEmail.trim() }),
+            updatedAt: new Date(),
+          })
+          .where(eq(schools.id, existingSchool.id))
+          .returning();
+        return updated || existingSchool;
+      }
+      return existingSchool;
+    }
+  }
+
+  // 2. If user already has an active school membership in database
+  if (userId) {
+    const [existingUser] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    if (existingUser?.schoolId) {
+      const [userSchool] = await db.select().from(schools).where(eq(schools.id, existingUser.schoolId)).limit(1);
+      if (userSchool) {
+        if (schoolName && schoolName.trim() !== "") {
+          const [updated] = await db
+            .update(schools)
+            .set({
+              name: schoolName.trim(),
+              ...(address && { address: address.trim() }),
+              ...(phone && { phone: phone.trim() }),
+              updatedAt: new Date(),
+            })
+            .where(eq(schools.id, userSchool.id))
+            .returning();
+          return updated || userSchool;
+        }
+        return userSchool;
+      }
+    }
+  }
+
+  // 3. Otherwise, create a brand-new school entity for this administrator
+  const effectiveName = schoolName?.trim() || "Apexium Model Academy";
+  const newSchool = await createSchoolWithTenant({
+    name: effectiveName,
+    address: address?.trim() || "Main Campus",
+    phone: phone?.trim() || "+2348000000000",
+    email: schoolEmail?.trim() || (userId ? `admin-${userId}@apexium.edu` : "admin@apexium.edu"),
+    motto: motto?.trim() || "Excellence & Character",
+  });
+
+  // 4. Attach user to this school in `users` and `saasSchoolMemberships`
+  if (userId) {
+    const [existingUser] = await db.select().from(users).where(eq(users.id, userId)).limit(1);
+    if (existingUser) {
+      await db
+        .update(users)
+        .set({
+          schoolId: newSchool.id,
+          role: "admin",
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, userId));
+    } else {
+      await db
+        .insert(users)
+        .values({
+          id: userId,
+          schoolId: newSchool.id,
+          email: params.adminEmail || `admin-${userId}@apexium.edu`,
+          firstName: params.adminFirstName || "School",
+          lastName: params.adminLastName || "Administrator",
+          role: "admin",
+        })
+        .onConflictDoNothing();
+    }
+
+    try {
+      await db
+        .insert(saasSchoolMemberships)
+        .values({
+          id: crypto.randomUUID(),
+          schoolId: newSchool.id,
+          userId: userId,
+          role: "admin",
+          status: "active",
+        })
+        .onConflictDoNothing();
+    } catch {
+      // ignore if saas table doesn't exist
+    }
+  }
+
+  return newSchool;
 }
 
 // ── 2. Provision Administrator User ──────────────────────────

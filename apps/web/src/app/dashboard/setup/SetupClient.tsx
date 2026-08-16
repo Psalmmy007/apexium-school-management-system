@@ -119,60 +119,15 @@ export function SetupClient({ initialStatus, initialSchool, currentUser }: Props
   const [schoolSaved, setSchoolSaved] = useState(!!initialSchool?.name);
   const [errorMsg, setErrorMsg] = useState("");
 
-  // Step 2 Action: Save School Profile & Provision School/Admin
-  const handleSaveSchoolProfile = async () => {
+  // Step 2 Action: Save School Profile & Proceed to Academic Session
+  const handleSaveSchoolProfile = () => {
     if (!schoolName.trim()) {
       setErrorMsg("School Name is required.");
       return;
     }
-
-    setSavingSchool(true);
     setErrorMsg("");
-
-    try {
-      const res = await fetch("/api/setup/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          schoolName,
-          adminEmail,
-          adminFirstName,
-          adminLastName,
-          motto: schoolMotto,
-          phone: schoolPhone,
-          address: campusAddress,
-        }),
-      });
-
-      let json = await res.json();
-
-      if (!res.ok || !json.success) {
-        // Fallback to /api/setup if session exists
-        const res2 = await fetch("/api/setup", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            schoolName,
-            address: campusAddress,
-            phone: schoolPhone,
-            sessionName,
-          }),
-        });
-        const json2 = await res2.json();
-        if (!res2.ok || !json2.success) {
-          throw new Error(json2.error || json.error || "Failed provisioning school entity");
-        }
-        json = json2;
-      }
-
-      setSchoolSaved(true);
-      setStep(3);
-    } catch (err: any) {
-      console.error(err);
-      setErrorMsg(err.message || "Failed saving school profile.");
-    } finally {
-      setSavingSchool(false);
-    }
+    setSchoolSaved(true);
+    setStep(3);
   };
 
   // Step 3 Actions: Terms
@@ -243,6 +198,14 @@ export function SetupClient({ initialStatus, initialSchool, currentUser }: Props
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          schoolName,
+          schoolEmail,
+          phone: schoolPhone,
+          address: campusAddress,
+          motto: schoolMotto,
+          adminFirstName,
+          adminLastName,
+          adminEmail,
           sessionName,
           terms: termsList,
           classNames: classesList,

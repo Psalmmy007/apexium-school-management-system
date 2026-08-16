@@ -1,29 +1,50 @@
 import { NextResponse } from "next/server";
 import { getSessionUser, isValidUUID } from "@/lib/auth/session";
-import { executeCoreSchoolSetup } from "@apexium/db";
+import { executeCoreSchoolSetup, resolveOrProvisionSchoolForAdmin } from "@apexium/db";
 
 export const dynamic = "force-dynamic";
 
 export async function POST(req: Request) {
   const user = await getSessionUser();
-  if (!user || user.role !== "admin") {
-    return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
-  }
-
-  const schoolId = user.schoolId;
-  if (!isValidUUID(schoolId)) {
-    return NextResponse.json(
-      { success: false, error: "No active school tenant context found to configure." },
-      { status: 400 }
-    );
+  if (!user || (user.role !== "admin" && user.role !== "platform_operator")) {
+    return NextResponse.json({ success: false, error: "Unauthorized. Admin privileges required." }, { status: 401 });
   }
 
   try {
     const body = await req.json();
-    const { sessionName, terms, classNames, departmentNames, subjects, gradeBands } = body;
+    const {
+      sessionName,
+      terms,
+      classNames,
+      departmentNames,
+      subjects,
+      gradeBands,
+      schoolName,
+      schoolEmail,
+      address,
+      phone,
+      motto,
+      adminFirstName,
+      adminLastName,
+      adminEmail,
+    } = body;
+
+    // Resiliently resolve or provision the school tenant entity
+    const targetSchool = await resolveOrProvisionSchoolForAdmin({
+      userId: user.id,
+      currentSchoolId: user.schoolId,
+      schoolName,
+      schoolEmail,
+      address,
+      phone,
+      motto,
+      adminFirstName: adminFirstName || user.firstName,
+      adminLastName: adminLastName || user.lastName,
+      adminEmail: adminEmail || user.email,
+    });
 
     const result = await executeCoreSchoolSetup({
-      schoolId,
+      schoolId: targetSchool.id,
       sessionName,
       terms,
       classNames,
@@ -35,6 +56,8 @@ export async function POST(req: Request) {
     return NextResponse.json({
       success: true,
       message: "School core setup completed successfully.",
+      schoolId: targetSchool.id,
+      school: targetSchool,
       summary: result,
       data: result,
     });
@@ -43,4 +66,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: false, error: error.message || "Setup wizard failed" }, { status: 500 });
   }
 }
+
 
