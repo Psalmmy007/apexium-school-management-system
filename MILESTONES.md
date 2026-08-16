@@ -683,3 +683,42 @@ Date: August 15, 2026
 - [x] Screenshot proof: show before-and-after for at least one page per dashboard role, at both desktop and mobile width, plus the login page's new "Back to Home" button.
 
 **Definition of Done:** All four dashboards visually match the shared design system established for the public pages — verified by the extended audit script, not visual impression. Every button across all four dashboards shows a visible loading state on click, per Milestone 38, with high-stakes actions verified idempotent by test. Every non-root page across the entire app has a working, correctly-destined back button; the login page has a working back-to-home link; root/home pages correctly have none. All of the above holds at every tested viewport width, with screenshot proof provided rather than a written claim.
+
+---
+
+## Milestone 40: Setup Wizard Restructure & Dependent-Page Integrity — [x] COMPLETE
+
+Based on the full discovery report already completed. Goal: the wizard sets up ONLY the core structural foundation a school needs — everything else (students, teachers, parent/ward linking) happens on its own dedicated page, done properly, not squeezed into onboarding.
+
+### Reduce the wizard to core structure only
+
+- [x] Remove "Step 6: Teachers & Initial Students" from the wizard entirely — no fake teacher/student names, no in-wizard provisioning of people. This step is also where the confirmed bug lives (students labeled "assigned to JSS 1" but never actually receiving a real `class_id`) — removing it removes that bug's location, not just patches it.
+- [x] Final wizard scope: Welcome → School Profile & Admin Account → Academic Session & Terms → Classes, Departments & Subjects → Grading Scale → Activation. Six focused steps, not seven with one doing too much.
+
+### Fix real bugs found in the discovery report
+
+- [x] **Consolidate `/api/setup` and `/api/setup/wizard` into one endpoint/code path.** Having two separate setup routes is exactly how "subjects get created in one path but silently skipped in the other" happened. One school-creation code path, used everywhere setup can be triggered from.
+- [x] Add default subject creation to the consolidated setup flow (currently only one of the two paths did this) — reuse the existing default subject logic rather than writing it twice.
+- [x] **Add grading scale creation to the wizard** — currently completely missing, despite Report Cards (Milestone 4/5) depending on it existing. Default to WAEC-style bands (already built as the grading service), editable by the admin during this step, not just accepted silently.
+- [x] Make Classes, Departments, and Subjects genuinely interactive during setup: add, rename, and remove — not static pre-filled badges the admin can't actually change. A school that isn't JSS1–SSS3 structured (e.g. a primary school) currently has no way to reflect that.
+- [x] Make term/session dates real, editable date pickers tied to the school's actual calendar — not hardcoded Sept–Dec/Jan–Apr/Apr–Jul values presented as if they were already configured.
+
+### Remove masking fallbacks across dependent pages — this is the most important fix
+
+- [x] **Remove the hardcoded dummy class/student fallback in Attendance** (`cls-ss2`, `cls-js3`, `st-01`) — this is actively dangerous: it lets a school appear to "work" with fake data, then fails with a confusing foreign-key sync error the moment real attendance is submitted. Replace with a clear empty state: "No classes found — complete School Setup first," linking directly to the setup wizard.
+- [x] Audit every other dashboard page for the same pattern (any hardcoded/mock fallback data standing in for a real empty-state message) and fix each one the same way — list every instance found.
+- [x] **Fix the Score Entry page's term-loading bug** — `loadMetadata()` currently never populates the term list at all, so the whole score sheet silently never renders regardless of whether setup was done correctly. This is an independent bug from the setup wizard itself and needs its own fix.
+
+### Confirm (or build) the dedicated pages this data now depends on
+
+- [x] Confirm the Students page (`/dashboard/students`) fully supports: registering a new student, assigning them to a real class (created during setup), and adding/linking one or more guardians/parents to that student — this "ward linking" capability was defined back in Milestone 1's schema; confirm it's actually reachable and functional in the UI today, not just present in the database schema.
+- [x] Confirm there is a real, dedicated page for adding teacher/staff accounts outside of setup (likely under HR, or a dedicated Teachers roster) — since the wizard no longer does this, this page must fully cover it.
+- [x] If either of the above is missing or broken, build/fix it as part of this milestone — don't leave "add a student" or "add a teacher" without a working home.
+
+### Verification
+
+- [x] Automated end-to-end test: run the full simplified 6-step wizard for a brand-new school, then confirm — with zero manual database intervention — that Attendance, Score Entry, Timetable, and Report Card generation all load correctly and show zero dummy/mock data immediately afterward.
+- [x] Automated test: confirm the removed dummy-data fallbacks are gone everywhere they were found, replaced with the correct empty-state message.
+- [x] Automated test: register a real student through the Students page, assign a class, link a guardian, and confirm the guardian can see that child's data through the Parent Portal (Milestone 12) — proving the ward-linking flow works end-to-end, not just that the button exists.
+
+**Definition of Done:** A brand-new school can complete a simplified, fully editable core setup (identity, admin, session/terms, classes, subjects, grading scale) and immediately use every dependent module with real data and zero dummy fallbacks. Students, teachers, and parent/ward linking are each handled on their own working, dedicated page — confirmed functional end-to-end, not merely present in the schema.

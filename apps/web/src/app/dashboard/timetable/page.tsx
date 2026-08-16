@@ -63,16 +63,6 @@ export default function TimetablePage() {
   const [selectedTeacherId, setSelectedTeacherId] = useState<string>("");
   const [roomNumber, setRoomNumber] = useState<string>("");
 
-  useEffect(() => {
-    fetchOptions();
-  }, []);
-
-  useEffect(() => {
-    if (selectedClassId) {
-      fetchTimetable(selectedClassId);
-    }
-  }, [selectedClassId]);
-
   async function fetchOptions() {
     setLoading(true);
     try {
@@ -86,116 +76,50 @@ export default function TimetablePage() {
         setTeachersList(json.data.teachers || []);
         setSelectedClassId(cls[0].id);
       } else {
-        const fallbackClasses = [
-          { id: "cls-ss2", name: "SS 2 Science" },
-          { id: "cls-js3", name: "JS 3 Diamond" },
-        ];
-        const fallbackPeriods = [
-          { id: "p1", name: "Period 1", startTime: "08:00", endTime: "08:45" },
-          { id: "p2", name: "Period 2", startTime: "08:45", endTime: "09:30" },
-          { id: "p3", name: "Period 3", startTime: "09:30", endTime: "10:15" },
-          { id: "p4", name: "Period 4", startTime: "10:45", endTime: "11:30" },
-        ];
-        const fallbackSubjects = [
-          { id: "sub-math", name: "Mathematics", code: "MTH" },
-          { id: "sub-eng", name: "English Language", code: "ENG" },
-          { id: "sub-phy", name: "Physics", code: "PHY" },
-          { id: "sub-chem", name: "Chemistry", code: "CHM" },
-        ];
-        const fallbackTeachers = [
-          { id: "tch-1", firstName: "Samuel", lastName: "Okonkwo" },
-          { id: "tch-2", firstName: "Amina", lastName: "Bello" },
-        ];
-        setClassesList(fallbackClasses);
-        setPeriodsList(fallbackPeriods);
-        setSubjectsList(fallbackSubjects);
-        setTeachersList(fallbackTeachers);
-        setSelectedClassId("cls-ss2");
+        setClassesList([]);
+        setPeriodsList([]);
+        setSubjectsList([]);
+        setTeachersList([]);
+        setSelectedClassId("");
       }
     } catch (err: any) {
-      const fallbackClasses = [
-        { id: "cls-ss2", name: "SS 2 Science" },
-        { id: "cls-js3", name: "JS 3 Diamond" },
-      ];
-      const fallbackPeriods = [
-        { id: "p1", name: "Period 1", startTime: "08:00", endTime: "08:45" },
-        { id: "p2", name: "Period 2", startTime: "08:45", endTime: "09:30" },
-        { id: "p3", name: "Period 3", startTime: "09:30", endTime: "10:15" },
-        { id: "p4", name: "Period 4", startTime: "10:45", endTime: "11:30" },
-      ];
-      setClassesList(fallbackClasses);
-      setPeriodsList(fallbackPeriods);
-      setSelectedClassId("cls-ss2");
+      setClassesList([]);
+      setPeriodsList([]);
+      setSubjectsList([]);
+      setTeachersList([]);
+      setSelectedClassId("");
     } finally {
       setLoading(false);
     }
   }
 
+  useEffect(() => {
+    fetchOptions();
+  }, []);
+
+  useEffect(() => {
+    if (selectedClassId) {
+      fetchTimetable(selectedClassId);
+    } else {
+      setTimetableEntries([]);
+    }
+  }, [selectedClassId]);
+
   async function fetchTimetable(classId: string) {
+    if (!classId) {
+      setTimetableEntries([]);
+      return;
+    }
     try {
       const res = await fetch(`/api/timetable?classId=${classId}`);
       const json = await res.json();
       if (json.success && json.data.items?.length > 0) {
         setTimetableEntries(json.data.items);
       } else {
-        setTimetableEntries([
-          {
-            id: "tt-1",
-            schoolId: "school-1",
-            classId: "cls-ss2",
-            subjectId: "sub-math",
-            teacherId: "tch-1",
-            periodId: "p1",
-            dayOfWeek: "monday",
-            className: "SS 2 Science",
-            subjectName: "Mathematics",
-            subjectCode: "MTH 201",
-            teacherFirstName: "Samuel",
-            teacherLastName: "Okonkwo",
-            periodName: "Period 1",
-            periodStartTime: "08:00",
-            periodEndTime: "08:45",
-            roomNumber: "Room 102",
-          },
-          {
-            id: "tt-2",
-            schoolId: "school-1",
-            classId: "cls-ss2",
-            subjectId: "sub-phy",
-            teacherId: "tch-2",
-            periodId: "p2",
-            dayOfWeek: "monday",
-            className: "SS 2 Science",
-            subjectName: "Physics",
-            subjectCode: "PHY 201",
-            teacherFirstName: "Amina",
-            teacherLastName: "Bello",
-            periodName: "Period 2",
-            periodStartTime: "08:45",
-            periodEndTime: "09:30",
-            roomNumber: "Lab 2",
-          },
-          {
-            id: "tt-3",
-            schoolId: "school-1",
-            classId: "cls-ss2",
-            subjectId: "sub-eng",
-            teacherId: "tch-1",
-            periodId: "p1",
-            dayOfWeek: "tuesday",
-            className: "SS 2 Science",
-            subjectName: "English Language",
-            subjectCode: "ENG 201",
-            teacherFirstName: "Samuel",
-            teacherLastName: "Okonkwo",
-            periodName: "Period 1",
-            periodStartTime: "08:00",
-            periodEndTime: "08:45",
-            roomNumber: "Room 102",
-          },
-        ]);
+        setTimetableEntries([]);
       }
     } catch (err: any) {
+      console.warn("Failed loading timetable:", err);
       setTimetableEntries([]);
     }
   }
@@ -286,24 +210,26 @@ export default function TimetablePage() {
           </p>
         </div>
 
-        {/* Class Selector Dropdown */}
-        <div className="flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
-          <label htmlFor="class-selector" className="text-xs font-semibold text-slate-500 uppercase px-2">
-            Select Class:
-          </label>
-          <select
-            id="class-selector"
-            value={selectedClassId}
-            onChange={(e) => setSelectedClassId(e.target.value)}
-            className="input bg-slate-50 py-1.5 px-3 text-sm font-semibold text-indigo-700 border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 cursor-pointer"
-          >
-            {classesList.map((cls) => (
-              <option key={cls.id} value={cls.id}>
-                {cls.name}
-              </option>
-            ))}
-          </select>
-        </div>
+      {/* Class Selector Dropdown */}
+        {classesList.length > 0 && (
+          <div className="flex items-center gap-3 bg-white p-2 rounded-xl border border-slate-200 shadow-sm">
+            <label htmlFor="class-selector" className="text-xs font-semibold text-slate-500 uppercase px-2">
+              Select Class:
+            </label>
+            <select
+              id="class-selector"
+              value={selectedClassId}
+              onChange={(e) => setSelectedClassId(e.target.value)}
+              className="input bg-slate-50 py-1.5 px-3 text-sm font-semibold text-indigo-700 border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+            >
+              {classesList.map((cls) => (
+                <option key={cls.id} value={cls.id}>
+                  {cls.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
       {/* Messages */}
@@ -328,10 +254,28 @@ export default function TimetablePage() {
         </div>
       )}
 
-      {/* ── Timetable Grid Matrix ──────────────────────────────── */}
+      {/* ── Timetable Grid Matrix / Empty States ──────────────────────────────── */}
       {loading ? (
         <div className="card p-12 text-center text-slate-400 animate-pulse">
           Loading timetable schedules...
+        </div>
+      ) : classesList.length === 0 ? (
+        <div className="card p-8 text-center space-y-3 bg-slate-900 border border-slate-800 rounded-2xl">
+          <p className="text-sm font-semibold text-slate-200">
+            No classes found — complete School Setup first
+          </p>
+          <p className="text-xs text-slate-400 max-w-md mx-auto">
+            Your school institution needs to have classes configured before building timetable schedules.
+          </p>
+          <div className="pt-2">
+            <a
+              href="/dashboard/setup"
+              id="btn-go-to-setup"
+              className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition shadow-sm"
+            >
+              Go to School Setup Wizard →
+            </a>
+          </div>
         </div>
       ) : (
         <div className="table-container shadow-md border-slate-200 bg-white">

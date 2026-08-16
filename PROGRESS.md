@@ -778,3 +778,15 @@ What this means in plain terms: All four dashboards (Admin, Teacher, Parent, and
 Proof it works: 61/61 Vitest tests passed (including the new `milestone39-verification.test.tsx` verifying back navigation structure, hierarchy mapping, and mobile touch targets). The deterministic Playwright anti-slop and navigation audit scanned 14 routes across all dashboard roles and public portals, scoring 0/16 triggered slop patterns (100% clean). Full 5-viewport screenshot proof (375px, 390px, 768px, 1024px, 1440px) was generated and verified across desktop and mobile.
 
 Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+---
+
+## Milestone 40: Setup Wizard Restructure & Dependent-Page Integrity — COMPLETE
+Date: August 16, 2026
+
+What this means in plain terms: The school setup wizard has been streamlined from an overloaded 7-step process down to a focused 6-step core foundation setup (School Profile & Admin, Academic Session & Terms, Classes & Departments & Subjects, WAEC Grading Scale, and Module Activation). No fake students or teachers are generated during setup — instead, real student registration with class assignment and parent ward-linking is handled properly on the dedicated Students page, and staff provisioning is handled on the HR page. All hardcoded fake fallback data (such as dummy classes and students) has been completely removed from Attendance, Timetable, and Scores pages and replaced with honest empty-state notices that link directly to the setup wizard.
+
+Proof it works: Database integration test `m40-setup-wizard-integrity.test.ts` and web test `milestone40-verification.test.tsx` pass 100%, proving that completing the core setup writes real terms, classes, subjects, and grading scales to the database without provisioning any fake people, and confirms student registration and parent ward-linking work seamlessly. Next.js production build and TypeScript type checks compiled with 0 errors across 189 routes.
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+

@@ -18,6 +18,7 @@ interface TermItem {
   id: string;
   name: string;
   session: string;
+  isCurrent?: boolean;
 }
 
 interface StudentScoreRow {
@@ -49,15 +50,31 @@ export default function ScoreEntryPage() {
   useEffect(() => {
     async function loadMetadata() {
       try {
-        const [classRes, subjectRes] = await Promise.all([
+        const [classRes, subjectRes, termRes] = await Promise.all([
           fetch("/api/classes"),
           fetch("/api/subjects"),
+          fetch("/api/terms"),
         ]);
         const classJson = await classRes.json();
         const subjectJson = await subjectRes.json();
+        const termJson = await termRes.json();
 
-        if (classJson.success) setClassList(classJson.data.classes || []);
-        if (subjectJson.success) setSubjectList(subjectJson.data || []);
+        if (classJson.success) {
+          const classes = classJson.data.classes || [];
+          setClassList(classes);
+          if (classes.length > 0) setSelectedClassId(classes[0].id);
+        }
+        if (subjectJson.success) {
+          const subjects = subjectJson.data || [];
+          setSubjectList(subjects);
+          if (subjects.length > 0) setSelectedSubjectId(subjects[0].id);
+        }
+        if (termJson.success) {
+          const terms = termJson.data || [];
+          setTermList(terms);
+          const activeTerm = terms.find((t: any) => t.isCurrent) || terms[0];
+          if (activeTerm) setSelectedTermId(activeTerm.id);
+        }
       } catch (err) {
         console.warn("Error loading metadata", err);
       }
@@ -101,7 +118,7 @@ export default function ScoreEntryPage() {
             ...item,
             caScore,
             examScore,
-            totalScore: caScore + examScore,
+            totalScore: Math.round((caScore + examScore) * 100) / 100,
           };
         }
         return item;
@@ -109,9 +126,10 @@ export default function ScoreEntryPage() {
     );
   }
 
-  async function handleSave() {
+  async function handleSaveScores() {
+    if (!selectedClassId || !selectedSubjectId || !selectedTermId) return;
     setSaving(true);
-    setStatusMessage("Saving scores register...");
+    setStatusMessage(null);
 
     try {
       const res = await fetch("/api/scores", {
@@ -150,57 +168,81 @@ export default function ScoreEntryPage() {
         </p>
       </div>
 
-      {/* Filter Card */}
-      <div className="card grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div>
-          <label className="label">Select Class *</label>
-          <select
-            id="score-select-class"
-            value={selectedClassId}
-            onChange={(e) => setSelectedClassId(e.target.value)}
-            className="input"
-          >
-            <option value="">Choose Class</option>
-            {classList.map((cls) => (
-              <option key={cls.id} value={cls.id}>
-                {cls.name}
-              </option>
-            ))}
-          </select>
+      {classList.length === 0 ? (
+        <div className="card p-8 text-center space-y-3 bg-slate-900 border border-slate-800 rounded-2xl">
+          <p className="text-sm font-semibold text-slate-200">
+            No classes or academic terms found — complete School Setup first
+          </p>
+          <p className="text-xs text-slate-400 max-w-md mx-auto">
+            Your school institution needs to have classes, terms, and subjects configured before entering student scores.
+          </p>
+          <div className="pt-2">
+            <a
+              href="/dashboard/setup"
+              id="btn-go-to-setup"
+              className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition shadow-sm"
+            >
+              Go to School Setup Wizard →
+            </a>
+          </div>
         </div>
+      ) : (
+        <>
+          {/* Filter Card */}
+          <div className="card grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="label">Select Class *</label>
+              <select
+                id="score-select-class"
+                value={selectedClassId}
+                onChange={(e) => setSelectedClassId(e.target.value)}
+                className="input"
+              >
+                <option value="">Choose Class</option>
+                {classList.map((cls) => (
+                  <option key={cls.id} value={cls.id}>
+                    {cls.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        <div>
-          <label className="label">Select Subject *</label>
-          <select
-            id="score-select-subject"
-            value={selectedSubjectId}
-            onChange={(e) => setSelectedSubjectId(e.target.value)}
-            className="input"
-          >
-            <option value="">Choose Subject</option>
-            {subjectList.map((subj) => (
-              <option key={subj.id} value={subj.id}>
-                {subj.name} ({subj.code || "SUBJ"})
-              </option>
-            ))}
-          </select>
-        </div>
+            <div>
+              <label className="label">Select Subject *</label>
+              <select
+                id="score-select-subject"
+                value={selectedSubjectId}
+                onChange={(e) => setSelectedSubjectId(e.target.value)}
+                className="input"
+              >
+                <option value="">Choose Subject</option>
+                {subjectList.map((subj) => (
+                  <option key={subj.id} value={subj.id}>
+                    {subj.name} ({subj.code || "SUBJ"})
+                  </option>
+                ))}
+              </select>
+            </div>
 
-        <div>
-          <label className="label">Select Term *</label>
-          <select
-            id="score-select-term"
-            value={selectedTermId}
-            onChange={(e) => setSelectedTermId(e.target.value)}
-            className="input"
-          >
-            <option value="">Choose Term</option>
-            <option value="term-1-2025">First Term 2025/2026</option>
-            <option value="term-2-2025">Second Term 2025/2026</option>
-            <option value="term-3-2025">Third Term 2025/2026</option>
-          </select>
-        </div>
-      </div>
+            <div>
+              <label className="label">Select Term *</label>
+              <select
+                id="score-select-term"
+                value={selectedTermId}
+                onChange={(e) => setSelectedTermId(e.target.value)}
+                className="input"
+              >
+                <option value="">Choose Term</option>
+                {termList.map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name} ({t.session}) {t.isCurrent ? "— Active" : ""}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </>
+      )}
 
       {/* Score Entry Table */}
       {selectedClassId && selectedSubjectId && selectedTermId && (
@@ -282,7 +324,8 @@ export default function ScoreEntryPage() {
 
             <button
               type="button"
-              onClick={handleSave}
+              id="btn-save-scores"
+              onClick={handleSaveScores}
               disabled={saving || scores.length === 0}
               className="btn-primary"
             >

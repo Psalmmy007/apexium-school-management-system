@@ -7,9 +7,12 @@ import {
   hrDepartments,
   terms,
   schoolSettings,
+  subjects,
+  gradingScales,
 } from "../index";
 import { eq, and } from "drizzle-orm";
 import crypto from "crypto";
+import { DEFAULT_WAEC_GRADE_BANDS, type GradeBand } from "./grading";
 
 export interface ProvisionSchoolParams {
   name: string;
@@ -41,6 +44,39 @@ export interface StudentData {
   admissionNumber?: string;
   classId?: string;
 }
+
+export interface TermInput {
+  name: string;
+  start: string | Date;
+  end: string | Date;
+  isCurrent?: boolean;
+}
+
+export interface SubjectInput {
+  name: string;
+  code?: string;
+}
+
+export interface CoreSetupParams {
+  schoolId: string;
+  sessionName?: string;
+  terms?: TermInput[];
+  classNames?: string[];
+  departmentNames?: string[];
+  subjects?: SubjectInput[];
+  gradeBands?: GradeBand[];
+}
+
+export const DEFAULT_SUBJECTS: SubjectInput[] = [
+  { name: "Mathematics", code: "MTH" },
+  { name: "English Language", code: "ENG" },
+  { name: "Basic Science", code: "BSC" },
+  { name: "Physics", code: "PHY" },
+  { name: "Chemistry", code: "CHM" },
+  { name: "Biology", code: "BIO" },
+  { name: "Economics", code: "ECO" },
+  { name: "Civic Education", code: "CIV" },
+];
 
 // ── 1. Create School & Provision Tenant Settings ─────────────
 export async function createSchoolWithTenant(params: ProvisionSchoolParams) {
@@ -113,16 +149,20 @@ export async function provisionFirstAdminUser(schoolId: string, params: AdminUse
 // ── 3. Configure Academic Session and Terms ──────────────────
 export async function configureAcademicSessionAndTerms(
   schoolId: string,
-  sessionName: string = "2025/2026"
+  sessionName: string = "2025/2026",
+  customTerms?: TermInput[]
 ) {
-  const termNames = [
-    { name: "First Term", start: "2025-09-01", end: "2025-12-15", isCurrent: true },
-    { name: "Second Term", start: "2026-01-10", end: "2026-04-10", isCurrent: false },
-    { name: "Third Term", start: "2026-04-25", end: "2026-07-25", isCurrent: false },
-  ];
+  const termDefs: TermInput[] = customTerms && customTerms.length > 0
+    ? customTerms
+    : [
+        { name: "First Term", start: "2025-09-01", end: "2025-12-15", isCurrent: true },
+        { name: "Second Term", start: "2026-01-10", end: "2026-04-10", isCurrent: false },
+        { name: "Third Term", start: "2026-04-25", end: "2026-07-25", isCurrent: false },
+      ];
 
   const createdTerms = [];
-  for (const t of termNames) {
+  for (let i = 0; i < termDefs.length; i++) {
+    const t = termDefs[i];
     const [created] = await db
       .insert(terms)
       .values({
@@ -131,7 +171,7 @@ export async function configureAcademicSessionAndTerms(
         name: t.name,
         startDate: new Date(t.start),
         endDate: new Date(t.end),
-        isCurrent: t.isCurrent,
+        isCurrent: t.isCurrent !== undefined ? t.isCurrent : i === 0,
         status: "active",
       })
       .returning();
@@ -141,7 +181,7 @@ export async function configureAcademicSessionAndTerms(
   return { session: { name: sessionName }, terms: createdTerms };
 }
 
-// ── 4. Configure Default Classes and Departments ─────────────
+// ── 4. Configure Classes and Departments ─────────────────────
 export async function configureClassesAndDepartments(
   schoolId: string,
   classNames: string[] = ["JSS 1", "JSS 2", "JSS 3", "SSS 1", "SSS 2", "SSS 3"],
@@ -149,12 +189,13 @@ export async function configureClassesAndDepartments(
 ) {
   const createdDepts = [];
   for (const deptName of departmentNames) {
+    if (!deptName || !deptName.trim()) continue;
     const [d] = await db
       .insert(hrDepartments)
       .values({
         schoolId,
-        departmentName: deptName,
-        code: deptName.substring(0, 3).toUpperCase(),
+        departmentName: deptName.trim(),
+        code: deptName.trim().substring(0, 3).toUpperCase(),
       })
       .returning();
     createdDepts.push(d);
@@ -163,12 +204,13 @@ export async function configureClassesAndDepartments(
   const createdClasses = [];
   for (let i = 0; i < classNames.length; i++) {
     const className = classNames[i];
+    if (!className || !className.trim()) continue;
     const [c] = await db
       .insert(classes)
       .values({
         schoolId,
-        name: className,
-        code: className.replace(/\s+/g, "").toUpperCase(),
+        name: className.trim(),
+        code: className.trim().replace(/\s+/g, "").toUpperCase(),
         capacity: 40,
         displayOrder: i + 1,
         status: "active",
@@ -178,6 +220,104 @@ export async function configureClassesAndDepartments(
   }
 
   return { classes: createdClasses, departments: createdDepts };
+}
+
+// ── 5. Configure Subjects ────────────────────────────────────
+export async function configureSubjects(
+  schoolId: string,
+  subjectsList: SubjectInput[] = DEFAULT_SUBJECTS
+) {
+  const createdSubjects = [];
+  for (const s of subjectsList) {
+    if (!s.name || !s.name.trim()) continue;
+    const [sub] = await db
+      .insert(subjects)
+      .values({
+        schoolId,
+        name: s.name.trim(),
+        code: s.code?.trim() || s.name.trim().substring(0, 3).toUpperCase(),
+      })
+      .returning();
+    createdSubjects.push(sub);
+  }
+  return createdSubjects;
+}
+
+// ── 6. Configure Grading Scale ───────────────────────────────
+export async function configureGradingScale(
+  schoolId: string,
+  gradeBands: GradeBand[] = DEFAULT_WAEC_GRADE_BANDS
+) {
+  const createdBands = [];
+  for (let i = 0; i < gradeBands.length; i++) {
+    const band = gradeBands[i];
+    const [created] = await db
+      .insert(gradingScales)
+      .values({
+        schoolId,
+        name: "WAEC Grade Scale",
+        grade: band.grade,
+        minScore: band.minScore,
+        maxScore: band.maxScore,
+        remark: band.remark,
+        sortOrder: i + 1,
+      })
+      .returning();
+    createdBands.push(created);
+  }
+  return createdBands;
+}
+
+// ── 7. Master Core Setup Execution ───────────────────────────
+export async function executeCoreSchoolSetup(params: CoreSetupParams) {
+  const { schoolId } = params;
+
+  // 1. Session & Terms
+  const sessionResult = await configureAcademicSessionAndTerms(
+    schoolId,
+    params.sessionName || "2025/2026",
+    params.terms
+  );
+
+  // 2. Classes & Departments
+  const classNames = params.classNames && params.classNames.length > 0
+    ? params.classNames
+    : ["JSS 1", "JSS 2", "JSS 3", "SSS 1", "SSS 2", "SSS 3"];
+  const departmentNames = params.departmentNames && params.departmentNames.length > 0
+    ? params.departmentNames
+    : ["Sciences", "Arts & Humanities", "Commercial"];
+
+  const classResult = await configureClassesAndDepartments(
+    schoolId,
+    classNames,
+    departmentNames
+  );
+
+  // 3. Subjects
+  const subjectsResult = await configureSubjects(
+    schoolId,
+    params.subjects && params.subjects.length > 0 ? params.subjects : DEFAULT_SUBJECTS
+  );
+
+  // 4. Grading Scales
+  const gradingResult = await configureGradingScale(
+    schoolId,
+    params.gradeBands && params.gradeBands.length > 0 ? params.gradeBands : DEFAULT_WAEC_GRADE_BANDS
+  );
+
+  // 5. Complete Onboarding & Activate Modules
+  await completeSetupWizardOnboarding(schoolId);
+
+  return {
+    success: true,
+    session: sessionResult.session,
+    termsCount: sessionResult.terms.length,
+    classesCount: classResult.classes.length,
+    departmentsCount: classResult.departments.length,
+    subjectsCount: subjectsResult.length,
+    gradingBandsCount: gradingResult.length,
+    onboardingStatus: "Completed",
+  };
 }
 
 // ── 5. Provision Teachers & Staff ────────────────────────────

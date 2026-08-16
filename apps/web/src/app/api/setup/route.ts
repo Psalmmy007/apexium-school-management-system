@@ -11,6 +11,7 @@ import {
   createAcademicSection,
   createClass,
   createStream,
+  executeCoreSchoolSetup,
 } from "@apexium/db";
 import { eq } from "drizzle-orm";
 
@@ -61,7 +62,17 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { template = "standard_k12", sessionName = "2025/2026", schoolName, address, phone } = body;
+    const {
+      sessionName = "2025/2026",
+      schoolName,
+      address,
+      phone,
+      terms: customTerms,
+      classNames,
+      departmentNames,
+      subjects: customSubjects,
+      gradeBands,
+    } = body;
 
     let activeSchoolId = user.schoolId;
     if (!activeSchoolId || !isValidUUID(activeSchoolId)) {
@@ -86,54 +97,22 @@ export async function POST(request: NextRequest) {
         .where(eq(schools.id, activeSchoolId));
     }
 
-    // 2. Initialize Terms if none exist
-    const existingTerms = await db.select().from(terms).where(eq(terms.schoolId, activeSchoolId));
-    if (existingTerms.length === 0) {
-      await db.insert(terms).values([
-        { schoolId: activeSchoolId, name: "First Term", session: sessionName, isCurrent: true, status: "active" },
-        { schoolId: activeSchoolId, name: "Second Term", session: sessionName, isCurrent: false, status: "active" },
-        { schoolId: activeSchoolId, name: "Third Term", session: sessionName, isCurrent: false, status: "active" },
-      ]);
-    }
+    const result = await executeCoreSchoolSetup({
+      schoolId: activeSchoolId,
+      sessionName,
+      terms: customTerms,
+      classNames,
+      departmentNames,
+      subjects: customSubjects,
+      gradeBands,
+    });
 
-    // 3. Batch Create Academic Sections, Classes, Arms, and Subjects using K-12 Standard Template
-    if (template === "standard_k12") {
-      const existingSections = await db.select().from(academicSections).where(eq(academicSections.schoolId, activeSchoolId));
-      if (existingSections.length === 0) {
-        // Sections
-        const jss = await createAcademicSection(activeSchoolId, { name: "Junior Secondary", code: "JSS", displayOrder: 1 });
-        const sss = await createAcademicSection(activeSchoolId, { name: "Senior Secondary", code: "SSS", displayOrder: 2 });
-
-        // JSS Classes
-        const jss1 = await createClass(activeSchoolId, { sectionId: jss.id, name: "JSS 1", code: "JSS1", capacity: 40, displayOrder: 1 });
-        const jss2 = await createClass(activeSchoolId, { sectionId: jss.id, name: "JSS 2", code: "JSS2", capacity: 40, displayOrder: 2 });
-
-        // SSS Classes
-        const ss1 = await createClass(activeSchoolId, { sectionId: sss.id, name: "SS 1", code: "SS1", capacity: 40, displayOrder: 3 });
-        const ss2 = await createClass(activeSchoolId, { sectionId: sss.id, name: "SS 2", code: "SS2", capacity: 40, displayOrder: 4 });
-
-        // Streams/Arms
-        await createStream(activeSchoolId, { classId: jss1.id, name: "Gold Stream", capacity: 20, displayOrder: 1 });
-        await createStream(activeSchoolId, { classId: jss1.id, name: "Silver Stream", capacity: 20, displayOrder: 2 });
-        await createStream(activeSchoolId, { classId: ss1.id, name: "Science Stream", capacity: 20, displayOrder: 1 });
-        await createStream(activeSchoolId, { classId: ss1.id, name: "Arts Stream", capacity: 20, displayOrder: 2 });
-      }
-
-      // Default Subjects
-      const existingSubjects = await db.select().from(subjects).where(eq(subjects.schoolId, activeSchoolId));
-      if (existingSubjects.length === 0) {
-        await db.insert(subjects).values([
-          { schoolId: activeSchoolId, name: "Mathematics", code: "MTH" },
-          { schoolId: activeSchoolId, name: "English Language", code: "ENG" },
-          { schoolId: activeSchoolId, name: "Basic Science", code: "BSC" },
-          { schoolId: activeSchoolId, name: "Physics", code: "PHY" },
-          { schoolId: activeSchoolId, name: "Chemistry", code: "CHM" },
-          { schoolId: activeSchoolId, name: "Biology", code: "BIO" },
-        ]);
-      }
-    }
-
-    return NextResponse.json({ success: true, message: "First-time school setup completed successfully!" });
+    return NextResponse.json({
+      success: true,
+      message: "First-time school setup completed successfully!",
+      data: result,
+      summary: result,
+    });
   } catch (error: any) {
     console.error("Setup API Error:", error);
     let message = error.message || "Failed running school setup";

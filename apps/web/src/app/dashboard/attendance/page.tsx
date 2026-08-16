@@ -71,23 +71,13 @@ export default function MarkAttendancePage() {
           setSectionList(json.data.sections || []);
           setSelectedClassId(json.data.classes[0].id);
         } else {
-          const fallbackClasses = [
-            { id: "cls-ss2", name: "SS 2 Science" },
-            { id: "cls-js3", name: "JS 3 Diamond" },
-            { id: "cls-ss1", name: "SS 1 Commercial" },
-          ];
-          setClassList(fallbackClasses);
-          setSelectedClassId("cls-ss2");
+          setClassList([]);
+          setSelectedClassId("");
         }
       } catch (err) {
         console.warn("Offline or failed loading classes", err);
-        const fallbackClasses = [
-          { id: "cls-ss2", name: "SS 2 Science" },
-          { id: "cls-js3", name: "JS 3 Diamond" },
-          { id: "cls-ss1", name: "SS 1 Commercial" },
-        ];
-        setClassList(fallbackClasses);
-        setSelectedClassId("cls-ss2");
+        setClassList([]);
+        setSelectedClassId("");
       }
     }
     loadClasses();
@@ -96,7 +86,11 @@ export default function MarkAttendancePage() {
   // Fetch students for selected class
   useEffect(() => {
     async function loadStudents() {
-      if (!selectedClassId) return;
+      if (!selectedClassId) {
+        setStudentList([]);
+        setAttendanceMap({});
+        return;
+      }
       try {
         const res = await fetch(`/api/students?classId=${selectedClassId}&pageSize=100`);
         const json = await res.json();
@@ -110,46 +104,13 @@ export default function MarkAttendancePage() {
           });
           setAttendanceMap(initialMap);
         } else {
-          const fallbackStudents: StudentItem[] = [
-            {
-              id: "st-01",
-              admissionNumber: "ADM-2026-001",
-              firstName: "Samuel",
-              lastName: "Okonkwo",
-              middleName: "Chukwudi",
-            },
-            {
-              id: "st-02",
-              admissionNumber: "ADM-2026-002",
-              firstName: "Amina",
-              lastName: "Bello",
-              middleName: "Zainab",
-            },
-            {
-              id: "st-03",
-              admissionNumber: "ADM-2026-003",
-              firstName: "Chidi",
-              lastName: "Adeyemi",
-              middleName: "Emmanuel",
-            },
-            {
-              id: "st-04",
-              admissionNumber: "ADM-2026-004",
-              firstName: "Fatima",
-              lastName: "Dangote",
-              middleName: "Maryam",
-            },
-          ];
-          setStudentList(fallbackStudents);
-          setAttendanceMap({
-            "st-01": { status: "present", remarks: "" },
-            "st-02": { status: "present", remarks: "" },
-            "st-03": { status: "late", remarks: "Traffic delay" },
-            "st-04": { status: "present", remarks: "" },
-          });
+          setStudentList([]);
+          setAttendanceMap({});
         }
       } catch (err) {
-        console.warn("Failed loading class students", err);
+        console.warn("Offline or failed loading students", err);
+        setStudentList([]);
+        setAttendanceMap({});
       }
     }
     loadStudents();
@@ -269,161 +230,197 @@ export default function MarkAttendancePage() {
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="card grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div>
-          <label className="label">Select Class *</label>
-          <select
-            id="select-class"
-            value={selectedClassId}
-            onChange={(e) => {
-              setSelectedClassId(e.target.value);
-              setSelectedSectionId("");
-            }}
-            className="input"
-          >
-            {classList.map((cls) => (
-              <option key={cls.id} value={cls.id}>
-                {cls.name}
-              </option>
-            ))}
-          </select>
+      {classList.length === 0 ? (
+        <div className="card p-8 text-center space-y-3 bg-slate-900 border border-slate-800 rounded-2xl">
+          <p className="text-sm font-semibold text-slate-200">
+            No classes found — complete School Setup first
+          </p>
+          <p className="text-xs text-slate-400 max-w-md mx-auto">
+            Your school institution needs to have classes configured before taking attendance.
+          </p>
+          <div className="pt-2">
+            <a
+              href="/dashboard/setup"
+              id="btn-go-to-setup"
+              className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition shadow-sm"
+            >
+              Go to School Setup Wizard →
+            </a>
+          </div>
         </div>
-
-        <div>
-          <label className="label">Section / Arm</label>
-          <select
-            id="select-section"
-            value={selectedSectionId}
-            onChange={(e) => setSelectedSectionId(e.target.value)}
-            className="input"
-          >
-            <option value="">All Sections</option>
-            {availableSections.map((sec) => (
-              <option key={sec.id} value={sec.id}>
-                {sec.name}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div>
-          <label className="label">Date *</label>
-          <input
-            id="attendance-date"
-            type="date"
-            value={selectedDate}
-            onChange={(e) => setSelectedDate(e.target.value)}
-            className="input"
-          />
-        </div>
-      </div>
-
-      {/* Roster & Quick Actions */}
-      {studentList.length > 0 && (
-        <div className="card space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
-            <span className="text-sm font-semibold text-slate-700">
-              Class Roster ({studentList.length} Students)
-            </span>
-            <div className="flex items-center gap-2">
-              <span className="text-xs text-slate-400 mr-1">Quick Mark:</span>
-              <button
-                type="button"
-                onClick={() => handleMarkAll("present")}
-                className="btn-secondary btn-sm"
+      ) : (
+        <>
+          {/* Filter Bar */}
+          <div className="card grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="label">Select Class *</label>
+              <select
+                id="select-class"
+                value={selectedClassId}
+                onChange={(e) => {
+                  setSelectedClassId(e.target.value);
+                  setSelectedSectionId("");
+                }}
+                className="input"
               >
-                All Present
-              </button>
-              <button
-                type="button"
-                onClick={() => handleMarkAll("absent")}
-                className="btn-ghost btn-sm text-red-600 hover:bg-red-50"
+                {classList.map((cls) => (
+                  <option key={cls.id} value={cls.id}>
+                    {cls.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="label">Section / Arm</label>
+              <select
+                id="select-section"
+                value={selectedSectionId}
+                onChange={(e) => setSelectedSectionId(e.target.value)}
+                className="input"
               >
-                All Absent
-              </button>
+                <option value="">All Sections</option>
+                {availableSections.map((sec) => (
+                  <option key={sec.id} value={sec.id}>
+                    {sec.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="label">Date *</label>
+              <input
+                id="attendance-date"
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="input"
+              />
             </div>
           </div>
 
-          {/* Student List Table */}
-          <div className="table-container">
-            <table className="table">
-              <thead>
-                <tr>
-                  <th>Student Name</th>
-                  <th>Admission No</th>
-                  <th className="text-center">Attendance Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {studentList.map((student) => {
-                  const currentStatus = attendanceMap[student.id]?.status || "present";
-                  return (
-                    <tr key={student.id} id={`student-attendance-row-${student.id}`}>
-                      <td>
-                        <div className="flex items-center gap-3">
-                          <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center font-bold text-indigo-700 text-xs flex-shrink-0">
-                            {student.firstName.charAt(0)}
-                            {student.lastName.charAt(0)}
-                          </div>
-                          <span className="font-semibold text-slate-900">
-                            {student.lastName}, {student.firstName}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="font-mono text-xs text-slate-500">
-                        {student.admissionNumber}
-                      </td>
-                      <td className="text-center">
-                        <div className="inline-flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
-                          {(["present", "late", "absent", "excused"] as AttendanceStatus[]).map(
-                            (st) => (
-                              <button
-                                key={st}
-                                type="button"
-                                onClick={() => handleStatusChange(student.id, st)}
-                                className={`px-3 py-1 rounded-lg text-xs font-semibold capitalize transition-all ${
-                                  currentStatus === st
-                                    ? st === "present"
-                                      ? "bg-emerald-600 text-white shadow-sm"
-                                      : st === "late"
-                                      ? "bg-amber-500 text-white shadow-sm"
-                                      : st === "absent"
-                                      ? "bg-red-600 text-white shadow-sm"
-                                      : "bg-sky-600 text-white shadow-sm"
-                                    : "text-slate-600 hover:text-slate-900"
-                                }`}
-                              >
-                                {st}
-                              </button>
-                            )
-                          )}
-                        </div>
-                      </td>
+          {/* Roster or Empty State */}
+          {studentList.length === 0 ? (
+            <div className="card p-6 text-center space-y-2 bg-slate-900 border border-slate-800 rounded-2xl">
+              <p className="text-sm font-semibold text-slate-200">No students enrolled in this class yet</p>
+              <p className="text-xs text-slate-400">Add or register students to begin recording class attendance.</p>
+              <div className="pt-2">
+                <a
+                  href="/dashboard/students/new"
+                  id="btn-add-student"
+                  className="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition shadow-sm"
+                >
+                  + Register Student
+                </a>
+              </div>
+            </div>
+          ) : (
+            <div className="card space-y-4">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                <span className="text-sm font-semibold text-slate-700">
+                  Class Roster ({studentList.length} Students)
+                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-400 mr-1">Quick Mark:</span>
+                  <button
+                    type="button"
+                    onClick={() => handleMarkAll("present")}
+                    className="btn-secondary btn-sm"
+                  >
+                    All Present
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleMarkAll("absent")}
+                    className="btn-ghost btn-sm text-red-600 hover:bg-red-50"
+                  >
+                    All Absent
+                  </button>
+                </div>
+              </div>
+
+              {/* Student List Table */}
+              <div className="table-container">
+                <table className="table">
+                  <thead>
+                    <tr>
+                      <th>Student Name</th>
+                      <th>Admission No</th>
+                      <th className="text-center">Attendance Status</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
+                  </thead>
+                  <tbody>
+                    {studentList.map((student) => {
+                      const currentStatus = attendanceMap[student.id]?.status || "present";
+                      return (
+                        <tr key={student.id} id={`student-attendance-row-${student.id}`}>
+                          <td>
+                            <div className="flex items-center gap-3">
+                              <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center font-bold text-indigo-700 text-xs flex-shrink-0">
+                                {student.firstName.charAt(0)}
+                                {student.lastName.charAt(0)}
+                              </div>
+                              <span className="font-semibold text-slate-900">
+                                {student.lastName}, {student.firstName}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="font-mono text-xs text-slate-500">
+                            {student.admissionNumber}
+                          </td>
+                          <td className="text-center">
+                            <div className="inline-flex items-center gap-1 bg-slate-100 p-1 rounded-xl">
+                              {(["present", "late", "absent", "excused"] as AttendanceStatus[]).map(
+                                (st) => (
+                                  <button
+                                    key={st}
+                                    type="button"
+                                    onClick={() => handleStatusChange(student.id, st)}
+                                    className={`px-3 py-1 rounded-lg text-xs font-semibold capitalize transition-all ${
+                                      currentStatus === st
+                                        ? st === "present"
+                                          ? "bg-emerald-600 text-white shadow-sm"
+                                          : st === "late"
+                                          ? "bg-amber-500 text-white shadow-sm"
+                                          : st === "absent"
+                                          ? "bg-red-600 text-white shadow-sm"
+                                          : "bg-sky-600 text-white shadow-sm"
+                                        : "text-slate-600 hover:text-slate-900"
+                                    }`}
+                                  >
+                                    {st}
+                                  </button>
+                                )
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
 
-          {/* Submit Footer */}
-          <div className="flex items-center justify-between border-t border-slate-100 pt-4">
-            <span className="text-xs text-slate-500">
-              {syncStatus || "Ready to save attendance"}
-            </span>
+              {/* Submit Footer */}
+              <div className="flex items-center justify-between border-t border-slate-100 pt-4">
+                <span className="text-xs text-slate-500">
+                  {syncStatus || "Ready to save attendance"}
+                </span>
 
-            <button
-              id="save-attendance-btn"
-              type="button"
-              onClick={handleSaveAttendance}
-              disabled={saving}
-              className="btn-primary"
-            >
-              {saving ? "Saving Register..." : "Save Attendance Register"}
-            </button>
-          </div>
-        </div>
+                <button
+                  id="save-attendance-btn"
+                  type="button"
+                  onClick={handleSaveAttendance}
+                  disabled={saving}
+                  className="btn-primary"
+                >
+                  {saving ? "Saving Register..." : "Save Attendance Register"}
+                </button>
+              </div>
+            </div>
+          )}
+        </>
       )}
     </div>
   );

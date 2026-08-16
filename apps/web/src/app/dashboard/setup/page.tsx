@@ -45,7 +45,7 @@ export default async function SetupPage() {
           School Onboarding & Setup Wizard
         </h1>
         <p className="text-sm text-slate-400 mt-1">
-          Create and configure your school institution, setup academic sessions, terms, classes, departments, and activate all ERP modules.
+          Create and configure your school institution, setup academic sessions, terms, classes, departments, subjects, grading scale, and activate all ERP modules.
         </p>
       </div>
 
