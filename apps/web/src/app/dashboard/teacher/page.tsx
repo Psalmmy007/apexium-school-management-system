@@ -181,7 +181,37 @@ export default function TeacherHomePage() {
           Teacher Workspace Tools
         </h2>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Link
+            href="/dashboard/attendance"
+            className="p-5 bg-slate-950 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 rounded-xl transition-all group"
+          >
+            <div className="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-emerald-400 mb-3">
+              <CalendarCheck className="w-4 h-4" />
+            </div>
+            <h3 className="font-bold text-white group-hover:text-emerald-300 transition-colors">
+              Class Attendance
+            </h3>
+            <p className="text-xs text-slate-400 mt-1">
+              Mark and sync daily roll-call attendance for your assigned classes.
+            </p>
+          </Link>
+
+          <Link
+            href="/dashboard/academics/scores"
+            className="p-5 bg-slate-950 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 rounded-xl transition-all group"
+          >
+            <div className="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-amber-400 mb-3">
+              <FileEdit className="w-4 h-4" />
+            </div>
+            <h3 className="font-bold text-white group-hover:text-amber-300 transition-colors">
+              Enter Fast Scores
+            </h3>
+            <p className="text-xs text-slate-400 mt-1">
+              Input continuous assessment (CA) and exam scores with live grading.
+            </p>
+          </Link>
+
           <Link
             href="/dashboard/academics/lessons"
             className="p-5 bg-slate-950 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 rounded-xl transition-all group"
@@ -190,10 +220,10 @@ export default function TeacherHomePage() {
               <BookMarked className="w-4 h-4" />
             </div>
             <h3 className="font-bold text-white group-hover:text-indigo-300 transition-colors">
-              Lesson Notes & Curriculum
+              Lesson Notes
             </h3>
             <p className="text-xs text-slate-400 mt-1">
-              Publish scheme-of-work topics with low-bandwidth video and audio notes.
+              Publish scheme-of-work topics with lightweight notes and audio.
             </p>
           </Link>
 
@@ -201,29 +231,14 @@ export default function TeacherHomePage() {
             href="/dashboard/academics/assignments"
             className="p-5 bg-slate-950 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 rounded-xl transition-all group"
           >
-            <div className="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-indigo-400 mb-3">
-              <FileEdit className="w-4 h-4" />
+            <div className="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-sky-400 mb-3">
+              <BookOpen className="w-4 h-4" />
             </div>
-            <h3 className="font-bold text-white group-hover:text-indigo-300 transition-colors">
-              Assignments & Grading
+            <h3 className="font-bold text-white group-hover:text-sky-300 transition-colors">
+              Assignments & LMS
             </h3>
             <p className="text-xs text-slate-400 mt-1">
-              Create homework assignments, review student submissions, and sync CA grades.
-            </p>
-          </Link>
-
-          <Link
-            href="/dashboard/teacher/messages"
-            className="p-5 bg-slate-950 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 rounded-xl transition-all group"
-          >
-            <div className="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-indigo-400 mb-3">
-              <MessageSquare className="w-4 h-4" />
-            </div>
-            <h3 className="font-bold text-white group-hover:text-indigo-300 transition-colors">
-              Parent & Admin Messaging
-            </h3>
-            <p className="text-xs text-slate-400 mt-1">
-              Send secure threaded messages to verified student guardians.
+              Create homework assignments, review submissions, and sync grades.
             </p>
           </Link>
         </div>

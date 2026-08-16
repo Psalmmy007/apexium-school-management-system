@@ -38,7 +38,7 @@ interface DashboardData {
 
 export default function StudentDashboardPage() {
   const [data, setData] = useState<DashboardData | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     async function loadDashboard() {
@@ -141,24 +141,54 @@ export default function StudentDashboardPage() {
                 </div>
                 <div>
                   <p className="text-sm font-bold text-white group-hover:text-emerald-300 transition-colors">
-                    Take CBT Exam
+                    Take Available CBT Exam
                   </p>
                   <p className="text-xs text-slate-400">Timed computer assessments</p>
                 </div>
               </Link>
 
               <Link
-                href="/dashboard/student/timetable"
+                href="/dashboard/student/lms"
                 className="p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 shadow-md transition-all group flex items-center gap-4"
               >
                 <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-indigo-400 shrink-0">
-                  <CalendarCheck className="w-5 h-5" />
+                  <BookOpen className="w-5 h-5" />
                 </div>
                 <div>
                   <p className="text-sm font-bold text-white group-hover:text-indigo-300 transition-colors">
-                    Class Schedule
+                    Submit Assignment (LMS)
                   </p>
-                  <p className="text-xs text-slate-400">Weekly timetable & periods</p>
+                  <p className="text-xs text-slate-400">Review homework & submit work</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/dashboard/student/academics"
+                className="p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 shadow-md transition-all group flex items-center gap-4"
+              >
+                <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-amber-400 shrink-0">
+                  <Award className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white group-hover:text-amber-300 transition-colors">
+                    Grades & Report Card
+                  </p>
+                  <p className="text-xs text-slate-400">Term grades & published reports</p>
+                </div>
+              </Link>
+
+              <Link
+                href="/dashboard/student/attendance"
+                className="p-5 rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 shadow-md transition-all group flex items-center gap-4"
+              >
+                <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-sky-400 shrink-0">
+                  <CalendarCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-white group-hover:text-sky-300 transition-colors">
+                    Attendance History
+                  </p>
+                  <p className="text-xs text-slate-400">Term roll-call & presence record</p>
                 </div>
               </Link>
             </div>

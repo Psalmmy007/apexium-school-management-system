@@ -14,20 +14,31 @@ import {
 } from "lucide-react";
 import { tokens } from "@/lib/design-system/tokens";
 
+import StudentDashboardPage from "./student/page";
+import ParentDashboardPage from "./parent/page";
+import TeacherHomePage from "./teacher/page";
+
 export const metadata: Metadata = {
-  title: "Admin Dashboard",
+  title: "Dashboard",
 };
 
 export default async function DashboardPage() {
   const user = await getSessionUser();
 
-  const roleGreetings: Record<string, string> = {
-    admin: "Here is an operational overview of your school today.",
-    teacher: "Here is a summary of your classes and students.",
-    parent: "Here is a summary for your registered children.",
-    student: "Here is your academic overview and schedule.",
-  };
+  // Role-Specific Homepage Delegation
+  if (user?.role === "student") {
+    return <StudentDashboardPage />;
+  }
 
+  if (user?.role === "parent") {
+    return <ParentDashboardPage />;
+  }
+
+  if (user?.role === "teacher") {
+    return <TeacherHomePage />;
+  }
+
+  // School Administrator Operational Overview
   const stats = [
     {
       id: "stat-students",
@@ -68,7 +79,7 @@ export default async function DashboardPage() {
             Welcome back, {user?.firstName ?? "Administrator"}
           </h1>
           <p className="text-slate-400 text-sm mt-1">
-            {roleGreetings[user?.role ?? "admin"]}
+            Here is an operational overview of your school today.
           </p>
         </div>
         <div className="inline-flex items-center gap-2 text-xs font-medium text-slate-400 bg-slate-900 rounded-xl border border-slate-800 px-3.5 py-2">
