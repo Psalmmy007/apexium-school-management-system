@@ -7,18 +7,26 @@ import {
   type IncidentSeverity,
   type IncidentStatus,
 } from "@apexium/db";
-import { getSessionUser } from "@/lib/auth/session";
+import { getSessionUser, verifyPlatformOperator } from "@/lib/auth/session";
 
 /**
  * GET /api/operations/incidents
  * List all incidents, optionally filtered by status or severity.
- * Admin only.
+ * Strictly restricted to verified platform_operator role.
  */
 export async function GET(req: Request) {
   try {
     const user = await getSessionUser();
-    if (!user || user.role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const isOperator = await verifyPlatformOperator(user);
+    if (!isOperator || user.role !== "platform_operator") {
+      return NextResponse.json(
+        { error: "Forbidden: Platform Operator authorization required" },
+        { status: 403 }
+      );
     }
 
     const { searchParams } = new URL(req.url);
@@ -41,13 +49,21 @@ export async function GET(req: Request) {
 
 /**
  * POST /api/operations/incidents
- * Create a new incident. Admin only.
+ * Create a new incident. Strictly restricted to verified platform_operator role.
  */
 export async function POST(req: Request) {
   try {
     const user = await getSessionUser();
-    if (!user || user.role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const isOperator = await verifyPlatformOperator(user);
+    if (!isOperator || user.role !== "platform_operator") {
+      return NextResponse.json(
+        { error: "Forbidden: Platform Operator authorization required" },
+        { status: 403 }
+      );
     }
 
     const body = await req.json();
@@ -85,13 +101,21 @@ export async function POST(req: Request) {
 /**
  * PATCH /api/operations/incidents
  * Update an existing incident with a status change and message.
- * Admin only.
+ * Strictly restricted to verified platform_operator role.
  */
 export async function PATCH(req: Request) {
   try {
     const user = await getSessionUser();
-    if (!user || user.role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const isOperator = await verifyPlatformOperator(user);
+    if (!isOperator || user.role !== "platform_operator") {
+      return NextResponse.json(
+        { error: "Forbidden: Platform Operator authorization required" },
+        { status: 403 }
+      );
     }
 
     const body = await req.json();

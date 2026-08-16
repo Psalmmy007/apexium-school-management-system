@@ -32,6 +32,8 @@ import { GET as getSaasAnalytics } from "./api/saas/analytics/route";
 import { GET as getDiagnostics, POST as postDiagnostics } from "./api/operations/diagnostics/route";
 import { GET as getBenchmark, POST as postBenchmark } from "./api/performance/benchmark/route";
 import { GET as getAdminLicenses } from "./api/admin/licenses/route";
+import { GET as getIncidents, POST as postIncidents } from "./api/operations/incidents/route";
+import { POST as postMaintenance } from "./api/operations/maintenance/route";
 import { DashboardShell } from "@/components/DashboardShell";
 import type { SessionUser } from "@apexium/types";
 
@@ -201,6 +203,31 @@ describe("Platform Role Separation & Server-Side Security Lockdown", () => {
       const json = await res.json();
       expect(json.error).toContain("Platform Operator");
     });
+
+    it("REJECTS regular school admin from GET /api/operations/incidents with HTTP 403 Forbidden", async () => {
+      vi.mocked(getSessionUser).mockResolvedValue(schoolAdminUser);
+
+      const req = new Request("http://localhost:3000/api/operations/incidents");
+      const res = await getIncidents(req);
+
+      expect(res.status).toBe(403);
+      const json = await res.json();
+      expect(json.error).toContain("Platform Operator");
+    });
+
+    it("REJECTS regular school admin from POST /api/operations/maintenance with HTTP 403 Forbidden", async () => {
+      vi.mocked(getSessionUser).mockResolvedValue(schoolAdminUser);
+
+      const req = new Request("http://localhost:3000/api/operations/maintenance", {
+        method: "POST",
+        body: JSON.stringify({ action: "enable", message: "Scheduled maintenance" }),
+      });
+      const res = await postMaintenance(req);
+
+      expect(res.status).toBe(403);
+      const json = await res.json();
+      expect(json.error).toContain("Platform Operator");
+    });
   });
 
   describe("2. Rejection of Unauthenticated Requests", () => {
@@ -259,6 +286,17 @@ describe("Platform Role Separation & Server-Side Security Lockdown", () => {
       const json = await res.json();
       expect(json.success).toBe(true);
       expect(json.data).toBeDefined();
+    });
+
+    it("ALLOWS verified platform operator access to GET /api/operations/incidents with HTTP 200 OK", async () => {
+      vi.mocked(getSessionUser).mockResolvedValue(platformOperatorUser);
+
+      const req = new Request("http://localhost:3000/api/operations/incidents");
+      const res = await getIncidents(req);
+
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.incidents).toBeDefined();
     });
   });
 

@@ -4,7 +4,7 @@ import {
   enableMaintenanceMode,
   disableMaintenanceMode,
 } from "@apexium/db";
-import { getSessionUser } from "@/lib/auth/session";
+import { getSessionUser, verifyPlatformOperator } from "@/lib/auth/session";
 
 /**
  * GET /api/operations/maintenance
@@ -17,14 +17,22 @@ export async function GET(): Promise<NextResponse> {
 
 /**
  * POST /api/operations/maintenance
- * Enable or disable maintenance mode. Admin only.
+ * Enable or disable maintenance mode. Strictly restricted to verified platform_operator role.
  * Body: { action: "enable" | "disable", message?: string, estimatedRestoreAt?: string }
  */
 export async function POST(req: Request): Promise<NextResponse> {
   try {
     const user = await getSessionUser();
-    if (!user || user.role !== "admin") {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    if (!user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const isOperator = await verifyPlatformOperator(user);
+    if (!isOperator || user.role !== "platform_operator") {
+      return NextResponse.json(
+        { error: "Forbidden: Platform Operator authorization required" },
+        { status: 403 }
+      );
     }
 
     const body = await req.json();
