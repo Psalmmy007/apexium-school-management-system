@@ -305,7 +305,13 @@ export async function getParentChildren(schoolId: string, parentId: string) {
     .select({ studentId: studentGuardians.studentId })
     .from(studentGuardians)
     .where(
-      and(eq(studentGuardians.schoolId, schoolId), eq(studentGuardians.parentId, parentId))
+      and(
+        eq(studentGuardians.schoolId, schoolId),
+        or(
+          eq(studentGuardians.parentId, parentId),
+          eq(studentGuardians.guardianId, parentId)
+        )
+      )
     );
 
   if (links.length === 0) return [];

@@ -66,7 +66,8 @@ export async function linkStudentGuardian(
   studentId: string,
   guardianId: string,
   relationship: string = "Father",
-  isPrimary: boolean = true
+  isPrimary: boolean = true,
+  parentId?: string
 ) {
   // Check if already linked
   const [existingLink] = await db
@@ -83,7 +84,7 @@ export async function linkStudentGuardian(
   if (existingLink) {
     const [updated] = await db
       .update(studentGuardians)
-      .set({ relationship, isPrimary, updatedAt: new Date() })
+      .set({ relationship, isPrimary, parentId: parentId || existingLink.parentId, updatedAt: new Date() })
       .where(eq(studentGuardians.id, existingLink.id))
       .returning();
     return updated;
@@ -95,6 +96,7 @@ export async function linkStudentGuardian(
       schoolId,
       studentId,
       guardianId,
+      parentId: parentId || null,
       relationship,
       isPrimary,
     })

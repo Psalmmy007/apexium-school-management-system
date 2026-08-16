@@ -9,12 +9,14 @@ import {
   students,
   guardians,
   studentGuardians,
+  users,
   schoolSettings,
   createSchoolWithTenant,
   executeCoreSchoolSetup,
   createGuardian,
   linkStudentGuardian,
   getStudentGuardians,
+  getParentChildren,
 } from "../index";
 import { eq, and } from "drizzle-orm";
 import crypto from "crypto";
@@ -155,5 +157,77 @@ describe("Milestone 40: Setup Wizard Restructure & Dependent-Page Integrity", ()
     expect(linkedGuardians.length).toBe(1);
     expect(linkedGuardians[0].firstName).toBe("Emeka");
     expect(linkedGuardians[0].relationship).toBe("Father");
+  });
+
+  it("3. Full chain end-to-end: student registered -> assigned class from setup -> linked to parent -> Parent Portal retrieves student record", async () => {
+    // 1. Core setup creates classes
+    await executeCoreSchoolSetup({
+      schoolId,
+      sessionName: "2025/2026",
+      classNames: ["SSS 3 Science", "SSS 3 Commercial"],
+    });
+
+    const [sss3Class] = await db
+      .select()
+      .from(classes)
+      .where(and(eq(classes.schoolId, schoolId), eq(classes.name, "SSS 3 Science")));
+    expect(sss3Class).toBeDefined();
+
+    // 2. Register real student into SSS 3 Science
+    const studentId = crypto.randomUUID();
+    const [realStudent] = await db
+      .insert(students)
+      .values({
+        id: studentId,
+        schoolId,
+        admissionNumber: `ADM-2026-${Date.now()}`,
+        firstName: "Tunde",
+        lastName: "Bakare",
+        gender: "male",
+        classId: sss3Class.id,
+        admissionDate: new Date(),
+        status: "active",
+      })
+      .returning();
+
+    // 3. Create a parent user account & guardian record
+    const parentUserId = crypto.randomUUID();
+    await db.insert(users).values({
+      id: parentUserId,
+      schoolId,
+      email: `parent-m40-${Date.now()}@test.edu`,
+      role: "parent",
+      firstName: "Funmilayo",
+      lastName: "Bakare",
+    });
+
+    const guardian = await createGuardian(schoolId, {
+      firstName: "Funmilayo",
+      lastName: "Bakare",
+      phone: `+23480${Math.floor(10000000 + Math.random() * 90000000)}`,
+      email: `funmi-${Date.now()}@example.com`,
+      relationship: "Mother",
+    });
+
+    // 4. Link student to guardian with parentId
+    await linkStudentGuardian(schoolId, realStudent.id, guardian.id, "Mother", true, parentUserId);
+
+    // 5. Parent queries Parent Portal for their children
+    const parentChildrenByUserId = await getParentChildren(schoolId, parentUserId);
+    expect(parentChildrenByUserId.length).toBe(1);
+    expect(parentChildrenByUserId[0].id).toBe(realStudent.id);
+    expect(parentChildrenByUserId[0].firstName).toBe("Tunde");
+    expect(parentChildrenByUserId[0].lastName).toBe("Bakare");
+    expect(parentChildrenByUserId[0].classId).toBe(sss3Class.id);
+
+    // Querying by guardian record ID also resolves the linked student
+    const parentChildrenByGuardianId = await getParentChildren(schoolId, guardian.id);
+    expect(parentChildrenByGuardianId.length).toBe(1);
+    expect(parentChildrenByGuardianId[0].id).toBe(realStudent.id);
+
+    // 6. Confirm an unrelated parent sees ZERO children
+    const unrelatedParentId = crypto.randomUUID();
+    const unrelatedChildren = await getParentChildren(schoolId, unrelatedParentId);
+    expect(unrelatedChildren.length).toBe(0);
   });
 });
