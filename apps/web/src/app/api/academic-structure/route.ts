@@ -12,7 +12,7 @@ import {
 
 export async function GET() {
   const user = await getSessionUser();
-  if (!user || (user.role !== "admin" && user.role !== "teacher")) {
+  if (!user || !user.schoolId || (user.role !== "admin" && user.role !== "teacher")) {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
@@ -26,7 +26,7 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   const user = await getSessionUser();
-  if (!user || user.role !== "admin") {
+  if (!user || !user.schoolId || user.role !== "admin") {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
   }
 
