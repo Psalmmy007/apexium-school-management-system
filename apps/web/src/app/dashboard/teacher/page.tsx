@@ -13,6 +13,7 @@ import {
   BookMarked,
   ArrowRight,
   GraduationCap,
+  FileText,
 } from "lucide-react";
 import { tokens } from "@/lib/design-system/tokens";
 
@@ -239,6 +240,21 @@ export default function TeacherHomePage() {
             </h3>
             <p className="text-xs text-slate-400 mt-1">
               Create homework assignments, review submissions, and sync grades.
+            </p>
+          </Link>
+
+          <Link
+            href="/dashboard/reports"
+            className="p-5 bg-slate-950 hover:bg-slate-800/80 border border-slate-800 hover:border-slate-700 rounded-xl transition-all group"
+          >
+            <div className="w-9 h-9 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center text-indigo-400 mb-3">
+              <FileText className="w-4 h-4" />
+            </div>
+            <h3 className="font-bold text-white group-hover:text-indigo-300 transition-colors">
+              Class Report Cards
+            </h3>
+            <p className="text-xs text-slate-400 mt-1">
+              Generate and review PDF term reports for your assigned class.
             </p>
           </Link>
         </div>

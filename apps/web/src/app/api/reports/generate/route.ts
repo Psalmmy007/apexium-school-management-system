@@ -1,13 +1,87 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSessionUser } from "@/lib/auth/session";
 import { enqueueReportCardGenerationJob } from "@/lib/reports/report-card-service";
-import { db, students, classes, studentScores, subjects, terms, schools, studentTermReports, studentAttendance, computeClassRankings } from "@apexium/db";
+import {
+  db,
+  students,
+  classes,
+  sections,
+  timetableEntries,
+  studentScores,
+  subjects,
+  terms,
+  schools,
+  studentTermReports,
+  studentAttendance,
+  computeClassRankings,
+} from "@apexium/db";
 import { eq, and, gte, lte } from "drizzle-orm";
+
+async function verifyTeacherClassAssignment(
+  schoolId: string,
+  teacherId: string,
+  classId: string
+): Promise<boolean> {
+  // 1. Direct class teacher assignment on class
+  const classRecord = await db
+    .select({ id: classes.id })
+    .from(classes)
+    .where(
+      and(
+        eq(classes.schoolId, schoolId),
+        eq(classes.id, classId),
+        eq(classes.classTeacherId, teacherId)
+      )
+    )
+    .limit(1);
+
+  if (classRecord.length > 0) return true;
+
+  // 2. Section teacher assignment for any section belonging to this class
+  const sectionRecord = await db
+    .select({ id: sections.id })
+    .from(sections)
+    .where(
+      and(
+        eq(sections.schoolId, schoolId),
+        eq(sections.classId, classId),
+        eq(sections.classTeacherId, teacherId)
+      )
+    )
+    .limit(1);
+
+  if (sectionRecord.length > 0) return true;
+
+  // 3. Timetable entry teaching in this class
+  const timetableRecord = await db
+    .select({ id: timetableEntries.id })
+    .from(timetableEntries)
+    .where(
+      and(
+        eq(timetableEntries.schoolId, schoolId),
+        eq(timetableEntries.classId, classId),
+        eq(timetableEntries.teacherId, teacherId)
+      )
+    )
+    .limit(1);
+
+  if (timetableRecord.length > 0) return true;
+
+  return false;
+}
 
 export async function POST(request: NextRequest) {
   const user = await getSessionUser();
-  if (!user || user.role !== "admin") {
+  if (!user) {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Only administrators and teachers may generate report cards
+  if (user.role !== "admin" && user.role !== "teacher") {
+    return NextResponse.json(
+      { success: false, error: "Forbidden: Only administrators and class teachers can generate report cards." },
+      { status: 403 }
+    );
   }
 
   try {
@@ -19,6 +93,17 @@ export async function POST(request: NextRequest) {
         { success: false, error: "Please provide classId, academicSession, and termName" },
         { status: 400 }
       );
+    }
+
+    // Role Enforcement: If teacher, strictly verify they are assigned to this specific class
+    if (user.role === "teacher") {
+      const isAssigned = await verifyTeacherClassAssignment(user.schoolId, user.id, classId);
+      if (!isAssigned) {
+        return NextResponse.json(
+          { success: false, error: "Forbidden: You are not assigned as a teacher for this class." },
+          { status: 403 }
+        );
+      }
     }
 
     // Fetch school info
