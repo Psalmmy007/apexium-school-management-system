@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, schools, getAdmissionApplicationByReference } from "@apexium/db";
 import { eq } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);

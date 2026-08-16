@@ -19,6 +19,13 @@ const nextConfig = {
       },
     ],
   },
+
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals = [...(config.externals || []), "@valkey/valkey-glide"];
+    }
+    return config;
+  },
 };
 
 module.exports = nextConfig;
