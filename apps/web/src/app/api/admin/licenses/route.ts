@@ -1,12 +1,22 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getSessionUser } from "@/lib/auth/session";
+import { getSessionUser, verifyPlatformOperator } from "@/lib/auth/session";
 import { listAllSchoolLicenses } from "@apexium/db";
 
 // ── GET /api/admin/licenses — Superadmin multi-tenant license audit ─
+// Strictly restricted to verified platform_operator role.
 export async function GET(request: NextRequest) {
   const user = await getSessionUser();
-  if (!user || user.role !== "admin") {
+  if (!user) {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 });
+  }
+
+  // Verify platform_operator role (School admins MUST be rejected with 403)
+  const isOperator = await verifyPlatformOperator(user);
+  if (!isOperator || user.role !== "platform_operator") {
+    return NextResponse.json(
+      { success: false, error: "Forbidden: Platform Operator authorization required" },
+      { status: 403 }
+    );
   }
 
   const { searchParams } = new URL(request.url);
@@ -26,3 +36,4 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
