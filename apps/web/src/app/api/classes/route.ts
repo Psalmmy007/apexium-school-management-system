@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
 import { getSessionUser } from "@/lib/auth/session";
-import { db, classes, sections } from "@apexium/db";
-import { eq } from "drizzle-orm";
+import { db, classes, sections, students } from "@apexium/db";
+import { eq, and, sql } from "drizzle-orm";
+
+export const dynamic = "force-dynamic";
 
 export async function GET() {
   const user = await getSessionUser();
@@ -11,20 +13,37 @@ export async function GET() {
 
   try {
     const schoolClasses = await db
-      .select()
+      .select({
+        id: classes.id,
+        name: classes.name,
+        code: classes.code,
+        capacity: classes.capacity,
+        studentCount: sql<number>`count(${students.id})::int`,
+      })
       .from(classes)
-      .where(eq(classes.schoolId, user.schoolId));
+      .leftJoin(
+        students,
+        and(eq(students.classId, classes.id), eq(students.status, "active"))
+      )
+      .where(eq(classes.schoolId, user.schoolId))
+      .groupBy(classes.id, classes.name, classes.code, classes.capacity);
 
     const schoolSections = await db
       .select()
       .from(sections)
       .where(eq(sections.schoolId, user.schoolId));
 
+    const totalSchoolStudents = schoolClasses.reduce(
+      (acc, curr) => acc + (curr.studentCount || 0),
+      0
+    );
+
     return NextResponse.json({
       success: true,
       data: {
         classes: schoolClasses,
         sections: schoolSections,
+        totalSchoolStudents,
       },
     });
   } catch (error: any) {
@@ -34,3 +53,4 @@ export async function GET() {
     );
   }
 }
+

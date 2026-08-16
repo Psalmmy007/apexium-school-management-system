@@ -11,12 +11,27 @@ import {
   Calendar,
   Activity,
   ArrowRight,
+  School,
+  Clock,
+  Sparkles,
 } from "lucide-react";
 import { tokens } from "@/lib/design-system/tokens";
+import {
+  db,
+  students,
+  studentAttendance,
+  users,
+  classes,
+  studentTermReports,
+  studentActivityTimeline,
+} from "@apexium/db";
+import { eq, and, count, desc, sql } from "drizzle-orm";
 
 import StudentDashboardPage from "./student/page";
 import ParentDashboardPage from "./parent/page";
 import TeacherHomePage from "./teacher/page";
+
+export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
   title: "Dashboard",
@@ -38,35 +53,111 @@ export default async function DashboardPage() {
     return <TeacherHomePage />;
   }
 
+  let totalStudents = 0;
+  let totalPresentToday = 0;
+  let totalMarkedToday = 0;
+  let totalTeachers = 0;
+  let totalClasses = 0;
+  let totalReports = 0;
+  let recentActivities: Array<{ id: string; eventType: string; description: string; createdAt: Date }> = [];
+
+  if (user?.schoolId) {
+    try {
+      const todayStr = new Date().toISOString().split("T")[0];
+
+      const [
+        [studentCountRes],
+        [attendanceRes],
+        [teacherCountRes],
+        [classCountRes],
+        [reportsCountRes],
+        activitiesList,
+      ] = await Promise.all([
+        db
+          .select({ total: count() })
+          .from(students)
+          .where(and(eq(students.schoolId, user.schoolId), eq(students.status, "active"))),
+        db
+          .select({
+            totalPresent: sql<number>`count(case when ${studentAttendance.status} = 'present' then 1 end)::int`,
+            totalMarked: count(),
+          })
+          .from(studentAttendance)
+          .where(and(eq(studentAttendance.schoolId, user.schoolId), eq(studentAttendance.date, todayStr))),
+        db
+          .select({ total: count() })
+          .from(users)
+          .where(and(eq(users.schoolId, user.schoolId), eq(users.role, "teacher"), eq(users.isActive, true))),
+        db
+          .select({ total: count() })
+          .from(classes)
+          .where(eq(classes.schoolId, user.schoolId)),
+        db
+          .select({ total: count() })
+          .from(studentTermReports)
+          .where(eq(studentTermReports.schoolId, user.schoolId)),
+        db
+          .select({
+            id: studentActivityTimeline.id,
+            eventType: studentActivityTimeline.eventType,
+            description: studentActivityTimeline.description,
+            createdAt: studentActivityTimeline.createdAt,
+          })
+          .from(studentActivityTimeline)
+          .where(eq(studentActivityTimeline.schoolId, user.schoolId))
+          .orderBy(desc(studentActivityTimeline.createdAt))
+          .limit(6),
+      ]);
+
+      totalStudents = Number(studentCountRes?.total || 0);
+      totalPresentToday = Number(attendanceRes?.totalPresent || 0);
+      totalMarkedToday = Number(attendanceRes?.totalMarked || 0);
+      totalTeachers = Number(teacherCountRes?.total || 0);
+      totalClasses = Number(classCountRes?.total || 0);
+      totalReports = Number(reportsCountRes?.total || 0);
+      recentActivities = activitiesList || [];
+    } catch (e) {
+      console.error("[Dashboard] Error querying live metrics:", e);
+    }
+  }
+
+  const attendanceDisplay = totalMarkedToday > 0
+    ? `${totalPresentToday} / ${totalMarkedToday}`
+    : `${totalPresentToday}`;
+
   // School Administrator Operational Overview
   const stats = [
     {
       id: "stat-students",
       label: "Total Students",
-      value: "—",
+      value: String(totalStudents),
+      subValue: totalStudents === 1 ? "1 active student" : `${totalStudents} active students`,
       icon: <Users className="w-5 h-5 text-indigo-400" />,
       link: "/dashboard/students",
     },
     {
       id: "stat-attendance",
       label: "Present Today",
-      value: "—",
+      value: attendanceDisplay,
+      subValue: totalMarkedToday > 0 ? `${Math.round((totalPresentToday / totalMarkedToday) * 100)}% attendance rate` : "No roll-call today",
       icon: <CheckCircle className="w-5 h-5 text-emerald-400" />,
       link: "/dashboard/attendance",
     },
     {
       id: "stat-teachers",
       label: "Teaching Staff",
-      value: "—",
+      value: String(totalTeachers),
+      subValue: totalTeachers === 1 ? "1 active teacher" : `${totalTeachers} active teachers`,
       icon: <GraduationCap className="w-5 h-5 text-sky-400" />,
       link: "/dashboard/hr",
     },
     {
       id: "stat-reports",
-      label: "Pending Reports",
-      value: "—",
-      icon: <FileText className="w-5 h-5 text-amber-400" />,
-      link: "/dashboard/reports",
+      label: "Active Classes",
+      value: String(totalClasses),
+      subValue: totalClasses === 1 ? "1 configured class" : `${totalClasses} configured classes`,
+      icon: <School className="w-5 h-5 text-amber-400" />,
+      link: "/dashboard/academics/structure",
     },
   ];
 
@@ -115,13 +206,18 @@ export default async function DashboardPage() {
                 {stat.icon}
               </div>
             </div>
-            <div className="flex items-baseline justify-between">
+            <div className="space-y-1">
               <p className="text-3xl font-extrabold text-white">
                 {stat.value}
               </p>
-              <span className="text-xs text-indigo-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1">
-                View <ArrowRight className="w-3 h-3" />
-              </span>
+              <div className="flex items-center justify-between pt-1">
+                <span className="text-[11px] text-slate-500 font-medium">
+                  {stat.subValue}
+                </span>
+                <span className="text-xs text-indigo-400 font-medium opacity-0 group-hover:opacity-100 transition-opacity inline-flex items-center gap-1">
+                  View <ArrowRight className="w-3 h-3" />
+                </span>
+              </div>
             </div>
           </Link>
         ))}
@@ -197,15 +293,48 @@ export default async function DashboardPage() {
 
       {/* ── System Status & Activity ───────────────────── */}
       <div className="p-6 rounded-2xl bg-slate-900 border border-slate-800 space-y-4">
-        <h3 className="text-sm font-bold text-white flex items-center gap-2">
-          <Activity className="w-4 h-4 text-slate-400" />
-          Recent System Activity
-        </h3>
-        <div className="p-8 text-center border border-dashed border-slate-800 rounded-xl">
-          <p className="text-xs text-slate-400">
-            Real-time audit log feeds will populate as administrative and academic operations occur.
-          </p>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold text-white flex items-center gap-2">
+            <Activity className="w-4 h-4 text-indigo-400" />
+            Recent System Activity
+          </h3>
+          <span className="text-xs text-slate-500 font-mono">Live Audit Log</span>
         </div>
+
+        {recentActivities.length > 0 ? (
+          <div className="divide-y divide-slate-800">
+            {recentActivities.map((act) => (
+              <div key={act.id} className="py-3 flex items-start justify-between gap-4">
+                <div className="flex items-start gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center shrink-0 mt-0.5">
+                    <Sparkles className="w-3.5 h-3.5 text-indigo-400" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-semibold text-slate-200">{act.description}</p>
+                    <span className="text-[10px] text-slate-500 uppercase tracking-wider font-mono">
+                      {act.eventType.replace(/_/g, " ")}
+                    </span>
+                  </div>
+                </div>
+                <div className="text-[11px] text-slate-500 flex items-center gap-1 shrink-0 font-mono">
+                  <Clock className="w-3 h-3" />
+                  {new Date(act.createdAt).toLocaleDateString("en-GB", {
+                    day: "numeric",
+                    month: "short",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="p-8 text-center border border-dashed border-slate-800 rounded-xl">
+            <p className="text-xs text-slate-400">
+              System is initialized and ready. Activity logs will appear here as students are registered, attendance is taken, and grades are entered.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
