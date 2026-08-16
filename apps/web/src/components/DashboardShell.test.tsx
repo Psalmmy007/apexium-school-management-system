@@ -35,3 +35,45 @@ describe("DashboardShell Sign Out functionality", () => {
     expect(sidebarSignOut).not.toBeNull();
   });
 });
+
+describe("DashboardShell Sidebar Section Labels & Multi-Branch Visibility", () => {
+  it("renders accurate school-scoped section labels and hides SaaS governance label", () => {
+    render(
+      <DashboardShell user={{ firstName: "Admin", lastName: "User", role: "admin" }}>
+        <div>Test Content</div>
+      </DashboardShell>
+    );
+
+    // Assert accurate section headers exist
+    expect(screen.getByText("School Operations")).not.toBeNull();
+    expect(screen.getByText("Administration & Settings")).not.toBeNull();
+
+    // Assert old misleading section label is gone
+    expect(screen.queryByText("SaaS & Group Governance")).toBeNull();
+    expect(screen.queryByText("Enterprise Operations")).toBeNull();
+  });
+
+  it("hides Multi-Branch School Group for standalone schools by default", () => {
+    render(
+      <DashboardShell user={{ firstName: "Admin", lastName: "User", role: "admin" }} isMultiBranch={false}>
+        <div>Test Content</div>
+      </DashboardShell>
+    );
+
+    expect(screen.queryByText("Multi-Branch School Group")).toBeNull();
+    expect(screen.queryByText("Multi-Branch Network")).toBeNull();
+    expect(document.getElementById("nav-group")).toBeNull();
+  });
+
+  it("renders Multi-Branch School Group when school is part of a group", () => {
+    render(
+      <DashboardShell user={{ firstName: "Admin", lastName: "User", role: "admin" }} isMultiBranch={true}>
+        <div>Test Content</div>
+      </DashboardShell>
+    );
+
+    expect(screen.getByText("Multi-Branch School Group")).not.toBeNull();
+    expect(screen.getByText("Multi-Branch Network")).not.toBeNull();
+    expect(document.getElementById("nav-group")).not.toBeNull();
+  });
+});

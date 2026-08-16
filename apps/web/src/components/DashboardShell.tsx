@@ -15,6 +15,7 @@ interface UserInfo {
 
 interface DashboardShellProps {
   user: UserInfo;
+  isMultiBranch?: boolean;
   children: React.ReactNode;
 }
 
@@ -26,7 +27,7 @@ function IconSignOut({ className = "w-5 h-5" }: { className?: string }) {
   );
 }
 
-export function DashboardShell({ user, children }: DashboardShellProps) {
+export function DashboardShell({ user, isMultiBranch = false, children }: DashboardShellProps) {
   const router = useRouter();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -70,12 +71,12 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
           isMobileMenuOpen ? "translate-x-0 shadow-2xl" : "-translate-x-full"
         }`}
       >
-        {/* Sidebar Header & Close Button for Mobile */}
-        <div className="px-5 py-5 border-b border-sidebar-border flex items-center justify-between">
+        {/* Sidebar Header / Brand */}
+        <div className="flex items-center justify-between px-5 py-4 border-b border-sidebar-border">
           <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-600 flex items-center justify-center flex-shrink-0 shadow-md">
-              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4.26 10.147a60.436 60.436 0 00-.491 6.347A48.627 48.627 0 0112 20.904a48.627 48.627 0 018.232-4.41 60.46 60.46 0 00-.491-6.347m-15.482 0a50.57 50.57 0 00-2.658-.813A59.905 59.905 0 0112 3.493a59.902 59.902 0 0110.399 5.84c-.896.248-1.783.52-2.658.814m-15.482 0A50.697 50.697 0 0112 13.489a50.702 50.702 0 017.74-3.342M6.75 15a.75.75 0 100-1.5.75.75 0 000 1.5zm0 0v-3.675A55.378 55.378 0 0112 8.443m-7.007 11.55A5.981 5.981 0 006.75 15.75v-1.5" />
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-xs">
+              <svg className="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
               </svg>
             </div>
             <div>
@@ -148,25 +149,29 @@ export function DashboardShell({ user, children }: DashboardShellProps) {
 
           {user.role === "admin" && (
             <>
-              <p className="nav-group-label mt-4">Enterprise Operations</p>
+              <p className="nav-group-label mt-4">School Operations</p>
               <NavItem href="/dashboard/finance" id="nav-finance" label="Finance & Accounting" icon={<IconReports />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/hr" id="nav-hr" label="HR & Payroll" icon={<IconStudents />} onClick={() => setIsMobileMenuOpen(false)} />
-              <NavItem href="/dashboard/transport" id="nav-transport" label="Transport System" icon={<IconAttendance />} onClick={() => setIsMobileMenuOpen(false)} />
-              <NavItem href="/dashboard/inventory" id="nav-inventory" label="Inventory & Fixed Assets" icon={<IconTimetable />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/communication" id="nav-communication" label="Communication Centre" icon={<IconReports />} onClick={() => setIsMobileMenuOpen(false)} />
-              <NavItem href="/dashboard/analytics" id="nav-analytics" label="Executive Analytics" icon={<IconDashboard />} onClick={() => setIsMobileMenuOpen(false)} />
-
-              <p className="nav-group-label mt-4">SaaS & Group Governance</p>
-              <NavItem href="/dashboard/group" id="nav-group" label="Multi-Branch School Group" icon={<IconDashboard />} onClick={() => setIsMobileMenuOpen(false)} />
-              <NavItem href="/dashboard/settings/data-export" id="nav-data-export" label="Data Portability & Export" icon={<IconSettings />} onClick={() => setIsMobileMenuOpen(false)} />
-
-              <p className="nav-group-label mt-4">System</p>
-              <NavItem href="/dashboard/setup" id="nav-setup-wizard" label="School Setup Wizard" icon={<IconPromotion />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/library" id="nav-library" label="Library System" icon={<IconReports />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/hostel" id="nav-hostel" label="Hostel System" icon={<IconAttendance />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/transport" id="nav-transport" label="Transport System" icon={<IconAttendance />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/inventory" id="nav-inventory" label="Inventory & Fixed Assets" icon={<IconTimetable />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/analytics" id="nav-analytics" label="Executive Analytics" icon={<IconDashboard />} onClick={() => setIsMobileMenuOpen(false)} />
+
+              {isMultiBranch && (
+                <>
+                  <p className="nav-group-label mt-4">Multi-Branch Network</p>
+                  <NavItem href="/dashboard/group" id="nav-group" label="Multi-Branch School Group" icon={<IconDashboard />} onClick={() => setIsMobileMenuOpen(false)} />
+                </>
+              )}
+
+              <p className="nav-group-label mt-4">Administration & Settings</p>
+              <NavItem href="/dashboard/setup" id="nav-setup-wizard" label="School Setup Wizard" icon={<IconPromotion />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/settings/licenses" id="nav-licenses" label="License Center" icon={<IconLicense />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/settings/data-export" id="nav-data-export" label="Data Portability & Export" icon={<IconSettings />} onClick={() => setIsMobileMenuOpen(false)} />
               <NavItem href="/dashboard/settings/privacy" id="nav-privacy" label="Data Privacy & NDPR" icon={<IconSettings />} onClick={() => setIsMobileMenuOpen(false)} />
-              <NavItem href="/dashboard/settings" id="nav-settings" label="Settings" icon={<IconSettings />} onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem href="/dashboard/settings" id="nav-settings" label="School Settings" icon={<IconSettings />} onClick={() => setIsMobileMenuOpen(false)} />
             </>
           )}
         </nav>
