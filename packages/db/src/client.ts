@@ -15,9 +15,26 @@ if (process.env.NODE_ENV === "production" && databaseUrl.includes("localhost")) 
   console.warn("WARNING: DATABASE_URL is pointing to localhost in production environment!");
 }
 
-// Use connection pool for app
-const queryClient = postgres(databaseUrl, { max: 10 });
+// Cache connection across hot lambdas in serverless
+const globalForDb = globalThis as unknown as {
+  conn: postgres.Sql | undefined;
+};
+
+// Configure serverless connection pooling
+const queryClient =
+  globalForDb.conn ??
+  postgres(databaseUrl, {
+    max: process.env.NODE_ENV === "production" ? 10 : 5,
+    idle_timeout: 20,
+    connect_timeout: 10,
+    prepare: false, // Critical for Supabase connection pooler / transaction mode
+  });
+
+if (process.env.NODE_ENV !== "production") {
+  globalForDb.conn = queryClient;
+}
 
 export const db = drizzle(queryClient, { schema });
 
 export type Db = typeof db;
+

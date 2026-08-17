@@ -322,3 +322,35 @@
   0%, 100% { opacity: 1;   }
   50%       { opacity: 0.6; }
 }
+
+/* ── Universal Button Loading States ───────────────────────── */
+[data-btn-loading="true"],
+.btn-loading-state {
+  position: relative !important;
+  opacity: 0.8 !important;
+  cursor: wait !important;
+  pointer-events: none !important;
+  transition: all 0.2s ease-in-out !important;
+}
+
+[data-btn-loading="true"]::after,
+.btn-loading-state::after {
+  content: "" !important;
+  position: absolute !important;
+  inset: 0 !important;
+  border-radius: inherit !important;
+  background: rgba(15, 23, 42, 0.35) !important;
+  pointer-events: none !important;
+}
+
+/* Loading pulse effect on clicked action buttons */
+[data-btn-loading="true"] svg,
+.btn-loading-state svg {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+

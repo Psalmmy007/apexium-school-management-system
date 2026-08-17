@@ -74,6 +74,17 @@ function extractSlugFromHost(host: string): string | null {
   return null;
 }
 
+function hasAuthCookies(request: NextRequest): boolean {
+  const cookies = request.cookies.getAll();
+  return cookies.some(
+    (c) =>
+      c.name.includes("sb-") ||
+      c.name.includes("auth-token") ||
+      c.name.includes("supabase") ||
+      c.name.includes("session")
+  );
+}
+
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const host = request.headers.get("host") || "";
@@ -84,9 +95,43 @@ export async function middleware(request: NextRequest) {
     },
   });
 
+  // ── Inject tenant context header for school-specific hostnames ─────────────
+  const tenantSlug = extractSlugFromHost(host);
+  if (tenantSlug) {
+    response.headers.set("x-apexium-tenant-slug", tenantSlug);
+  }
+
+  const isPublic = isPublicRoute(pathname);
+  const hasCookies = hasAuthCookies(request);
+
+  // ── Fast-path for non-auth public routes (0ms network overhead) ────────────
+  if (isPublic && !pathname.startsWith("/auth/")) {
+    return response;
+  }
+
+  // ── Fast-path for unauthenticated users visiting auth pages ────────────────
+  if (isPublic && pathname.startsWith("/auth/") && !hasCookies) {
+    return response;
+  }
+
+  // ── Fast-path for unauthenticated users visiting protected pages ──────────
+  if (!isPublic && !hasCookies) {
+    const loginUrl = new URL("/auth/login", request.url);
+    loginUrl.searchParams.set("redirectTo", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Only initialize Supabase client when auth verification is actually needed
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    return response;
+  }
+
   const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    supabaseUrl,
+    supabaseAnonKey,
     {
       cookies: {
         getAll() {
@@ -107,15 +152,8 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // ── Inject tenant context header for school-specific hostnames ─────────────
-  const tenantSlug = extractSlugFromHost(host);
-  if (tenantSlug) {
-    response.headers.set("x-apexium-tenant-slug", tenantSlug);
-  }
-
-  // ── Public routes — no auth required ──────────────────────────────────────
-  if (isPublicRoute(pathname)) {
-    // Redirect authenticated users away from auth pages to their dashboard
+  // ── Public auth routes handling when user is already logged in ────────────
+  if (isPublic) {
     if (user && (pathname === "/auth/login" || pathname.startsWith("/auth/"))) {
       const role = (user.user_metadata?.role as string) || (user.app_metadata?.role as string);
       if (role === "platform_operator") {
@@ -140,7 +178,6 @@ export async function middleware(request: NextRequest) {
       (user.app_metadata?.role as string);
 
     if (userRole !== "platform_operator") {
-      // Reject non-platform operators (e.g. school admins, teachers, parents, students)
       return NextResponse.redirect(new URL("/dashboard?error=forbidden_platform_access", request.url));
     }
   }

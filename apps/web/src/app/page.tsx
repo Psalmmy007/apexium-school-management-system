@@ -441,6 +441,7 @@ export default function HomePage() {
                           src={mod.webImg}
                           alt={mod.webCaption}
                           fill
+                          loading="lazy"
                           className="object-cover object-top"
                           sizes="(max-width: 768px) 100vw, 450px"
                         />
@@ -459,11 +460,13 @@ export default function HomePage() {
                           src={mod.mobileImg}
                           alt={mod.mobileCaption}
                           fill
+                          loading="lazy"
                           className="object-cover object-top"
                           sizes="(max-width: 768px) 100vw, 200px"
                         />
                       </div>
                     </div>
+
                   </div>
                 </div>
               </div>
