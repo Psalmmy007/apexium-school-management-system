@@ -1,11 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { usePathname, useSearchParams } from "next/navigation";
+import React, { useEffect, useState, Suspense } from "react";
+import { usePathname } from "next/navigation";
 
-export function GlobalButtonFeedback() {
+
+function GlobalButtonFeedbackContent() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const [isNavigating, setIsNavigating] = useState(false);
   const [progress, setProgress] = useState(0);
 
@@ -25,7 +25,7 @@ export function GlobalButtonFeedback() {
     }, 250);
 
     return () => clearTimeout(timer);
-  }, [pathname, searchParams]);
+  }, [pathname]);
 
   // Animate top progress bar when navigating
   useEffect(() => {
@@ -46,7 +46,6 @@ export function GlobalButtonFeedback() {
   // Global document click interceptor
   useEffect(() => {
     function handleClick(e: MouseEvent) {
-      // Find the closest button or link
       const target = e.target as HTMLElement | null;
       if (!target) return;
 
@@ -85,7 +84,6 @@ export function GlobalButtonFeedback() {
 
         // Check if internal navigation
         if (href.startsWith("/") || href.includes(window.location.host)) {
-          // Set loading state on button/link
           setButtonLoading(interactive);
           setIsNavigating(true);
         }
@@ -94,13 +92,12 @@ export function GlobalButtonFeedback() {
 
       // Check if it's a button or input[type="submit"]
       if (tagName === "button" || (tagName === "input" && interactive.getAttribute("type") === "submit")) {
-        // Form submission or interactive action button
         const form = interactive.closest("form");
         const isSubmit = interactive.getAttribute("type") === "submit" || (form && !interactive.getAttribute("type"));
 
         // If it's a submit button in a form, check validity first
         if (isSubmit && form && !form.checkValidity()) {
-          return; // Browser will show validation tooltip
+          return;
         }
 
         setButtonLoading(interactive);
@@ -109,7 +106,7 @@ export function GlobalButtonFeedback() {
           setIsNavigating(true);
         }
 
-        // Safety timeout to reset if no navigation happens (e.g. async fetch inside same page)
+        // Safety timeout to reset if no navigation happens
         setTimeout(() => {
           resetButtonLoading(interactive);
         }, 8000);
@@ -120,8 +117,6 @@ export function GlobalButtonFeedback() {
       element.setAttribute("data-btn-loading", "true");
       element.setAttribute("aria-busy", "true");
       element.classList.add("btn-loading-state");
-
-      // Prevent immediate double-clicks
       element.style.pointerEvents = "none";
     }
 
@@ -162,3 +157,12 @@ export function GlobalButtonFeedback() {
     </>
   );
 }
+
+export function GlobalButtonFeedback() {
+  return (
+    <Suspense fallback={null}>
+      <GlobalButtonFeedbackContent />
+    </Suspense>
+  );
+}
+
