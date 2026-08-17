@@ -65,11 +65,18 @@ export default function AcademicStructurePage() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const res = await fetch("/api/academic-structure");
+      const [res, tRes] = await Promise.all([
+        fetch("/api/academic-structure"),
+        fetch("/api/teachers"),
+      ]);
       const json = await res.json();
+      const tJson = await tRes.json();
       if (json.success) {
         setSections(json.data.sections || []);
         setClasses(json.data.classes || []);
+      }
+      if (tJson.success && tJson.data.teachers) {
+        setTeachers(tJson.data.teachers || []);
       }
     } catch (err) {
       console.error("Failed loading academic structure", err);
