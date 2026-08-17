@@ -790,3 +790,12 @@ Proof it works: Database integration test `m40-setup-wizard-integrity.test.ts` a
 
 Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
 
+---
+
+## Post-Milestone Bug Fixes — COMPLETE
+Date: August 17, 2026
+
+What this means in plain terms: Three bugs were found through actual use of the live system and fixed. First, the Admin dashboard stat cards (Total Students, Present Today, Teaching Staff, Active Classes) were all wired to real database queries and now show correct live numbers — Total Students correctly showed 2 (matching the two real students registered). Second, the Admin sidebar wrongly listed a "Teacher Workspace" item that only belongs to teachers — it has been completely removed from the admin navigation. Third, because the setup wizard no longer adds teachers, a proper "Teachers" page now exists at /dashboard/teachers for admins to add staff, assign them as form teachers to specific classes, and link to HR and Timetable from one place.
+
+Proof it works: Live Playwright screenshots captured from the running production build confirm: (1) Admin sidebar shows "Teachers" in the ACADEMIC section with no "Teacher Workspace" item anywhere; (2) The /dashboard/teachers page loads and correctly shows the unified Teaching Staff & Class Assignments panel with an "+ Add New Teacher" button; (3) JSS 1 in Academic Structure now shows "Olawale Adeleke" as Class Teacher after a teacher was added — the form-teacher link flows through end-to-end. Build completed successfully (exit code 0) across 191 routes with zero TypeScript errors.
+
