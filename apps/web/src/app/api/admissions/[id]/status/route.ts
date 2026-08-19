@@ -17,7 +17,18 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     }
 
     const body = await req.json();
-    const { action, reason } = body;
+    let action = (body.action || "").toLowerCase().trim();
+    const status = (body.status || "").toLowerCase().trim();
+    const reason = body.reason;
+
+    if (!action && status) {
+      if (status === "under_review" || status === "under review" || status === "review") action = "review";
+      else if (status === "shortlisted" || status === "shortlist") action = "shortlist";
+      else if (status === "accepted" || status === "accept") action = "accept";
+      else if (status === "waitlisted" || status === "waitlist") action = "waitlist";
+      else if (status === "rejected" || status === "reject") action = "reject";
+      else if (status === "withdrawn" || status === "withdraw") action = "withdraw";
+    }
 
     let updated;
     switch (action) {
@@ -40,7 +51,7 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
         updated = await withdrawApplication(params.id, user.schoolId);
         break;
       default:
-        return NextResponse.json({ error: `Invalid status action: ${action}` }, { status: 400 });
+        return NextResponse.json({ error: `Invalid status action: ${action || status || "empty"}` }, { status: 400 });
     }
 
     if (!updated) {

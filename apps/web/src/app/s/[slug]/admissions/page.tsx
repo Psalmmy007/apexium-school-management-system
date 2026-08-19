@@ -34,15 +34,15 @@ export default function AdmissionsPage() {
     gender: "",
     currentSchool: "",
     previousAcademicInfo: "",
-    desiredClass: "",
+    desiredClassId: "",
     desiredSession: "",
-    desiredTerm: "",
+    desiredTermId: "",
     guardianName: "",
     guardianRelationship: "",
     guardianEmail: "",
     guardianPhone: "",
     guardianAddress: "",
-    consent: false,
+    declarationConsent: false,
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -56,25 +56,27 @@ export default function AdmissionsPage() {
   useEffect(() => {
     async function init() {
       try {
-        // In a real app we'd fetch the school details from a public API
-        // For now, we simulate fetching the school info and classes
-        setSchool({
-          id: "1",
-          name: "Apexium International School",
-          brandColor: "#4f46e5"
-        });
-
         const res = await fetch(`/api/admissions/classes`, {
           headers: { "x-apexium-tenant-slug": slug }
         });
         if (res.ok) {
           const data = await res.json();
-          setClasses(data.classes || [{ id: "c1", name: "Grade 1" }, { id: "c2", name: "Grade 2" }]);
+          setSchool({
+            id: data.schoolId || "1",
+            name: data.schoolName || "School Admissions",
+            brandColor: "#4f46e5"
+          });
+          setClasses(data.classes || []);
         } else {
-          setClasses([{ id: "c1", name: "Grade 1" }, { id: "c2", name: "Grade 2" }]); // fallback
+          setSchool({
+            id: "1",
+            name: "School Admissions",
+            brandColor: "#4f46e5"
+          });
+          setClasses([]);
         }
       } catch (err) {
-        console.error(err);
+        console.error("Failed to load admissions classes", err);
       } finally {
         setLoading(false);
       }
@@ -98,7 +100,7 @@ export default function AdmissionsPage() {
         return;
       }
     } else if (step === 2) {
-      if (!formData.desiredClass || !formData.desiredSession || !formData.desiredTerm) {
+      if (!formData.desiredClassId || !formData.desiredSession || !formData.desiredTermId) {
         setError("Please fill all required fields.");
         return;
       }
@@ -115,7 +117,7 @@ export default function AdmissionsPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.consent) {
+    if (!formData.declarationConsent) {
       setError("You must consent to data processing.");
       return;
     }
@@ -129,26 +131,30 @@ export default function AdmissionsPage() {
           "Content-Type": "application/json",
           "x-apexium-tenant-slug": slug 
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          slug,
+        }),
       });
 
-      if (!res.ok) {
-        throw new Error("Failed to submit application");
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to submit application");
       }
       
-      const data = await res.json();
+      const ref = data.reference || data.application?.applicationReference;
+      if (!ref) {
+        throw new Error("Application submitted but no reference number returned from server.");
+      }
+
       setSuccessData({
-        reference: data.reference || `ADM-2026-${Math.floor(Math.random() * 10000)}`,
-        schoolName: school?.name || "The School",
+        reference: ref,
+        schoolName: data.schoolName || school?.name || "The School",
         date: new Date().toLocaleDateString(),
       });
     } catch (err: any) {
-      // Fallback for UI if API stub fails
-      setSuccessData({
-        reference: `ADM-2026-${Math.floor(Math.random() * 10000)}`,
-        schoolName: school?.name || "The School",
-        date: new Date().toLocaleDateString(),
-      });
+      setError(err.message || "Failed to submit application. Please try again.");
+      setSuccessData(null);
     } finally {
       setIsSubmitting(false);
     }
@@ -279,7 +285,7 @@ export default function AdmissionsPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm text-slate-400 mb-1">Desired Class *</label>
-                    <select name="desiredClass" value={formData.desiredClass} onChange={handleChange} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    <select name="desiredClassId" value={formData.desiredClassId} onChange={handleChange} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
                       <option value="">Select Class</option>
                       {classes.map(c => (
                         <option key={c.id} value={c.id}>{c.name}</option>
@@ -296,7 +302,7 @@ export default function AdmissionsPage() {
                   </div>
                   <div>
                     <label className="block text-sm text-slate-400 mb-1">Desired Term *</label>
-                    <select name="desiredTerm" value={formData.desiredTerm} onChange={handleChange} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                    <select name="desiredTermId" value={formData.desiredTermId} onChange={handleChange} className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
                       <option value="">Select Term</option>
                       <option value="first">First Term</option>
                       <option value="second">Second Term</option>
@@ -348,7 +354,7 @@ export default function AdmissionsPage() {
                     By submitting this application, I confirm that all information provided is accurate and true to the best of my knowledge. I understand that any false information may lead to the rejection of this application or withdrawal of admission.
                   </p>
                   <label className="flex items-start gap-3 cursor-pointer">
-                    <input type="checkbox" name="consent" checked={formData.consent} onChange={handleChange} className="mt-1 w-5 h-5 rounded border-slate-700 bg-slate-900 text-indigo-500 focus:ring-indigo-500" />
+                    <input type="checkbox" name="declarationConsent" checked={formData.declarationConsent} onChange={handleChange} className="mt-1 w-5 h-5 rounded border-slate-700 bg-slate-900 text-indigo-500 focus:ring-indigo-500" />
                     <span className="text-sm text-slate-300">
                       I confirm all information is accurate and consent to data processing per NDPR regulations.
                     </span>
@@ -379,7 +385,7 @@ export default function AdmissionsPage() {
               ) : (
                 <button
                   type="submit"
-                  disabled={isSubmitting || !formData.consent}
+                  disabled={isSubmitting || !formData.declarationConsent}
                   className="px-6 py-2.5 rounded-xl text-sm font-medium text-white shadow-lg transition-all hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
                   style={{ backgroundColor: school?.brandColor || '#4f46e5' }}
                 >

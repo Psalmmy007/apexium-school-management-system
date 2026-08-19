@@ -11,6 +11,10 @@ export default defineConfig({
     hookTimeout: 30000,
     setupFiles: ["./src/test/setup.ts"],
     include: ["src/**/*.test.{ts,tsx}", "src/**/*.spec.{ts,tsx}"],
+    env: {
+      DATABASE_URL:
+        "postgresql://postgres.gadpsebirkwblhguxrjw:Mediocrity00%40%40%23%23@aws-1-eu-west-2.pooler.supabase.com:6543/postgres",
+    },
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],

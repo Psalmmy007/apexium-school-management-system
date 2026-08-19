@@ -62,18 +62,8 @@ export default function TrackApplicationPage() {
       const data = await res.json();
       setResult(data);
     } catch (err: any) {
-      // Stub fallback
-      if (reference.startsWith("ADM-")) {
-        setResult({
-          reference,
-          status: "UNDER_REVIEW",
-          submissionDate: new Date().toLocaleDateString(),
-          schoolName: school?.name || "The School",
-          applicantName: "Applicant",
-        });
-      } else {
-        setError(err.message || "Unable to track application.");
-      }
+      setError(err.message || "Unable to track application. Application not found or verification mismatch.");
+      setResult(null);
     } finally {
       setLoading(false);
     }

@@ -36,10 +36,13 @@ export async function GET(req: NextRequest) {
     // Return safe tracking details only (no internal notes, decisionBy, etc.)
     return NextResponse.json({
       applicationReference: app.applicationReference,
+      reference: app.applicationReference,
       firstName: app.firstName,
       lastName: app.lastName,
-      status: app.status,
+      applicantName: `${app.firstName} ${app.lastName}`.trim(),
+      status: (app.status || "submitted").toUpperCase().replace(" ", "_"),
       submittedAt: app.submittedAt,
+      submissionDate: app.submittedAt ? new Date(app.submittedAt).toLocaleDateString() : "Recent",
       desiredSession: app.desiredSession,
       guardianEmail: app.guardianEmail,
     });

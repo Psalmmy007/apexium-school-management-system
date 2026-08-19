@@ -48,72 +48,111 @@ export default function AdminAdmissionsDashboard() {
     sessionId: ""
   });
 
+  const [classList, setClassList] = useState<{ id: string; name: string }[]>([]);
+
   useEffect(() => {
     fetchStats();
     fetchApplications();
+    fetchClasses();
   }, [statusFilter, sessionFilter]);
+
+  const fetchClasses = async () => {
+    try {
+      const res = await fetch("/api/timetable/options");
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data.classes)) {
+          setClassList(data.classes.map((c: any) => ({ id: c.id, name: c.name })));
+        }
+      }
+    } catch (e) {
+      console.error("Failed to load classes for admission enrollment", e);
+    }
+  };
 
   const fetchStats = async () => {
     try {
       const res = await fetch("/api/admissions/stats");
       if (res.ok) {
         const data = await res.json();
-        setStats(data);
-      } else {
-        // Mock data
         setStats({
-          total: 120, submitted: 45, underReview: 30, accepted: 20, enrolled: 15, conversionRate: "12.5%"
+          total: data.total || 0,
+          submitted: data.submitted || (data.byStatus?.submitted ?? 0),
+          underReview: data.underReview || (data.byStatus?.under_review ?? 0),
+          accepted: data.accepted || (data.byStatus?.accepted ?? 0),
+          enrolled: data.enrolled || (data.byStatus?.enrolled ?? 0),
+          conversionRate: data.conversionRate || "0%",
         });
       }
     } catch (e) {
-      setStats({
-        total: 120, submitted: 45, underReview: 30, accepted: 20, enrolled: 15, conversionRate: "12.5%"
-      });
+      console.error("Failed to fetch admissions stats", e);
     }
   };
 
   const fetchApplications = async () => {
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/admissions?status=${statusFilter !== "All" ? statusFilter : ""}&session=${sessionFilter}`);
+      const statusParam = statusFilter !== "All" ? statusFilter.toLowerCase() : "";
+      const res = await fetch(`/api/admissions?status=${statusParam}&session=${encodeURIComponent(sessionFilter)}`);
       if (res.ok) {
         const data = await res.json();
-        setApplications(data.applications || []);
+        const rawList = Array.isArray(data.applications) ? data.applications : Array.isArray(data.data) ? data.data : [];
+        const mapped: Application[] = rawList.map((a: any) => ({
+          id: a.id,
+          reference: a.applicationReference || a.reference || a.id,
+          applicantName: `${a.firstName || ''} ${a.lastName || ''}`.trim() || a.applicantName || "Applicant",
+          desiredClass: a.desiredClass?.name || a.desiredClassId || a.desiredClass || "Not specified",
+          desiredSession: a.desiredSession || "2026/2027",
+          desiredTerm: a.desiredTerm?.name || a.desiredTermId || a.desiredTerm || "First Term",
+          status: (a.status || "submitted").toUpperCase().replace(" ", "_"),
+          guardianEmail: a.guardianEmail || "",
+          guardianName: a.guardianName || "",
+          guardianPhone: a.guardianPhone || "",
+          submittedDate: a.submittedAt ? new Date(a.submittedAt).toLocaleDateString() : (a.createdAt ? new Date(a.createdAt).toLocaleDateString() : "Recent"),
+          internalNotes: a.internalNotes || "",
+        }));
+        setApplications(mapped);
       } else {
-        // Mock data
-        setApplications([
-          {
-            id: "1", reference: "ADM-2026-001", applicantName: "John Doe", desiredClass: "Grade 1", desiredSession: "2026/2027", desiredTerm: "First", status: "SUBMITTED", guardianEmail: "parent@example.com", guardianName: "Jane Doe", guardianPhone: "1234567890", submittedDate: "2026-08-10"
-          },
-          {
-            id: "2", reference: "ADM-2026-002", applicantName: "Alice Smith", desiredClass: "Grade 2", desiredSession: "2026/2027", desiredTerm: "First", status: "UNDER_REVIEW", guardianEmail: "alice.parent@example.com", guardianName: "Bob Smith", guardianPhone: "0987654321", submittedDate: "2026-08-11"
-          },
-          {
-            id: "3", reference: "ADM-2026-003", applicantName: "Charlie Brown", desiredClass: "Grade 1", desiredSession: "2026/2027", desiredTerm: "First", status: "ACCEPTED", guardianEmail: "charlie.p@example.com", guardianName: "David Brown", guardianPhone: "555666777", submittedDate: "2026-08-12"
-          }
-        ]);
+        setApplications([]);
       }
     } catch (e) {
-      // Mock data on failure
+      console.error("Failed to fetch applications", e);
+      setApplications([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const updateStatus = async (appId: string, newStatus: string) => {
+  const updateStatus = async (appId: string, newStatus: string, reason?: string) => {
     try {
-      await fetch(`/api/admissions/${appId}/status`, {
+      const actionMap: Record<string, string> = {
+        UNDER_REVIEW: "review",
+        SHORTLISTED: "shortlist",
+        WAITLISTED: "waitlist",
+        ACCEPTED: "accept",
+        REJECTED: "reject",
+        WITHDRAWN: "withdraw",
+      };
+      const action = actionMap[newStatus] || newStatus.toLowerCase();
+
+      const res = await fetch(`/api/admissions/${appId}/status`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: newStatus })
+        body: JSON.stringify({ action, status: newStatus, reason })
       });
-      // Optimistic update
+
+      const resData = await res.json();
+      if (!res.ok || !resData.success) {
+        throw new Error(resData.error || "Failed to update status");
+      }
+
       setApplications(apps => apps.map(a => a.id === appId ? { ...a, status: newStatus } : a));
       if (selectedApp && selectedApp.id === appId) {
         setSelectedApp({ ...selectedApp, status: newStatus });
       }
-    } catch (e) {
-      console.error(e);
+      fetchStats();
+    } catch (e: any) {
+      alert(e.message || "Failed to update application status");
     }
   };
 
@@ -121,21 +160,27 @@ export default function AdminAdmissionsDashboard() {
     e.preventDefault();
     if (!selectedApp) return;
     try {
-      await fetch(`/api/admissions/${selectedApp.id}/enroll`, {
+      const res = await fetch(`/api/admissions/${selectedApp.id}/enroll`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(enrollData)
       });
-      updateStatus(selectedApp.id, "ENROLLED");
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to enroll applicant");
+      }
+      setApplications(apps => apps.map(a => a.id === selectedApp.id ? { ...a, status: "ENROLLED" } : a));
+      setSelectedApp({ ...selectedApp, status: "ENROLLED" });
       setIsEnrollModalOpen(false);
-    } catch (e) {
-      console.error(e);
+      fetchStats();
+    } catch (e: any) {
+      alert(e.message || "Failed to enroll applicant");
     }
   };
 
   const openEnrollModal = (app: Application) => {
     setEnrollData({
-      admissionNumber: `STU-${new Date().getFullYear()}-${Math.floor(Math.random()*1000)}`,
+      admissionNumber: `ADM-${new Date().getFullYear()}-${Math.floor(1000 + Math.random()*9000)}`,
       classId: app.desiredClass,
       sessionId: app.desiredSession
     });
@@ -459,10 +504,10 @@ export default function AdminAdmissionsDashboard() {
                   className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white"
                   required
                 >
-                  <option value={selectedApp.desiredClass}>{selectedApp.desiredClass} (Desired)</option>
-                  <option value="Grade 1">Grade 1</option>
-                  <option value="Grade 2">Grade 2</option>
-                  <option value="Grade 3">Grade 3</option>
+                  <option value="">Select a Class</option>
+                  {classList.map(c => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
                 </select>
               </div>
               <div>

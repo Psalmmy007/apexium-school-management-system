@@ -15,16 +15,23 @@ export async function POST(req: NextRequest) {
       nationality,
       currentSchool,
       previousAcademicInfo,
-      desiredClassId,
+      desiredClassId: inputClassId,
+      desiredClass,
       desiredSession,
-      desiredTermId,
+      desiredTermId: inputTermId,
+      desiredTerm,
       guardianName,
       guardianRelationship,
       guardianEmail,
       guardianPhone,
       guardianAddress,
-      declarationConsent,
+      declarationConsent: inputConsent,
+      consent,
     } = body;
+
+    const desiredClassId = inputClassId || desiredClass;
+    const desiredTermId = inputTermId || desiredTerm;
+    const declarationConsent = inputConsent !== undefined ? inputConsent : consent;
 
     // Tenant resolution: use header x-apexium-tenant-slug or body.slug
     const headerSlug = req.headers.get("x-apexium-tenant-slug");
@@ -86,8 +93,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      reference: submittedApp.applicationReference,
       application: submittedApp,
       potentialDuplicateCount: duplicates.length,
+      schoolName: school.name,
     });
   } catch (error: any) {
     console.error("Admissions apply error:", error);

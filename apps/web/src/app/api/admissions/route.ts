@@ -29,7 +29,10 @@ export async function GET(req: NextRequest) {
       limit,
     });
 
-    return NextResponse.json(result);
+    return NextResponse.json({
+      ...result,
+      applications: result.data,
+    });
   } catch (error: any) {
     console.error("Admin admissions list error:", error);
     return NextResponse.json({ error: error.message || "Failed to list applications" }, { status: 500 });

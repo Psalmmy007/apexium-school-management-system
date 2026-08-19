@@ -731,11 +731,11 @@ Based on the full discovery audit already completed. Ordered so nothing gets exp
 
 ### Phase 1 — Fix the active data-integrity bugs (do this before anything else)
 
-- [ ] **Fix the field-name mismatch between the public application form and `/api/admissions/apply`** (`desiredClass`/`consent` vs `desiredClassId`/`declarationConsent`). Confirm the real submission actually persists to `admission_applications` after the fix.
-- [ ] **Remove the fake client-generated reference number entirely.** A failed submission must show a clear, honest error — never a reference number that implies success unless the record genuinely exists in the database. Add an automated test: submit a form with a value guaranteed to fail server-side, and assert the UI does NOT display any reference number, only a real error.
-- [ ] **Fix the field-name mismatch between the admin dashboard's status actions and `/api/admissions/[id]/status`** (`{ status: "ACCEPTED" }` vs `{ action: "accept" }`). Confirm clicking Accept/Reject/Shortlist/Waitlist actually persists in the database, not just updates the UI optimistically.
-- [ ] Audit the rest of the admissions API surface for the same category of mismatch (frontend payload shape vs API expectation) — list everywhere else this pattern shows up, not just the two instances already found.
-- [ ] Automated test: submit a real, valid application through the actual public form end-to-end, move it through every pipeline stage as an admin, and confirm each transition genuinely persists — not just the two stages already known to be broken.
+- [x] **Fix the field-name mismatch between the public application form and `/api/admissions/apply`** (`desiredClass`/`consent` vs `desiredClassId`/`declarationConsent`). Confirm the real submission actually persists to `admission_applications` after the fix.
+- [x] **Remove the fake client-generated reference number entirely.** A failed submission must show a clear, honest error — never a reference number that implies success unless the record genuinely exists in the database. Add an automated test: submit a form with a value guaranteed to fail server-side, and assert the UI does NOT display any reference number, only a real error.
+- [x] **Fix the field-name mismatch between the admin dashboard's status actions and `/api/admissions/[id]/status`** (`{ status: "ACCEPTED" }` vs `{ action: "accept" }`). Confirm clicking Accept/Reject/Shortlist/Waitlist actually persists in the database, not just updates the UI optimistically.
+- [x] Audit the rest of the admissions API surface for the same category of mismatch (frontend payload shape vs API expectation) — list everywhere else this pattern shows up, not just the two instances already found.
+- [x] Automated test: submit a real, valid application through the actual public form end-to-end, move it through every pipeline stage as an admin, and confirm each transition genuinely persists — not just the two stages already known to be broken.
 
 ### Phase 2 — Payments (application fee + acceptance fee)
 
