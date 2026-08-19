@@ -114,3 +114,10 @@ This file records every technical decision made during development. It exists so
 **Date:** 2026-08-19
 **Context:** Prospective applicants need to sit entrance assessments and pay application/acceptance fees before becoming students. Prematurely inserting prospective candidates into the `students` table would create fake/premature student records and pollute the active school roster.
 **Decision:** Extended `cbtExamSessions` with an optional `admission_application_id` and made `student_id` nullable, allowing applicants to sit scheduled CBT entrance exams using their application reference and guardian email without requiring a user account or student record. Extended Paystack HMAC webhook processing to support `admission_application_fee` and `admission_acceptance_fee` alongside `feeInvoices`. Student records are only created upon verified acceptance and enrollment.
+
+---
+
+## Decision 020 — Multi-Tenant Admissions Discoverability: School-Scoped Portals & Platform School Directory
+**Date:** 2026-08-19
+**Context:** The main apexium.app marketing landing page sells the ERP platform to school proprietors and administrators. Placing a generic admissions application button on the main platform homepage would break multi-tenant boundaries by pretending the platform is a single school.
+**Decision:** Scoped the public admissions application flow directly to individual school portal pages (`/s/[slug]`), where parents apply with full tenant context. Added a public "Find Your School" directory search tool on the main platform landing page allowing parents and students to search registered schools by name, city, or state and navigate directly to their school's `/s/[slug]` gateway.

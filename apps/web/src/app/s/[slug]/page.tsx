@@ -2,8 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { db, schools } from "@apexium/db";
 import { eq } from "drizzle-orm";
-import { notFound } from "next/navigation";
-import { GraduationCap, ArrowRight, Search, Lock, School as SchoolIcon, FileText, CheckCircle2 } from "lucide-react";
+import { GraduationCap, ArrowRight, Search, Lock, School as SchoolIcon, FileText } from "lucide-react";
 
 interface Props {
   params: {
@@ -14,16 +13,16 @@ interface Props {
 export const dynamic = "force-dynamic";
 
 export default async function SchoolSlugLandingPage({ params }: Props) {
-  const { slug } = params;
+  const slug = (params.slug || "portal").toLowerCase();
 
   // Look up school tenant
-  const [school] = await db.select().from(schools).where(eq(schools.slug, slug)).limit(1);
+  const [school] = await db
+    .select()
+    .from(schools)
+    .where(eq(schools.slug, slug))
+    .limit(1);
 
-  if (!school) {
-    notFound();
-  }
-
-  const schoolName = school.name || "School Portal";
+  const schoolName = school?.name || `${slug.replace(/-/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())} Portal`;
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col justify-between selection:bg-indigo-500 selection:text-white relative overflow-hidden">
@@ -46,6 +45,7 @@ export default async function SchoolSlugLandingPage({ params }: Props) {
 
           <div className="flex items-center gap-3">
             <Link
+              id="school-portal-login-btn"
               href={`/s/${slug}/auth/login`}
               className="text-xs font-semibold px-4 py-2 text-slate-300 hover:text-white hover:bg-slate-800/60 border border-slate-700/60 rounded-xl transition-all flex items-center gap-1.5"
             >
@@ -85,6 +85,7 @@ export default async function SchoolSlugLandingPage({ params }: Props) {
               </p>
             </div>
             <Link
+              id="school-apply-admission-btn"
               href={`/s/${slug}/admissions`}
               className="inline-flex items-center justify-center w-full px-4 py-3 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm rounded-xl transition-all shadow-lg shadow-indigo-600/25 gap-2"
             >
@@ -105,6 +106,7 @@ export default async function SchoolSlugLandingPage({ params }: Props) {
               </p>
             </div>
             <Link
+              id="school-track-admission-btn"
               href={`/s/${slug}/admissions/track`}
               className="inline-flex items-center justify-center w-full px-4 py-3 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm rounded-xl transition-all border border-slate-700 gap-2"
             >
@@ -125,6 +127,7 @@ export default async function SchoolSlugLandingPage({ params }: Props) {
               </p>
             </div>
             <Link
+              id="school-portal-signin-card-btn"
               href={`/s/${slug}/auth/login`}
               className="inline-flex items-center justify-center w-full px-4 py-3 bg-slate-800 hover:bg-slate-700 text-white font-semibold text-sm rounded-xl transition-all border border-slate-700 gap-2"
             >

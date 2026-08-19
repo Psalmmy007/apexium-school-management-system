@@ -21,6 +21,7 @@ import {
   Activity,
 } from "lucide-react";
 import { PublicHeader } from "@/components/public/PublicHeader";
+import { SchoolFinder } from "@/components/public/SchoolFinder";
 import { tokens } from "@/lib/design-system/tokens";
 
 const FEATURE_TOUR_MODULES = [
@@ -169,8 +170,16 @@ export default function HomePage() {
             </a>
           </div>
 
+          {/* ── Directory: Find Your School Portal ───────────────────────────── */}
+          <div className="mt-10 sm:mt-12 max-w-2xl mx-auto text-center">
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">
+              Already enrolled or looking to apply to a specific school?
+            </p>
+            <SchoolFinder />
+          </div>
+
           {/* ── Role-Based Entry Points Cards ─────────────────────────────────── */}
-          <div className="mt-12 sm:mt-16 grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 max-w-6xl mx-auto text-left">
+          <div className="mt-12 sm:mt-16 grid grid-cols-1 md:grid-cols-2 gap-5 sm:gap-6 max-w-4xl mx-auto text-left">
             {/* Entry Point A: School Owners & Administrators */}
             <div className={tokens.card + " p-6 sm:p-7 flex flex-col justify-between"}>
               <div>
@@ -178,8 +187,8 @@ export default function HomePage() {
                   <School className="w-6 h-6" />
                 </div>
                 <h3 className={tokens.h3 + " mb-2"}>School Owners & Administrators</h3>
-                <p className={tokens.body + " mb-5 text-sm"}>
-                  Set up your academic structure, configure grading scales, enroll students, and manage fee billing in minutes.
+                <p className={tokens.body + " mb-5"}>
+                  Set up your academic structure, configure grading scales, enroll students, and manage fee billing. Setup takes under three minutes.
                 </p>
               </div>
               <Link
@@ -192,46 +201,14 @@ export default function HomePage() {
               </Link>
             </div>
 
-            {/* Entry Point B: Prospective Parents & Applicants */}
-            <div className={tokens.card + " p-6 sm:p-7 flex flex-col justify-between border-indigo-500/40 bg-indigo-950/20"}>
-              <div>
-                <div className={tokens.iconBoxLarge + " mb-4 bg-indigo-600/30 text-indigo-400"}>
-                  <FileCheck2 className="w-6 h-6" />
-                </div>
-                <h3 className={tokens.h3 + " mb-2"}>Prospective Parents & Applicants</h3>
-                <p className={tokens.body + " mb-5 text-sm"}>
-                  Submit student admission applications, sit timed CBT entrance assessments, and track admission status online.
-                </p>
-              </div>
-              <div className="space-y-1">
-                <Link
-                  id="role-admissions-apply-link"
-                  href="/s/demo/admissions"
-                  className="inline-flex items-center text-sm font-bold text-indigo-400 hover:text-indigo-300 transition-colors gap-1.5 min-h-[36px]"
-                >
-                  <span>Apply for Admission</span>
-                  <ArrowRight className="w-4 h-4" />
-                </Link>
-                <div>
-                  <Link
-                    id="role-admissions-track-link"
-                    href="/s/demo/admissions/track"
-                    className="inline-flex items-center text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors gap-1 min-h-[28px]"
-                  >
-                    <span>Track existing application →</span>
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            {/* Entry Point C: Teachers, Parents & Students */}
+            {/* Entry Point B: Teachers, Parents & Students */}
             <div className={tokens.card + " p-6 sm:p-7 flex flex-col justify-between"}>
               <div>
                 <div className={tokens.iconBoxLarge + " mb-4"}>
                   <GraduationCap className="w-6 h-6" />
                 </div>
                 <h3 className={tokens.h3 + " mb-2"}>Teachers, Parents & Students</h3>
-                <p className={tokens.body + " mb-5 text-sm"}>
+                <p className={tokens.body + " mb-5"}>
                   Access your school portal to record attendance, enter term scores, inspect academic report cards, or make fee payments.
                 </p>
               </div>

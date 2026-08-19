@@ -38,6 +38,7 @@ const ALWAYS_PUBLIC_PREFIXES = [
   "/api/saas/plans",
   "/api/saas/register",
   "/api/admissions/",   // Public admissions intake API
+  "/api/schools/search", // Public directory search for schools
   "/s/",                // School-specific public pages (admissions, login)
   "/_next/",
   "/favicon",

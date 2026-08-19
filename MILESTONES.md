@@ -756,10 +756,11 @@ Based on the full discovery audit already completed. Ordered so nothing gets exp
 - [x] Exam results feed back into the applicant's record as part of the admin's accept/reject decision — visible on the admin admissions dashboard, not a separate disconnected report.
 - [x] Automated test: an applicant (not a student) can access and complete a scheduled entrance exam via their application reference, and the score is correctly attached to their application record only — confirm no student record is created as a side effect of taking the exam.
 
-### Phase 5 — Public discoverability (only after Phases 1-4 are solid)
+### Phase 5 — Public discoverability & school portal gateway
 
-- [x] Add a clear, prominent "Apply for Admission" call-to-action on the main marketing landing page, linking to the correct school-specific application flow.
-- [x] Add the same clear call-to-action on each school's own subdomain/portal pages (`/s/[slug]`), not just a small "back to admissions" link buried on the login screen.
+- [x] Make "Apply for Admission" prominent and obvious on each individual school's own public page (`/s/[slug]`), correctly scoped to that school.
+- [x] Keep main marketing landing page scoped to selling Apexium to school administrators without generic admissions CTAs that pretend the platform is a single school.
+- [x] Add "Find Your School" search tool on the main marketing landing page allowing prospective parents/students to search by school name, city, or state and link directly to that specific school's `/s/[slug]` portal and admissions flow.
 - [x] Confirm a parent can genuinely complete the entire journey without visiting the school or creating an account: apply → pay application fee (if required) → sit entrance exam via reference number → get interview scheduled → receive decision → pay acceptance fee → become an enrolled student with a real `students` record.
 
 ### Verification
@@ -767,4 +768,4 @@ Based on the full discovery audit already completed. Ordered so nothing gets exp
 - [x] End-to-end test covering the full real journey described above, start to finish, with a genuinely new application — not test data injected directly into the database.
 - [x] Screenshot proof of the public "Apply for Admission" flow actually working, the way earlier bug fixes were proven with real screenshots, not just test suite claims.
 
-**Definition of Done:** A real prospective parent can find, complete, pay for, and track a full admission application entirely online, from a public landing page, with zero silent failures or fake success states anywhere in the flow — and every stage of the pipeline, including the entrance exam, is genuinely connected to the rest of the system rather than working in isolation.
+**Definition of Done:** A real prospective parent can find, complete, pay for, and track a full admission application entirely online, from a public school gateway, with zero silent failures or fake success states anywhere in the flow — and every stage of the pipeline, including the entrance exam, is genuinely connected to the rest of the system rather than working in isolation.
