@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, schools } from "@apexium/db";
-import { ilike, or, eq, and } from "drizzle-orm";
+import { searchPublicSchoolDirectory } from "@apexium/db";
 
 export const dynamic = "force-dynamic";
 
@@ -8,32 +7,24 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const query = (searchParams.get("q") || "").trim();
+    const state = (searchParams.get("state") || "").trim();
+    const city = (searchParams.get("city") || "").trim();
+    const schoolType = (searchParams.get("schoolType") || "").trim();
+    const limitParam = parseInt(searchParams.get("limit") || "20", 10);
+    const offsetParam = parseInt(searchParams.get("offset") || "0", 10);
 
-    if (!query || query.length < 2) {
-      return NextResponse.json({ schools: [] });
-    }
+    const result = await searchPublicSchoolDirectory({
+      query: query || undefined,
+      state: state || undefined,
+      city: city || undefined,
+      schoolType: schoolType || undefined,
+      limit: limitParam,
+      offset: offsetParam,
+    });
 
-    const matchedSchools = await db
-      .select({
-        id: schools.id,
-        name: schools.name,
-        slug: schools.slug,
-        address: schools.address,
-        logoUrl: schools.logoUrl,
-      })
-      .from(schools)
-      .where(
-        or(
-          ilike(schools.name, `%${query}%`),
-          ilike(schools.address, `%${query}%`),
-          ilike(schools.slug, `%${query}%`)
-        )
-      )
-      .limit(8);
-
-    return NextResponse.json({ schools: matchedSchools });
+    return NextResponse.json(result);
   } catch (error: any) {
-    console.error("Error searching schools:", error);
-    return NextResponse.json({ error: "Failed to search schools" }, { status: 500 });
+    console.error("Error searching school directory:", error);
+    return NextResponse.json({ error: "Failed to search school directory" }, { status: 500 });
   }
 }

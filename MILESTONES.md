@@ -768,4 +768,51 @@ Based on the full discovery audit already completed. Ordered so nothing gets exp
 - [x] End-to-end test covering the full real journey described above, start to finish, with a genuinely new application — not test data injected directly into the database.
 - [x] Screenshot proof of the public "Apply for Admission" flow actually working, the way earlier bug fixes were proven with real screenshots, not just test suite claims.
 
-**Definition of Done:** A real prospective parent can find, complete, pay for, and track a full admission application entirely online, from a public school gateway, with zero silent failures or fake success states anywhere in the flow — and every stage of the pipeline, including the entrance exam, is genuinely connected to the rest of the system rather than working in isolation.
+**Definition of Done:** A real prospective parent can find, complete, pay for, and track a full admission application entirely online, from a public school gateway, with zero silent failures or fake success states anywhere in the flow — and every stage of the pipeline, including the entrance exam, is genuinely connected to the rest of the system rather than working in isolation.
+
+---
+
+## Milestone 43: Public School Directory & Lightweight Listing Growth Loop — [x] COMPLETE
+
+A new, deliberately lightweight path for a school to get discovered by parents before committing to a full Apexium account — distinct from the existing paid "Register School" onboarding, and designed as a lead-generation engine for converting unconverted listed schools into real customers.
+
+### Data model — a real status, not an inferred one
+
+- [x] Add an explicit `listingStatus` (or equivalent) to the school record with three real states: `unclaimed` (not listed anywhere, default/non-existent), `listed_unconverted` (has a public directory entry, no active subscription/dashboard), `active_tenant` (the existing full paying customer state). Every part of the app that currently assumes "a school row exists = a real tenant" must be checked against this — list anywhere that assumption is currently made.
+- [x] Confirm this status is independent of, but connects cleanly to, the existing license/subscription status already built — a `listed_unconverted` school converting to a paying customer should smoothly transition to `active_tenant`, reusing its already-entered profile data (name, logo, address) rather than starting over.
+
+### The lightweight listing flow — "List Your School / Get Found by Parents"
+
+- [x] Add a new, clearly distinct call-to-action on the landing page labeled "List Your School / Get Found by Parents" — visually and functionally separate from the existing "Register School" button, which continues to mean the real paid signup + onboarding wizard exactly as it does today. Do not let these two flows share a button, a label, or get confused in the UI.
+- [x] Build the lightweight form: school name, logo upload, physical address, school email (must be a real, deliverable address — validate format and deliverability where practical), and basic classification (school type/level, city/state) needed for parents to actually filter and find it later.
+- [x] On submission, create the school record with `listingStatus: listed_unconverted` — explicitly NOT provisioning a dashboard, user account, or any of the real onboarding infrastructure. This is a directory entry, nothing more, at this stage.
+- [x] Send a real activation/confirmation email to the submitted address with a verification link. The listing does not go public until this link is clicked — this confirms the email address is live and reachable, which is the baseline trust signal for the directory.
+- [x] **Lightweight ownership safeguard:** flag (not block) any submission where the confirmed email's domain doesn't plausibly match the school (e.g. a free consumer email domain for what appears to be an established institution) for a manual glance before the listing is treated as fully trustworthy — email deliverability alone doesn't prove the submitter is actually affiliated with the school.
+
+### The public directory & search
+
+- [x] Build the "Find Your School" search on the main landing page: parents can search by school name and filter by state/city and school type. Results include only `listed_unconverted` and `active_tenant` schools that have completed activation — never an unverified or unconfirmed listing.
+- [x] Each result shows only safe, intentionally public information: logo, name, address, school type — never anything from inside an actual dashboard (no student counts, staff names, financials, or anything implying operational data that doesn't exist for an unconverted listing).
+
+### What a parent sees when they click into a listing — this must be honest, not broken
+
+- [x] For an `active_tenant` school with online admissions actually configured (from Milestone 42): show the real, working "Apply for Admission" flow for that specific school.
+- [x] For a `listed_unconverted` school: show a clear, honest message — this school is not yet set up for online applications through Apexium, along with their listed address/contact for the parent to reach out directly. **Do not show any form that appears to submit an application** — this would recreate the exact deceptive-success problem already fixed in Milestone 42, just in a new location.
+- [x] Include an "Are you affiliated with this school?" path from the unconverted listing page, leading into the real "Register School" onboarding flow — this is the actual conversion moment the whole feature exists to create.
+
+### The growth loop — interest tracking and follow-up
+
+- [x] Track search/view events against each `listed_unconverted` school's directory entry — a simple, lightweight counter, not full analytics infrastructure.
+- [x] Build a scheduled (weekly) email job, reusing existing notification infrastructure, that reports real interest to each unconverted school's confirmed email: how many parents searched for or viewed their listing in that period, with a direct, clear call-to-action to activate their full Apexium account. The number reported must be genuinely accurate — never rounded up or embellished, since the entire credibility of this growth mechanic depends on it being true.
+- [x] Do not send this email to schools with zero activity in a given period — an email reporting "0 parents searched for you" undermines the pitch rather than supporting it; skip the send instead.
+
+### Verification
+
+- [x] Automated test: submit a lightweight listing, confirm it does NOT appear in public search results until the activation email link is clicked, and does not create any dashboard/user account access.
+- [x] Automated test: a parent search correctly returns both `listed_unconverted` and `active_tenant` schools with correct, safe-only information per type, and correctly filters by state/city/type.
+- [x] Automated test: asserting all three badge states render correctly with the correct action button (or lack of one) for their respective conditions: (1) `active_tenant` with classes & terms -> `"Apexium Partner (Online Admissions)"` + `"Apply"` CTA; (2) `active_tenant` without classes/terms -> `"Apexium Partner (Portal Active)"` + `"Portal"` CTA only (no apply button); (3) `listed_unconverted` -> `"Directory Listing"` + contact details only (no apply button).
+- [x] Automated test: clicking into an unconverted school's listing never renders anything resembling a real application form — assert no such form exists in the rendered output for that school type.
+- [x] Automated test: the weekly interest-report email content matches the real, actual tracked count for that school and period — no hardcoded or estimated numbers.
+- [x] Screenshot proof: the two distinct landing-page buttons side by side, a real directory search result, and an unconverted school's honest "not yet on Apexium" page.
+
+**Definition of Done:** A school can get discovered by parents through a genuinely free, lightweight listing without ever touching the real onboarding flow; parents can find and filter real schools honestly, with no deceptive or broken states anywhere; and unconverted schools receive accurate, real interest data on a regular cadence that gives them a concrete, honest reason to convert into paying customers.

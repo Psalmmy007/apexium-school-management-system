@@ -24,6 +24,7 @@ const PUBLIC_ROUTES = [
   "/subscribe",
   "/onboarding",
   "/onboarding/payment",
+  "/list-school",
   "/api/saas/register",
   "/api/saas/plans",
   "/api/saas/subscription/verify",
@@ -38,7 +39,7 @@ const ALWAYS_PUBLIC_PREFIXES = [
   "/api/saas/plans",
   "/api/saas/register",
   "/api/admissions/",   // Public admissions intake API
-  "/api/schools/search", // Public directory search for schools
+  "/api/schools/",      // Public directory search, listing, and verification
   "/s/",                // School-specific public pages (admissions, login)
   "/_next/",
   "/favicon",

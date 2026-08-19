@@ -140,15 +140,24 @@ export default function HomePage() {
             Apexium provides complete offline-first operation, WAEC and NECO-aligned grade calculation, transparent Naira pricing, and unrestricted data export.
           </p>
 
-          {/* Single Dominant Call-to-Action */}
-          <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4 max-w-xl sm:max-w-none mx-auto">
+          {/* Dual Action CTAs: Full ERP Registration vs Free Directory Listing */}
+          <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row items-center justify-center gap-3.5 sm:gap-4 max-w-2xl sm:max-w-none mx-auto">
             <Link
               id="hero-primary-cta"
               href="/register"
-              className={tokens.btnPrimaryLg + " w-full sm:w-auto min-h-[48px] py-4 px-7"}
+              className={tokens.btnPrimaryLg + " w-full sm:w-auto min-h-[48px] py-4 px-7 shadow-lg shadow-indigo-600/20"}
             >
-              <span>Register Your School (14-Day Trial)</span>
+              <span>Register School (14-Day Trial)</span>
               <ArrowRight className="w-5 h-5 shrink-0" />
+            </Link>
+
+            <Link
+              id="hero-list-school-cta"
+              href="/list-school"
+              className="w-full sm:w-auto min-h-[48px] py-4 px-6 rounded-xl bg-emerald-600/10 hover:bg-emerald-600/20 border border-emerald-500/40 text-emerald-300 font-bold text-sm flex items-center justify-center gap-2 transition-colors shadow-sm"
+            >
+              <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+              <span>List Your School / Get Found by Parents (Free)</span>
             </Link>
 
             <Link
@@ -157,17 +166,8 @@ export default function HomePage() {
               className={tokens.btnSecondary + " w-full sm:w-auto min-h-[48px] py-4 px-6"}
             >
               <CreditCard className="w-4 h-4 text-slate-400 shrink-0" />
-              <span>View Naira Plans and Pricing</span>
+              <span>Naira Plans</span>
             </Link>
-
-            <a
-              id="hero-demo-cta"
-              href="#demo-preview"
-              className={tokens.btnSecondary + " w-full sm:w-auto min-h-[48px] py-4 px-6"}
-            >
-              <Sparkles className="w-4 h-4 text-indigo-400 shrink-0" />
-              <span>Try a Live Demo</span>
-            </a>
           </div>
 
           {/* ── Directory: Find Your School Portal ───────────────────────────── */}

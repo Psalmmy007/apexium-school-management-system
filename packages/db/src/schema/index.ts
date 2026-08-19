@@ -66,12 +66,41 @@ export const schools = pgTable("schools", {
   branchName: varchar("branch_name", { length: 255 }),
   isGroupHeadquarters: boolean("is_group_headquarters").notNull().default(false),
   isActive: boolean("is_active").notNull().default(true),
+  // Milestone 43 — Public Directory & Lightweight Listing
+  listingStatus: varchar("listing_status", { length: 30 }).notNull().default("active_tenant"), // 'unclaimed', 'listed_unconverted', 'active_tenant'
+  schoolType: varchar("school_type", { length: 50 }), // 'nursery', 'primary', 'secondary', 'combined', 'creche'
+  state: varchar("state", { length: 100 }),
+  city: varchar("city", { length: 100 }),
+  listingVerified: boolean("listing_verified").notNull().default(false),
+  verificationToken: varchar("verification_token", { length: 128 }),
+  flaggedDomainMismatch: boolean("flagged_domain_mismatch").notNull().default(false),
+  flagReason: varchar("flag_reason", { length: 255 }),
+  claimedAt: timestamp("claimed_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true })
     .notNull()
     .defaultNow(),
+});
+
+// ── Table: school_directory_views (Milestone 43 Directory Analytics) ───
+export const schoolDirectoryViews = pgTable("school_directory_views", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  schoolId: uuid("school_id")
+    .notNull()
+    .references(() => schools.id, { onDelete: "cascade" }),
+  eventType: varchar("event_type", { length: 30 }).notNull(), // 'search_impression', 'profile_view'
+  periodReported: boolean("period_reported").notNull().default(false),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .notNull()
+    .defaultNow(),
+}, (table) => {
+  return {
+    schoolIdIdx: index("idx_dir_views_school_id").on(table.schoolId),
+    createdAtIdx: index("idx_dir_views_created_at").on(table.createdAt),
+    periodReportedIdx: index("idx_dir_views_period_reported").on(table.periodReported),
+  };
 });
 
 // ── Table: users ──────────────────────────────────────────────

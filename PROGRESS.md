@@ -810,4 +810,16 @@ Proof it works: 8/8 automated integration tests in `admissions-pipeline.test.ts`
 
 Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
 
+---
+
+## Milestone 43: Public School Directory & Lightweight Listing Growth Loop — COMPLETE
+Date: August 19, 2026
+
+What this means in plain terms: Schools can now list themselves for free on the public Apexium directory in under two minutes without setting up a full school dashboard. Prospective parents can search the directory by school name and filter by Nigerian state, city, and school type (Primary, Secondary, or Combined). For schools that are only listed, parents see honest contact details and a direct inquiry address with no fake application forms. For full Apexium partner schools that have configured classes and academic terms, parents get a direct button to start an online admission. Every week, listed schools automatically receive an honest email summarizing how many parents searched for or viewed their profile, giving them a clear reason to upgrade to a full account.
+
+Proof it works: 7/7 backend integration tests in `packages/db/src/services/directory.test.ts` (proving real DNS email deliverability checks, domain mismatch flagging, verified publication gating, exact interest report calculations, and the 3 distinct badge states) and 4/4 web tests in `apps/web/src/app/school-directory.test.ts` (proving zero application form leakage on unconverted profiles and safe-only data returns) passed 100%. Next.js production build compiled cleanly across all 191 routes with 0 errors. Live Playwright screenshots confirm the side-by-side landing page buttons, multi-filter search results, free listing form, and honest directory profile.
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+
 
