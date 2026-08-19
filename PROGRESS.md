@@ -799,3 +799,15 @@ What this means in plain terms: Three bugs were found through actual use of the 
 
 Proof it works: Live Playwright screenshots captured from the running production build confirm: (1) Admin sidebar shows "Teachers" in the ACADEMIC section with no "Teacher Workspace" item anywhere; (2) The /dashboard/teachers page loads and correctly shows the unified Teaching Staff & Class Assignments panel with an "+ Add New Teacher" button; (3) JSS 1 in Academic Structure now shows "Olawale Adeleke" as Class Teacher after a teacher was added — the form-teacher link flows through end-to-end. Build completed successfully (exit code 0) across 191 routes with zero TypeScript errors.
 
+---
+
+## Milestone 42: Admissions Pipeline Completion & Public Application Flow — COMPLETE
+Date: August 19, 2026
+
+What this means in plain terms: Prospective parents can now complete the entire admission journey online without visiting the school or creating an account beforehand. They can submit an application, track their status, pay application and acceptance fees via Paystack, sit a timed online entrance exam (powered by the real CBT engine without creating a fake student record), attend scheduled interviews, and—once accepted and payment is verified—automatically convert into an active enrolled student with a real student ID and linked parent record.
+
+Proof it works: 8/8 automated integration tests in `admissions-pipeline.test.ts` and 9/9 unit tests in `admissions.test.ts` passed 100% against live Supabase PostgreSQL (verifying data integrity, payment webhooks, decoupled applicant CBT exams, interview scheduling, and enrollment guards). Next.js production build (`pnpm build`) compiled cleanly with 0 errors across all 190 routes.
+
+Nothing needed from you right now — just reply "continue" when you're ready for the next milestone.
+
+

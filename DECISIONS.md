@@ -107,3 +107,10 @@ This file records every technical decision made during development. It exists so
 **Date:** 2026-08-15
 **Context:** School administrators (`role: "admin"`) are tenant-scoped users bound to a single school (`school_id`). Platform operators (superadmins) manage the global SaaS multi-tenant infrastructure and must not be bound to any school tenancy or conflated with school admins.
 **Decision:** Defined `PlatformUserRole = "platform_operator"` as distinct from `SchoolUserRole = "admin" | "teacher" | "parent" | "student"`. Created an authoritative `saas_platform_operators` table. Locked down `/platform` routes and API endpoints (`/api/platform/schools`, `/api/saas/analytics`, `/api/operations/diagnostics`, `/api/performance/benchmark`) on the server to reject school admins with HTTP 403 Forbidden. Removed `/platform` from `PUBLIC_ROUTES` and removed all links from the school admin dashboard navigation. Built a dedicated server-only CLI provisioning tool (`scripts/provision-platform-operator.ts`) for founders/operators.
+
+---
+
+## Decision 019 — Decoupled CBT Entrance Assessments for Applicants & Multi-Purpose Webhooks
+**Date:** 2026-08-19
+**Context:** Prospective applicants need to sit entrance assessments and pay application/acceptance fees before becoming students. Prematurely inserting prospective candidates into the `students` table would create fake/premature student records and pollute the active school roster.
+**Decision:** Extended `cbtExamSessions` with an optional `admission_application_id` and made `student_id` nullable, allowing applicants to sit scheduled CBT entrance exams using their application reference and guardian email without requiring a user account or student record. Extended Paystack HMAC webhook processing to support `admission_application_fee` and `admission_acceptance_fee` alongside `feeInvoices`. Student records are only created upon verified acceptance and enrollment.

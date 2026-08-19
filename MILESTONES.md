@@ -725,7 +725,7 @@ Based on the full discovery report already completed. Goal: the wizard sets up O
 
 ---
 
-## Milestone 42: Admissions Pipeline Completion & Public Application Flow — [ ] NOT STARTED
+## Milestone 42: Admissions Pipeline Completion & Public Application Flow — [x] COMPLETE
 
 Based on the full discovery audit already completed. Ordered so nothing gets exposed to real applicants before it's actually safe to use.
 
@@ -739,32 +739,32 @@ Based on the full discovery audit already completed. Ordered so nothing gets exp
 
 ### Phase 2 — Payments (application fee + acceptance fee)
 
-- [ ] Wire the application fee to Paystack at the point of public submission — the `paymentRequired`/`paymentVerified`/`paymentReference` columns already exist on `admission_applications`, use them. A school should be able to configure whether an application fee is required at all (some schools don't charge one).
-- [ ] Wire a separate acceptance fee flow, triggered once an applicant is marked "Accepted" — this is the payment that actually secures the place, distinct from the application fee.
-- [ ] Extend the Paystack webhook handler to process admission-application payments, not only term fee invoices — confirm this doesn't disturb the existing fee-invoice webhook handling already relied on elsewhere.
-- [ ] Automated test: an application with a required fee cannot progress past submission without a verified payment; a webhook confirming payment correctly updates `paymentVerified` on the correct application record for the correct school.
+- [x] Wire the application fee to Paystack at the point of public submission — the `paymentRequired`/`paymentVerified`/`paymentReference` columns already exist on `admission_applications`, use them. A school should be able to configure whether an application fee is required at all (some schools don't charge one).
+- [x] Wire a separate acceptance fee flow, triggered once an applicant is marked "Accepted" — this is the payment that actually secures the place, distinct from the application fee.
+- [x] Extend the Paystack webhook handler to process admission-application payments, not only term fee invoices — confirm this doesn't disturb the existing fee-invoice webhook handling already relied on elsewhere.
+- [x] Automated test: an application with a required fee cannot progress past submission without a verified payment; a webhook confirming payment correctly updates `paymentVerified` on the correct application record for the correct school.
 
 ### Phase 3 — Interview scheduling
 
-- [ ] Add interview scheduling to the pipeline: a date/time an admin sets for a shortlisted candidate, visible to the parent on the public tracking page (`/s/[slug]/admissions/track`).
-- [ ] Add a simple interview outcome/notes field an admin can record after the interview, informing the eventual accept/reject decision.
+- [x] Add interview scheduling to the pipeline: a date/time an admin sets for a shortlisted candidate, visible to the parent on the public tracking page (`/s/[slug]/admissions/track`).
+- [x] Add a simple interview outcome/notes field an admin can record after the interview, informing the eventual accept/reject decision.
 
 ### Phase 4 — Entrance exam, connected to the real CBT engine
 
-- [ ] The CBT engine currently requires a real `student_id`, but an applicant isn't a student yet — and shouldn't become one prematurely just to sit an exam (this would recreate the exact "provisioning fake/premature people" problem fixed in Milestone 40). Extend CBT sessions to optionally attach to an `admission_application_id` instead of a `student_id`, reusing the same reference-number + guardian-email verification pattern already built for the public tracking page — an applicant accesses their scheduled entrance exam the same way they check their status, no login required.
-- [ ] Admin can schedule which exam (from the existing CBT question bank) an applicant takes, and at what date/time.
-- [ ] Exam results feed back into the applicant's record as part of the admin's accept/reject decision — visible on the admin admissions dashboard, not a separate disconnected report.
-- [ ] Automated test: an applicant (not a student) can access and complete a scheduled entrance exam via their application reference, and the score is correctly attached to their application record only — confirm no student record is created as a side effect of taking the exam.
+- [x] The CBT engine currently requires a real `student_id`, but an applicant isn't a student yet — and shouldn't become one prematurely just to sit an exam (this would recreate the exact "provisioning fake/premature people" problem fixed in Milestone 40). Extend CBT sessions to optionally attach to an `admission_application_id` instead of a `student_id`, reusing the same reference-number + guardian-email verification pattern already built for the public tracking page — an applicant accesses their scheduled entrance exam the same way they check their status, no login required.
+- [x] Admin can schedule which exam (from the existing CBT question bank) an applicant takes, and at what date/time.
+- [x] Exam results feed back into the applicant's record as part of the admin's accept/reject decision — visible on the admin admissions dashboard, not a separate disconnected report.
+- [x] Automated test: an applicant (not a student) can access and complete a scheduled entrance exam via their application reference, and the score is correctly attached to their application record only — confirm no student record is created as a side effect of taking the exam.
 
 ### Phase 5 — Public discoverability (only after Phases 1-4 are solid)
 
-- [ ] Add a clear, prominent "Apply for Admission" call-to-action on the main marketing landing page, linking to the correct school-specific application flow.
-- [ ] Add the same clear call-to-action on each school's own subdomain/portal pages (`/s/[slug]`), not just a small "back to admissions" link buried on the login screen.
-- [ ] Confirm a parent can genuinely complete the entire journey without visiting the school or creating an account: apply → pay application fee (if required) → sit entrance exam via reference number → get interview scheduled → receive decision → pay acceptance fee → become an enrolled student with a real `students` record.
+- [x] Add a clear, prominent "Apply for Admission" call-to-action on the main marketing landing page, linking to the correct school-specific application flow.
+- [x] Add the same clear call-to-action on each school's own subdomain/portal pages (`/s/[slug]`), not just a small "back to admissions" link buried on the login screen.
+- [x] Confirm a parent can genuinely complete the entire journey without visiting the school or creating an account: apply → pay application fee (if required) → sit entrance exam via reference number → get interview scheduled → receive decision → pay acceptance fee → become an enrolled student with a real `students` record.
 
 ### Verification
 
-- [ ] End-to-end test covering the full real journey described above, start to finish, with a genuinely new application — not test data injected directly into the database.
-- [ ] Screenshot proof of the public "Apply for Admission" flow actually working, the way earlier bug fixes were proven with real screenshots, not just test suite claims.
+- [x] End-to-end test covering the full real journey described above, start to finish, with a genuinely new application — not test data injected directly into the database.
+- [x] Screenshot proof of the public "Apply for Admission" flow actually working, the way earlier bug fixes were proven with real screenshots, not just test suite claims.
 
 **Definition of Done:** A real prospective parent can find, complete, pay for, and track a full admission application entirely online, from a public landing page, with zero silent failures or fake success states anywhere in the flow — and every stage of the pipeline, including the entrance exam, is genuinely connected to the rest of the system rather than working in isolation.

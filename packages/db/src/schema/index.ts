@@ -882,7 +882,7 @@ export const cbtExamQuestions = pgTable("cbt_exam_questions", {
   order: integer("order").notNull().default(1),
 });
 
-// Student Exam Sessions Tracking Table
+// Student & Applicant Exam Sessions Tracking Table
 export const cbtExamSessions = pgTable("cbt_exam_sessions", {
   id: uuid("id").defaultRandom().primaryKey(),
   schoolId: uuid("school_id")
@@ -892,8 +892,10 @@ export const cbtExamSessions = pgTable("cbt_exam_sessions", {
     .notNull()
     .references(() => cbtExams.id, { onDelete: "cascade" }),
   studentId: uuid("student_id")
-    .notNull()
     .references(() => students.id, { onDelete: "cascade" }),
+  admissionApplicationId: uuid("admission_application_id")
+    .references(() => admissionApplications.id, { onDelete: "cascade" }),
+  applicantReference: varchar("applicant_reference", { length: 100 }),
   startedAt: timestamp("started_at", { withTimezone: true }).notNull().defaultNow(),
   submittedAt: timestamp("submitted_at", { withTimezone: true }),
   status: varchar("status", { length: 20 }).notNull().default("in_progress"), // in_progress, submitted, timed_out
@@ -3674,6 +3676,17 @@ export const admissionApplications = pgTable(
     paymentRequired: boolean("payment_required").notNull().default(false),
     paymentVerified: boolean("payment_verified").notNull().default(false),
     paymentReference: varchar("payment_reference", { length: 200 }),
+    applicationFeeAmount: integer("application_fee_amount").default(0),
+    acceptanceFeeRequired: boolean("acceptance_fee_required").notNull().default(false),
+    acceptanceFeeVerified: boolean("acceptance_fee_verified").notNull().default(false),
+    acceptanceFeeReference: varchar("acceptance_fee_reference", { length: 200 }),
+    acceptanceFeeAmount: integer("acceptance_fee_amount").default(0),
+    interviewDate: timestamp("interview_date", { withTimezone: true }),
+    interviewLocation: varchar("interview_location", { length: 255 }),
+    interviewNotes: text("interview_notes"),
+    interviewScore: integer("interview_score"),
+    entranceExamScore: integer("entrance_exam_score"),
+    cbtExamId: uuid("cbt_exam_id").references(() => cbtExams.id, { onDelete: "set null" }),
     submittedAt: timestamp("submitted_at", { withTimezone: true }),
     reviewedAt: timestamp("reviewed_at", { withTimezone: true }),
     reviewedBy: uuid("reviewed_by").references(() => users.id, { onDelete: "set null" }),

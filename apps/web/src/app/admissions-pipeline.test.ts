@@ -264,4 +264,299 @@ describe("Milestone 42 — Admissions Data Integrity & Pipeline Transitions", ()
     expect(dbLink.guardianId).toBe(result.guardian.id);
     expect(dbLink.isPrimary).toBe(true);
   });
+
+  it("6. Phase 2: Application fee requirement blocks review until Paystack webhook verifies payment", async () => {
+    const { createAdmissionApplication, reviewAdmissionApplication, verifyAndProcessPaystackWebhook } = await import("@apexium/db");
+    const crypto = await import("crypto");
+
+    // Create an application that requires an application fee
+    const app = await createAdmissionApplication({
+      schoolId: testSchool.id,
+      firstName: "FeePay",
+      lastName: "Student",
+      dateOfBirth: new Date("2017-03-20"),
+      gender: "male",
+      guardianName: "Fee Guardian",
+      guardianRelationship: "father",
+      guardianEmail: "feepay.guardian@example.com",
+      guardianPhone: "+2348099887766",
+      desiredClassId: testClass.id,
+    });
+
+    // Flag that payment is required
+    await db
+      .update(admissionApplications)
+      .set({ paymentRequired: true, paymentVerified: false, applicationFeeAmount: 5000 })
+      .where(eq(admissionApplications.id, app.id));
+
+    // Attempting to review without verified payment throws an error
+    await expect(reviewAdmissionApplication(app.id, testSchool.id, testAdmin.id)).rejects.toThrow(
+      /Application fee must be verified/i
+    );
+
+    // Simulate Paystack HMAC Webhook event
+    const secretKey = "sk_test_admissions_secret_123";
+    const webhookPayload = JSON.stringify({
+      event: "charge.success",
+      data: {
+        reference: `PAY-ADM-${Date.now()}`,
+        amount: 500000,
+        metadata: {
+          applicationId: app.id,
+          paymentType: "admission_application_fee",
+        },
+      },
+    });
+    const signature = crypto.createHmac("sha512", secretKey).update(webhookPayload).digest("hex");
+
+    const webhookResult = await verifyAndProcessPaystackWebhook(
+      testSchool.id,
+      webhookPayload,
+      signature,
+      secretKey
+    );
+
+    expect(webhookResult.verified).toBe(true);
+    expect(webhookResult.actionTaken).toContain("Application fee");
+
+    // Verify DB updated
+    const [updatedApp] = await db
+      .select()
+      .from(admissionApplications)
+      .where(eq(admissionApplications.id, app.id));
+    expect(updatedApp.paymentVerified).toBe(true);
+
+    // Now review succeeds
+    const reviewed = await reviewAdmissionApplication(app.id, testSchool.id, testAdmin.id);
+    expect(reviewed.status).toBe("under_review");
+  });
+
+  it("7. Phase 3 & 4: Schedules interview and assigns Entrance CBT exam taken by applicant without student record", async () => {
+    const {
+      createAdmissionApplication,
+      scheduleInterview,
+      recordInterviewOutcome,
+      cbtExams,
+      cbtQuestions,
+      cbtExamQuestions,
+      subjects,
+      terms,
+      academicYears,
+      startApplicantExamSession,
+      submitExamSession,
+    } = await import("@apexium/db");
+
+    // 1. Create applicant
+    const app = await createAdmissionApplication({
+      schoolId: testSchool.id,
+      firstName: "ExamTaker",
+      lastName: "Candidate",
+      dateOfBirth: new Date("2016-09-12"),
+      gender: "female",
+      guardianName: "Exam Parent",
+      guardianRelationship: "mother",
+      guardianEmail: "exam.parent@example.com",
+      guardianPhone: "+2348077665544",
+      desiredClassId: testClass.id,
+    });
+
+    // 2. Schedule Interview
+    const interviewDate = new Date(Date.now() + 86400000); // Tomorrow
+    await scheduleInterview({
+      applicationId: app.id,
+      schoolId: testSchool.id,
+      interviewDate,
+      interviewLocation: "Admin Building Conference Room B",
+      adminId: testAdmin.id,
+    });
+
+    await recordInterviewOutcome({
+      applicationId: app.id,
+      schoolId: testSchool.id,
+      interviewNotes: "Candidate demonstrated strong communication skills and readiness.",
+      interviewScore: 88,
+      adminId: testAdmin.id,
+    });
+
+    const [interviewedApp] = await db
+      .select()
+      .from(admissionApplications)
+      .where(eq(admissionApplications.id, app.id));
+
+    expect(interviewedApp.interviewLocation).toBe("Admin Building Conference Room B");
+    expect(interviewedApp.interviewScore).toBe(88);
+
+    // 3. Create Subject, Term, and CBT Exam
+    const [sub] = await db
+      .insert(subjects)
+      .values({ schoolId: testSchool.id, name: "General Knowledge Assessment", code: `GK-${Date.now()}` })
+      .returning();
+
+    const [term] = await db
+      .insert(terms)
+      .values({
+        schoolId: testSchool.id,
+        name: "First Term",
+        session: "2026/2027",
+        startDate: new Date("2026-09-01"),
+        endDate: new Date("2026-12-15"),
+        isCurrent: true,
+      })
+      .returning();
+
+    const [exam] = await db
+      .insert(cbtExams)
+      .values({
+        schoolId: testSchool.id,
+        title: "2026 Entrance Assessment Exam",
+        subjectId: sub.id,
+        classId: testClass.id,
+        termId: term.id,
+        totalMarks: 20,
+        passMarks: 10,
+        durationMinutes: 30,
+      })
+      .returning();
+
+    const [q1] = await db
+      .insert(cbtQuestions)
+      .values({
+        schoolId: testSchool.id,
+        subjectId: sub.id,
+        questionText: "What is the capital of Nigeria?",
+        questionType: "mcq",
+        options: [
+          { id: "a", text: "Lagos" },
+          { id: "b", text: "Abuja" },
+        ],
+        correctAnswer: "b",
+      })
+      .returning();
+
+    await db.insert(cbtExamQuestions).values({
+      schoolId: testSchool.id,
+      examId: exam.id,
+      questionId: q1.id,
+      marks: 10,
+      order: 1,
+    });
+
+    // Assign exam to applicant
+    await db
+      .update(admissionApplications)
+      .set({ cbtExamId: exam.id })
+      .where(eq(admissionApplications.id, app.id));
+
+    // Applicant sits exam without student account
+    const session = await startApplicantExamSession({
+      schoolId: testSchool.id,
+      examId: exam.id,
+      applicationId: app.id,
+      applicantReference: app.applicationReference,
+    });
+
+    expect(session.studentId).toBeNull();
+    expect(session.admissionApplicationId).toBe(app.id);
+
+    // Save answer and submit
+    const { saveExamAnswer } = await import("@apexium/db");
+    await saveExamAnswer(session.id, q1.id, "b"); // Correct answer
+
+    const submittedSession = await submitExamSession(session.id);
+    expect(submittedSession.score).toBe(10);
+    expect(submittedSession.percentage).toBe("100.00");
+
+    // Verify applicant record received entranceExamScore automatically
+    const [finalApp] = await db
+      .select()
+      .from(admissionApplications)
+      .where(eq(admissionApplications.id, app.id));
+
+    expect(finalApp.entranceExamScore).toBe(10);
+
+    // Verify NO student record was prematurely created
+    const [prematureStudent] = await db
+      .select()
+      .from(students)
+      .where(
+        and(
+          eq(students.schoolId, testSchool.id),
+          eq(students.firstName, "ExamTaker")
+        )
+      );
+    expect(prematureStudent).toBeUndefined();
+  });
+
+  it("8. Phase 2: Acceptance fee requirement blocks enrollment until acceptance fee is verified", async () => {
+    const {
+      createAdmissionApplication,
+      acceptApplicant,
+      convertApplicantToStudent,
+      verifyAndProcessPaystackWebhook,
+    } = await import("@apexium/db");
+    const crypto = await import("crypto");
+
+    const app = await createAdmissionApplication({
+      schoolId: testSchool.id,
+      firstName: "AcceptFee",
+      lastName: "Child",
+      dateOfBirth: new Date("2017-05-14"),
+      gender: "male",
+      guardianName: "Accept Guardian",
+      guardianRelationship: "father",
+      guardianEmail: "accept.guardian@example.com",
+      guardianPhone: "+2348066554433",
+      desiredClassId: testClass.id,
+    });
+
+    // Accept with acceptance fee required
+    await acceptApplicant(app.id, testSchool.id, testAdmin.id, {
+      acceptanceFeeRequired: true,
+      acceptanceFeeAmount: 25000,
+    });
+
+    // Attempting to enroll before paying acceptance fee throws error
+    await expect(
+      convertApplicantToStudent({
+        applicationId: app.id,
+        schoolId: testSchool.id,
+        adminId: testAdmin.id,
+        classId: testClass.id,
+      })
+    ).rejects.toThrow(/Acceptance fee payment must be verified/i);
+
+    // Settle acceptance fee via Paystack Webhook
+    const secretKey = "sk_test_admissions_secret_123";
+    const webhookPayload = JSON.stringify({
+      event: "charge.success",
+      data: {
+        reference: `ACC-PAY-${Date.now()}`,
+        amount: 2500000,
+        metadata: {
+          applicationId: app.id,
+          paymentType: "admission_acceptance_fee",
+        },
+      },
+    });
+    const signature = crypto.createHmac("sha512", secretKey).update(webhookPayload).digest("hex");
+
+    await verifyAndProcessPaystackWebhook(
+      testSchool.id,
+      webhookPayload,
+      signature,
+      secretKey
+    );
+
+    // Now conversion succeeds
+    const result = await convertApplicantToStudent({
+      applicationId: app.id,
+      schoolId: testSchool.id,
+      adminId: testAdmin.id,
+      classId: testClass.id,
+    });
+
+    expect(result.student).toBeDefined();
+    expect(result.student.firstName).toBe("AcceptFee");
+    expect(result.application.status).toBe("enrolled");
+  });
 });

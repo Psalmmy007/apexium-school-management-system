@@ -5,6 +5,7 @@ import {
   integrationWebhookLogs,
   automationCronSchedules,
   feeInvoices,
+  admissionApplications,
 } from "../index";
 import { eq, and, desc } from "drizzle-orm";
 import crypto from "crypto";
@@ -127,6 +128,8 @@ export async function verifyAndProcessPaystackWebhook(
   if (payload.event === "charge.success") {
     const reference = payload.data?.reference;
     const invoiceId = payload.data?.metadata?.invoiceId;
+    const applicationId = payload.data?.metadata?.applicationId;
+    const paymentType = payload.data?.metadata?.paymentType;
 
     if (invoiceId) {
       await db
@@ -135,6 +138,42 @@ export async function verifyAndProcessPaystackWebhook(
         .where(and(eq(feeInvoices.schoolId, schoolId), eq(feeInvoices.id, invoiceId)));
 
       return { verified: true, actionTaken: `Invoice ${invoiceId} settled via Paystack webhook` };
+    }
+
+    if (paymentType === "admission_acceptance_fee") {
+      if (applicationId) {
+        await db
+          .update(admissionApplications)
+          .set({
+            acceptanceFeeVerified: true,
+            acceptanceFeeReference: reference,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(admissionApplications.schoolId, schoolId),
+              eq(admissionApplications.id, applicationId)
+            )
+          );
+        return { verified: true, actionTaken: `Acceptance fee for application ${applicationId} verified via Paystack webhook` };
+      }
+    } else if (paymentType === "admission_application_fee" || (applicationId && !invoiceId)) {
+      if (applicationId) {
+        await db
+          .update(admissionApplications)
+          .set({
+            paymentVerified: true,
+            paymentReference: reference,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(admissionApplications.schoolId, schoolId),
+              eq(admissionApplications.id, applicationId)
+            )
+          );
+        return { verified: true, actionTaken: `Application fee for application ${applicationId} verified via Paystack webhook` };
+      }
     }
   }
 

@@ -1,4 +1,4 @@
-import { db, cbtQuestions, cbtExams, cbtExamQuestions, cbtExamSessions, schools, subjects, classes, terms, students } from "../index";
+import { db, cbtQuestions, cbtExams, cbtExamQuestions, cbtExamSessions, schools, subjects, classes, terms, students, admissionApplications } from "../index";
 import { eq, and, inArray, count, desc } from "drizzle-orm";
 import crypto from "crypto";
 
@@ -123,7 +123,6 @@ export function shuffleWithSeed<T>(array: T[], seedStr: string): T[] {
   return copy;
 }
 
-// ── Student Exam Session Service ───────────────────────────────
 export async function startExamSession(schoolId: string, examId: string, studentId: string) {
   // Check if active session already exists for this student and exam
   const [existing] = await db
@@ -150,6 +149,50 @@ export async function startExamSession(schoolId: string, examId: string, student
       schoolId,
       examId,
       studentId,
+      startedAt: new Date(),
+      status: "in_progress",
+      answers: {},
+      seed,
+    })
+    .returning();
+
+  return session;
+}
+
+export async function startApplicantExamSession(params: {
+  schoolId: string;
+  examId: string;
+  applicationId: string;
+  applicantReference: string;
+}) {
+  const [existing] = await db
+    .select()
+    .from(cbtExamSessions)
+    .where(
+      and(
+        eq(cbtExamSessions.schoolId, params.schoolId),
+        eq(cbtExamSessions.examId, params.examId),
+        eq(cbtExamSessions.admissionApplicationId, params.applicationId)
+      )
+    );
+
+  if (existing) {
+    return existing;
+  }
+
+  const seed = crypto
+    .createHash("sha256")
+    .update(`${params.applicationId}-${params.examId}-${Date.now()}`)
+    .digest("hex");
+
+  const [session] = await db
+    .insert(cbtExamSessions)
+    .values({
+      schoolId: params.schoolId,
+      examId: params.examId,
+      studentId: null,
+      admissionApplicationId: params.applicationId,
+      applicantReference: params.applicantReference,
       startedAt: new Date(),
       status: "in_progress",
       answers: {},
@@ -227,6 +270,17 @@ export async function submitExamSession(sessionId: string) {
     })
     .where(eq(cbtExamSessions.id, sessionId))
     .returning();
+
+  // If this session belongs to an admission applicant, feed the score back to admissionApplications
+  if (session.admissionApplicationId) {
+    await db
+      .update(admissionApplications)
+      .set({
+        entranceExamScore: totalAchievedScore,
+        updatedAt: new Date(),
+      })
+      .where(eq(admissionApplications.id, session.admissionApplicationId));
+  }
 
   return submittedSession;
 }

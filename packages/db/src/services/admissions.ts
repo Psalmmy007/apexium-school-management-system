@@ -128,6 +128,13 @@ export async function submitAdmissionApplication(id: string, schoolId: string) {
 }
 
 export async function reviewAdmissionApplication(id: string, schoolId: string, adminId: string) {
+  const [app] = await db.select().from(admissionApplications)
+    .where(and(eq(admissionApplications.id, id), eq(admissionApplications.schoolId, schoolId)));
+  if (!app) throw new Error("Application not found");
+  if (app.paymentRequired && !app.paymentVerified) {
+    throw new Error("Application fee must be verified before application can be reviewed");
+  }
+
   const [updated] = await db.update(admissionApplications)
     .set({ status: 'under_review', reviewedAt: new Date(), reviewedBy: adminId })
     .where(and(
@@ -157,12 +164,134 @@ export async function waitlistApplicant(id: string, schoolId: string, adminId: s
   return updated;
 }
 
-export async function acceptApplicant(id: string, schoolId: string, adminId: string) {
+export async function acceptApplicant(id: string, schoolId: string, adminId: string, options?: { acceptanceFeeRequired?: boolean; acceptanceFeeAmount?: number }) {
   const [updated] = await db.update(admissionApplications)
-    .set({ status: 'accepted', decisionAt: new Date(), decisionBy: adminId })
+    .set({
+      status: 'accepted',
+      decisionAt: new Date(),
+      decisionBy: adminId,
+      acceptanceFeeRequired: options?.acceptanceFeeRequired ?? false,
+      acceptanceFeeAmount: options?.acceptanceFeeAmount ?? 0,
+      updatedAt: new Date(),
+    })
     .where(and(
       eq(admissionApplications.id, id),
       eq(admissionApplications.schoolId, schoolId)
+    )).returning();
+  return updated;
+}
+
+export async function recordApplicationPayment(params: {
+  applicationId: string;
+  schoolId: string;
+  paymentReference: string;
+  amount?: number;
+}) {
+  const [updated] = await db.update(admissionApplications)
+    .set({
+      paymentVerified: true,
+      paymentReference: params.paymentReference,
+      applicationFeeAmount: params.amount !== undefined ? params.amount : undefined,
+      updatedAt: new Date(),
+    })
+    .where(and(
+      eq(admissionApplications.id, params.applicationId),
+      eq(admissionApplications.schoolId, params.schoolId)
+    )).returning();
+  return updated;
+}
+
+export async function recordAcceptancePayment(params: {
+  applicationId: string;
+  schoolId: string;
+  paymentReference: string;
+  amount?: number;
+}) {
+  const [updated] = await db.update(admissionApplications)
+    .set({
+      acceptanceFeeVerified: true,
+      acceptanceFeeReference: params.paymentReference,
+      acceptanceFeeAmount: params.amount !== undefined ? params.amount : undefined,
+      updatedAt: new Date(),
+    })
+    .where(and(
+      eq(admissionApplications.id, params.applicationId),
+      eq(admissionApplications.schoolId, params.schoolId)
+    )).returning();
+  return updated;
+}
+
+export async function scheduleInterview(params: {
+  applicationId: string;
+  schoolId: string;
+  interviewDate: Date;
+  interviewLocation?: string;
+  adminId: string;
+}) {
+  const [updated] = await db.update(admissionApplications)
+    .set({
+      interviewDate: params.interviewDate,
+      interviewLocation: params.interviewLocation || "School Administration Office",
+      updatedAt: new Date(),
+    })
+    .where(and(
+      eq(admissionApplications.id, params.applicationId),
+      eq(admissionApplications.schoolId, params.schoolId)
+    )).returning();
+  return updated;
+}
+
+export async function recordInterviewOutcome(params: {
+  applicationId: string;
+  schoolId: string;
+  interviewNotes: string;
+  interviewScore?: number;
+  adminId: string;
+}) {
+  const [updated] = await db.update(admissionApplications)
+    .set({
+      interviewNotes: params.interviewNotes,
+      interviewScore: params.interviewScore,
+      updatedAt: new Date(),
+    })
+    .where(and(
+      eq(admissionApplications.id, params.applicationId),
+      eq(admissionApplications.schoolId, params.schoolId)
+    )).returning();
+  return updated;
+}
+
+export async function assignEntranceExam(params: {
+  applicationId: string;
+  schoolId: string;
+  cbtExamId: string;
+  adminId: string;
+}) {
+  const [updated] = await db.update(admissionApplications)
+    .set({
+      cbtExamId: params.cbtExamId,
+      updatedAt: new Date(),
+    })
+    .where(and(
+      eq(admissionApplications.id, params.applicationId),
+      eq(admissionApplications.schoolId, params.schoolId)
+    )).returning();
+  return updated;
+}
+
+export async function recordEntranceExamScore(params: {
+  applicationId: string;
+  schoolId: string;
+  score: number;
+}) {
+  const [updated] = await db.update(admissionApplications)
+    .set({
+      entranceExamScore: params.score,
+      updatedAt: new Date(),
+    })
+    .where(and(
+      eq(admissionApplications.id, params.applicationId),
+      eq(admissionApplications.schoolId, params.schoolId)
     )).returning();
   return updated;
 }
@@ -227,6 +356,9 @@ export async function convertApplicantToStudent(params: {
     if (!app) throw new Error("Application not found");
     if (app.status !== 'accepted') throw new Error("Application must be in accepted status");
     if (app.convertedStudentId) throw new Error("Applicant already enrolled");
+    if (app.acceptanceFeeRequired && !app.acceptanceFeeVerified) {
+      throw new Error("Acceptance fee payment must be verified before student enrollment");
+    }
     
     // Create Student
     const admissionNumber = params.admissionNumber || await generateAtomicAdmissionNumber(params.schoolId, new Date().getFullYear().toString(), 'ADM');

@@ -26,6 +26,17 @@ interface Application {
   guardianPhone: string;
   submittedDate: string;
   internalNotes?: string;
+  paymentRequired?: boolean;
+  paymentVerified?: boolean;
+  acceptanceFeeRequired?: boolean;
+  acceptanceFeeVerified?: boolean;
+  acceptanceFeeAmount?: number;
+  interviewDate?: string;
+  interviewLocation?: string;
+  interviewNotes?: string;
+  interviewScore?: number;
+  entranceExamScore?: number;
+  cbtExamId?: string;
 }
 
 export default function AdminAdmissionsDashboard() {
@@ -48,6 +59,20 @@ export default function AdminAdmissionsDashboard() {
     sessionId: ""
   });
 
+  // Interview modal state
+  const [isInterviewModalOpen, setIsInterviewModalOpen] = useState(false);
+  const [interviewData, setInterviewData] = useState({
+    date: "",
+    location: "School Administration Office",
+    notes: "",
+    score: ""
+  });
+
+  // CBT Exam assignment modal state
+  const [isExamModalOpen, setIsExamModalOpen] = useState(false);
+  const [availableExams, setAvailableExams] = useState<{ id: string; title: string }[]>([]);
+  const [selectedExamId, setSelectedExamId] = useState("");
+
   const [classList, setClassList] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
@@ -55,6 +80,95 @@ export default function AdminAdmissionsDashboard() {
     fetchApplications();
     fetchClasses();
   }, [statusFilter, sessionFilter]);
+
+  const openInterviewModal = (app: Application) => {
+    setInterviewData({
+      date: app.interviewDate ? new Date(app.interviewDate).toISOString().slice(0, 16) : "",
+      location: app.interviewLocation || "School Administration Office",
+      notes: app.interviewNotes || "",
+      score: app.interviewScore !== undefined ? String(app.interviewScore) : ""
+    });
+    setIsInterviewModalOpen(true);
+  };
+
+  const handleInterviewSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedApp) return;
+    try {
+      const res = await fetch(`/api/admissions/${selectedApp.id}/interview`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          interviewDate: interviewData.date ? new Date(interviewData.date).toISOString() : undefined,
+          interviewLocation: interviewData.location,
+          interviewNotes: interviewData.notes,
+          interviewScore: interviewData.score ? Number(interviewData.score) : undefined,
+        })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to schedule interview");
+      }
+      setSelectedApp({
+        ...selectedApp,
+        interviewDate: interviewData.date,
+        interviewLocation: interviewData.location,
+        interviewNotes: interviewData.notes,
+        interviewScore: interviewData.score ? Number(interviewData.score) : undefined,
+      });
+      setApplications(apps => apps.map(a => a.id === selectedApp.id ? {
+        ...a,
+        interviewDate: interviewData.date,
+        interviewLocation: interviewData.location,
+        interviewNotes: interviewData.notes,
+        interviewScore: interviewData.score ? Number(interviewData.score) : undefined,
+      } : a));
+      setIsInterviewModalOpen(false);
+    } catch (err: any) {
+      alert(err.message || "Failed to schedule interview");
+    }
+  };
+
+  const openExamModal = async (app: Application) => {
+    try {
+      const res = await fetch(`/api/admissions/${app.id}/exam`);
+      if (res.ok) {
+        const data = await res.json();
+        setAvailableExams(data.exams || []);
+      }
+      setSelectedExamId(app.cbtExamId || "");
+      setIsExamModalOpen(true);
+    } catch (e) {
+      console.error("Failed to load CBT exams", e);
+    }
+  };
+
+  const handleExamSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedApp || !selectedExamId) return;
+    try {
+      const res = await fetch(`/api/admissions/${selectedApp.id}/exam`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ cbtExamId: selectedExamId })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || "Failed to assign entrance exam");
+      }
+      setSelectedApp({
+        ...selectedApp,
+        cbtExamId: selectedExamId,
+      });
+      setApplications(apps => apps.map(a => a.id === selectedApp.id ? {
+        ...a,
+        cbtExamId: selectedExamId,
+      } : a));
+      setIsExamModalOpen(false);
+    } catch (err: any) {
+      alert(err.message || "Failed to assign entrance exam");
+    }
+  };
 
   const fetchClasses = async () => {
     try {
@@ -110,6 +224,17 @@ export default function AdminAdmissionsDashboard() {
           guardianPhone: a.guardianPhone || "",
           submittedDate: a.submittedAt ? new Date(a.submittedAt).toLocaleDateString() : (a.createdAt ? new Date(a.createdAt).toLocaleDateString() : "Recent"),
           internalNotes: a.internalNotes || "",
+          paymentRequired: a.paymentRequired,
+          paymentVerified: a.paymentVerified,
+          acceptanceFeeRequired: a.acceptanceFeeRequired,
+          acceptanceFeeVerified: a.acceptanceFeeVerified,
+          acceptanceFeeAmount: a.acceptanceFeeAmount,
+          interviewDate: a.interviewDate,
+          interviewLocation: a.interviewLocation,
+          interviewNotes: a.interviewNotes,
+          interviewScore: a.interviewScore,
+          entranceExamScore: a.entranceExamScore,
+          cbtExamId: a.cbtExamId,
         }));
         setApplications(mapped);
       } else {
@@ -351,6 +476,12 @@ export default function AdminAdmissionsDashboard() {
                   )}
                   {selectedApp.status === "UNDER_REVIEW" && (
                     <>
+                      <button onClick={() => openInterviewModal(selectedApp)} className="btn-secondary text-sm px-3.5 py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg hover:bg-indigo-100 flex items-center gap-1.5 font-medium">
+                        <span>📅 Interview</span>
+                      </button>
+                      <button onClick={() => openExamModal(selectedApp)} className="btn-secondary text-sm px-3.5 py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg hover:bg-indigo-100 flex items-center gap-1.5 font-medium">
+                        <span>📝 Assign CBT</span>
+                      </button>
                       <button onClick={() => updateStatus(selectedApp.id, "SHORTLISTED")} className="btn-secondary text-sm px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50">Shortlist</button>
                       <button onClick={() => updateStatus(selectedApp.id, "ACCEPTED")} className="btn-primary text-sm px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Accept</button>
                       <button onClick={() => updateStatus(selectedApp.id, "WAITLISTED")} className="btn-secondary text-sm px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50">Waitlist</button>
@@ -359,6 +490,12 @@ export default function AdminAdmissionsDashboard() {
                   )}
                   {selectedApp.status === "SHORTLISTED" && (
                     <>
+                      <button onClick={() => openInterviewModal(selectedApp)} className="btn-secondary text-sm px-3.5 py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg hover:bg-indigo-100 flex items-center gap-1.5 font-medium">
+                        <span>📅 Interview</span>
+                      </button>
+                      <button onClick={() => openExamModal(selectedApp)} className="btn-secondary text-sm px-3.5 py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-lg hover:bg-indigo-100 flex items-center gap-1.5 font-medium">
+                        <span>📝 Assign CBT</span>
+                      </button>
                       <button onClick={() => updateStatus(selectedApp.id, "ACCEPTED")} className="btn-primary text-sm px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Accept</button>
                       <button onClick={() => updateStatus(selectedApp.id, "WAITLISTED")} className="btn-secondary text-sm px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50">Waitlist</button>
                       <button onClick={() => updateStatus(selectedApp.id, "REJECTED")} className="btn-danger text-sm px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100">Reject</button>
@@ -376,6 +513,38 @@ export default function AdminAdmissionsDashboard() {
                       Enroll Applicant
                     </button>
                   )}
+                </div>
+              </div>
+
+              {/* Assessment, Interview & Payment Progress */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Entrance CBT</p>
+                  {selectedApp.entranceExamScore !== undefined && selectedApp.entranceExamScore !== null ? (
+                    <p className="text-base font-bold text-indigo-600">{selectedApp.entranceExamScore} pts (Completed)</p>
+                  ) : selectedApp.cbtExamId ? (
+                    <p className="text-sm font-medium text-amber-600">Assigned (Awaiting exam)</p>
+                  ) : (
+                    <p className="text-sm text-slate-400">Not assigned</p>
+                  )}
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Interview</p>
+                  {selectedApp.interviewDate ? (
+                    <div>
+                      <p className="text-xs font-medium text-slate-900">{new Date(selectedApp.interviewDate).toLocaleString([], { dateStyle: "short", timeStyle: "short" })}</p>
+                      {selectedApp.interviewScore !== undefined && <p className="text-xs text-indigo-600 font-semibold mt-0.5">Score: {selectedApp.interviewScore}/100</p>}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-400">Not scheduled</p>
+                  )}
+                </div>
+
+                <div className="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Fee Clearance</p>
+                  <p className="text-xs text-slate-700">App Fee: <span className="font-medium">{selectedApp.paymentRequired ? (selectedApp.paymentVerified ? "Verified ✓" : "Pending") : "Free"}</span></p>
+                  <p className="text-xs text-slate-700 mt-0.5">Acceptance: <span className="font-medium">{selectedApp.acceptanceFeeRequired ? (selectedApp.acceptanceFeeVerified ? "Verified ✓" : "Pending") : "None"}</span></p>
                 </div>
               </div>
 
@@ -525,6 +694,107 @@ export default function AdminAdmissionsDashboard() {
               <div className="pt-4 mt-2 border-t flex justify-end gap-3">
                 <button type="button" onClick={() => setIsEnrollModalOpen(false)} className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50">Cancel</button>
                 <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-emerald-600 rounded-lg hover:bg-emerald-700 shadow-sm">Confirm Enrollment</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Interview Scheduling Modal */}
+      {isInterviewModalOpen && selectedApp && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-fade-in">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-900">Schedule Applicant Interview</h3>
+              <button onClick={() => setIsInterviewModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <form onSubmit={handleInterviewSubmit} className="p-6 space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Interview Date & Time</label>
+                <input 
+                  type="datetime-local" 
+                  value={interviewData.date}
+                  onChange={e => setInterviewData({...interviewData, date: e.target.value})}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Location / Meeting Details</label>
+                <input 
+                  type="text" 
+                  value={interviewData.location}
+                  onChange={e => setInterviewData({...interviewData, location: e.target.value})}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  placeholder="e.g. Principal's Office / Zoom Link"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Interview Score (Optional, 0-100)</label>
+                <input 
+                  type="number" 
+                  min="0"
+                  max="100"
+                  value={interviewData.score}
+                  onChange={e => setInterviewData({...interviewData, score: e.target.value})}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  placeholder="Score out of 100"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Interview Notes / Outcome</label>
+                <textarea 
+                  value={interviewData.notes}
+                  onChange={e => setInterviewData({...interviewData, notes: e.target.value})}
+                  className="w-full border border-slate-300 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+                  rows={3}
+                  placeholder="Record discussion outcome, candidate readiness, recommendation..."
+                />
+              </div>
+
+              <div className="pt-4 mt-2 border-t flex justify-end gap-3">
+                <button type="button" onClick={() => setIsInterviewModalOpen(false)} className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50">Cancel</button>
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm">Save Interview</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* CBT Exam Assignment Modal */}
+      {isExamModalOpen && selectedApp && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden animate-fade-in">
+            <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+              <h3 className="text-lg font-bold text-slate-900">Assign Entrance CBT Exam</h3>
+              <button onClick={() => setIsExamModalOpen(false)} className="text-slate-400 hover:text-slate-600">
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <form onSubmit={handleExamSubmit} className="p-6 space-y-4">
+              <p className="text-xs text-slate-500">
+                Select an entrance examination from the school&apos;s CBT platform. The applicant can access and sit this exam using their application reference number.
+              </p>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-1">Select CBT Exam</label>
+                <select 
+                  value={selectedExamId}
+                  onChange={e => setSelectedExamId(e.target.value)}
+                  className="w-full border border-slate-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none bg-white"
+                  required
+                >
+                  <option value="">Select an Examination</option>
+                  {availableExams.map(ex => (
+                    <option key={ex.id} value={ex.id}>{ex.title}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="pt-4 mt-2 border-t flex justify-end gap-3">
+                <button type="button" onClick={() => setIsExamModalOpen(false)} className="px-4 py-2 text-sm font-medium text-slate-700 bg-white border border-slate-300 rounded-lg hover:bg-slate-50">Cancel</button>
+                <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-lg hover:bg-indigo-700 shadow-sm">Assign Exam</button>
               </div>
             </form>
           </div>

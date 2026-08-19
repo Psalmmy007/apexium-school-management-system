@@ -35,6 +35,7 @@ export async function GET(req: NextRequest) {
 
     // Return safe tracking details only (no internal notes, decisionBy, etc.)
     return NextResponse.json({
+      id: app.id,
       applicationReference: app.applicationReference,
       reference: app.applicationReference,
       firstName: app.firstName,
@@ -45,6 +46,16 @@ export async function GET(req: NextRequest) {
       submissionDate: app.submittedAt ? new Date(app.submittedAt).toLocaleDateString() : "Recent",
       desiredSession: app.desiredSession,
       guardianEmail: app.guardianEmail,
+      paymentRequired: app.paymentRequired,
+      paymentVerified: app.paymentVerified,
+      applicationFeeAmount: app.applicationFeeAmount || 0,
+      acceptanceFeeRequired: app.acceptanceFeeRequired,
+      acceptanceFeeVerified: app.acceptanceFeeVerified,
+      acceptanceFeeAmount: app.acceptanceFeeAmount || 0,
+      interviewDate: app.interviewDate,
+      interviewLocation: app.interviewLocation,
+      entranceExamScore: app.entranceExamScore,
+      cbtExamId: app.cbtExamId,
     });
   } catch (error: any) {
     console.error("Admissions tracking error:", error);

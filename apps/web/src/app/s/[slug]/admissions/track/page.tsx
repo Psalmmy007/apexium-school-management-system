@@ -12,11 +12,22 @@ interface School {
 }
 
 interface TrackResult {
+  id?: string;
   reference: string;
   status: string;
   submissionDate: string;
   schoolName: string;
   applicantName: string;
+  paymentRequired?: boolean;
+  paymentVerified?: boolean;
+  applicationFeeAmount?: number;
+  acceptanceFeeRequired?: boolean;
+  acceptanceFeeVerified?: boolean;
+  acceptanceFeeAmount?: number;
+  interviewDate?: string;
+  interviewLocation?: string;
+  cbtExamId?: string;
+  entranceExamScore?: number | null;
 }
 
 export default function TrackApplicationPage() {
@@ -204,6 +215,102 @@ export default function TrackApplicationPage() {
                 <p className="text-sm text-slate-400 mb-1">Date Submitted</p>
                 <p className="text-white">{result.submissionDate}</p>
               </div>
+
+              {/* Application Fee Status */}
+              {result.paymentRequired && (
+                <div className="bg-slate-950/40 p-4 rounded-xl border border-slate-800 flex justify-between items-center">
+                  <div>
+                    <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Application Fee</p>
+                    <p className="text-sm font-medium text-white">
+                      {result.applicationFeeAmount ? `₦${result.applicationFeeAmount.toLocaleString()}` : "Required"}
+                    </p>
+                  </div>
+                  <div>
+                    {result.paymentVerified ? (
+                      <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-semibold">
+                        Paid & Verified ✓
+                      </span>
+                    ) : (
+                      <span className="px-3 py-1 bg-amber-500/10 text-amber-400 border border-amber-500/20 rounded-full text-xs font-semibold">
+                        Payment Pending
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Entrance CBT Assessment */}
+              {result.cbtExamId && (
+                <div className="bg-indigo-950/20 p-4 rounded-xl border border-indigo-500/30">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-xs font-semibold text-indigo-400 uppercase tracking-wider">Entrance Assessment</p>
+                    {result.entranceExamScore !== undefined && result.entranceExamScore !== null ? (
+                      <span className="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-300 rounded text-xs font-medium">
+                        Completed
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-0.5 bg-indigo-500/20 text-indigo-300 rounded text-xs font-medium">
+                        Assigned
+                      </span>
+                    )}
+                  </div>
+                  {result.entranceExamScore !== undefined && result.entranceExamScore !== null ? (
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-sm text-slate-300">Assessment Score:</span>
+                      <span className="text-base font-bold text-white bg-slate-900 px-3 py-1 rounded-lg border border-slate-700">
+                        {result.entranceExamScore} pts
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="mt-3">
+                      <a
+                        href={`/s/${slug}/admissions/exam?reference=${encodeURIComponent(result.reference)}&email=${encodeURIComponent(email)}`}
+                        className="inline-flex items-center justify-center w-full px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg shadow-sm transition-colors"
+                      >
+                        Start Entrance Assessment →
+                      </a>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Interview Schedule */}
+              {result.interviewDate && (
+                <div className="bg-amber-950/20 p-4 rounded-xl border border-amber-500/30">
+                  <p className="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-2">Interview Scheduled</p>
+                  <div className="space-y-1">
+                    <p className="text-sm text-white font-medium">
+                      📅 {new Date(result.interviewDate).toLocaleString([], { dateStyle: "full", timeStyle: "short" })}
+                    </p>
+                    {result.interviewLocation && (
+                      <p className="text-xs text-slate-400">
+                        📍 {result.interviewLocation}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Acceptance Fee (when Accepted) */}
+              {result.status === "ACCEPTED" && result.acceptanceFeeRequired && (
+                <div className="bg-emerald-950/20 p-4 rounded-xl border border-emerald-500/30">
+                  <div className="flex justify-between items-center mb-1">
+                    <p className="text-xs font-semibold text-emerald-400 uppercase tracking-wider">Acceptance Fee</p>
+                    {result.acceptanceFeeVerified ? (
+                      <span className="px-2.5 py-0.5 bg-emerald-500/20 text-emerald-300 rounded text-xs font-medium">
+                        Verified ✓
+                      </span>
+                    ) : (
+                      <span className="px-2.5 py-0.5 bg-amber-500/20 text-amber-300 rounded text-xs font-medium">
+                        Pending
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-sm text-slate-300">
+                    Amount: {result.acceptanceFeeAmount ? `₦${result.acceptanceFeeAmount.toLocaleString()}` : "Required"}
+                  </p>
+                </div>
+              )}
 
               <div className="bg-slate-800/30 p-4 rounded-xl border border-slate-700/50">
                 <p className="text-sm text-slate-300 leading-relaxed">
