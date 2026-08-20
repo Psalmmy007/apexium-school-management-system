@@ -31,64 +31,7 @@ export function StudentRosterClient({
   userRole,
   classList,
 }: StudentRosterClientProps) {
-  const defaultRoster: StudentItem[] = [
-    {
-      id: "std-001",
-      admissionNumber: "ADM-2026-001",
-      firstName: "Samuel",
-      lastName: "Okonkwo",
-      middleName: "Chukwudi",
-      gender: "Male",
-      status: "active",
-      className: "SS 2",
-      sectionName: "Science A",
-      dateOfBirth: "2009-04-12",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "std-002",
-      admissionNumber: "ADM-2026-002",
-      firstName: "Amina",
-      lastName: "Bello",
-      middleName: "Zainab",
-      gender: "Female",
-      status: "active",
-      className: "SS 2",
-      sectionName: "Commercial",
-      dateOfBirth: "2009-08-25",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "std-003",
-      admissionNumber: "ADM-2026-003",
-      firstName: "Chidi",
-      lastName: "Adeyemi",
-      middleName: "Emmanuel",
-      gender: "Male",
-      status: "active",
-      className: "JS 3",
-      sectionName: "Diamond",
-      dateOfBirth: "2011-01-19",
-      createdAt: new Date().toISOString(),
-    },
-    {
-      id: "std-004",
-      admissionNumber: "ADM-2026-004",
-      firstName: "Fatima",
-      lastName: "Dangote",
-      middleName: "Maryam",
-      gender: "Female",
-      status: "active",
-      className: "SS 3",
-      sectionName: "Arts A",
-      dateOfBirth: "2008-11-03",
-      createdAt: new Date().toISOString(),
-    },
-  ];
-
-  const [studentsList, setStudentsList] = useState<StudentItem[]>(
-    initialStudents && initialStudents.length > 0 ? initialStudents : defaultRoster
-  );
+  const [studentsList, setStudentsList] = useState<StudentItem[]>(initialStudents || []);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [classFilter, setClassFilter] = useState("all");
@@ -378,8 +321,20 @@ export function StudentRosterClient({
             <tbody className="divide-y divide-slate-100 font-medium">
               {filteredStudents.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-12 text-slate-400">
-                    No students match the selected filter criteria.
+                  <td colSpan={6} className="text-center py-16 text-slate-500">
+                    {studentsList.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center space-y-3">
+                        <div className="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center font-bold text-xl">
+                          👥
+                        </div>
+                        <p className="font-semibold text-slate-800 text-sm">No Students Registered Yet</p>
+                        <p className="text-xs text-slate-400 max-w-sm">
+                          Your student roster is completely clean. Click &quot;Add Student&quot; or &quot;Import CSV&quot; above to register your school&apos;s students.
+                        </p>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-slate-400">No students match the selected filter criteria.</p>
+                    )}
                   </td>
                 </tr>
               ) : (
