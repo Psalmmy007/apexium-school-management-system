@@ -70,7 +70,11 @@ export async function getSessionUser(): Promise<SessionUser | null> {
             schoolId = membership.schoolId;
             userRole = (membership.role as SessionUser["role"]) ?? userRole;
           } else {
-            const [dbUser] = await db.select().from(users).where(eq(users.id, user.id)).limit(1);
+            const [dbUser] = await db
+              .select()
+              .from(users)
+              .where(user.email ? eq(users.email, user.email) : eq(users.id, user.id))
+              .limit(1);
             if (dbUser?.schoolId && isValidUUID(dbUser.schoolId)) {
               schoolId = dbUser.schoolId;
               userRole = (dbUser.role as SessionUser["role"]) ?? userRole;
@@ -97,15 +101,23 @@ export async function getSessionUser(): Promise<SessionUser | null> {
   // Fallback ONLY for local testing/demo environment when explicitly in dev mode without active Supabase Auth session
   if (process.env.NODE_ENV === "development" || process.env.VITEST) {
     try {
-      const [firstUser] = await db.select().from(users).limit(1);
-      if (firstUser && isValidUUID(firstUser.schoolId)) {
+      const [adminUser] = await db
+        .select()
+        .from(users)
+        .where(eq(users.email, "admin@apexium.edu"))
+        .limit(1);
+      const [anyAdmin] = !adminUser ? await db.select().from(users).where(eq(users.role, "admin")).limit(1) : [null];
+      const [anyUser] = !adminUser && !anyAdmin ? await db.select().from(users).limit(1) : [null];
+      const targetUser = adminUser || anyAdmin || anyUser;
+
+      if (targetUser && isValidUUID(targetUser.schoolId)) {
         return {
-          id: firstUser.id,
-          schoolId: firstUser.schoolId,
-          email: firstUser.email,
-          role: (firstUser.role as SessionUser["role"]) ?? "admin",
-          firstName: firstUser.firstName,
-          lastName: firstUser.lastName,
+          id: targetUser.id,
+          schoolId: targetUser.schoolId,
+          email: targetUser.email,
+          role: (targetUser.role as SessionUser["role"]) ?? "admin",
+          firstName: targetUser.firstName,
+          lastName: targetUser.lastName,
         };
       }
     } catch {

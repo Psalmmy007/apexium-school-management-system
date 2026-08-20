@@ -118,6 +118,9 @@ export async function middleware(request: NextRequest) {
 
   // ── Fast-path for unauthenticated users visiting protected pages ──────────
   if (!isPublic && !hasCookies) {
+    if (process.env.NODE_ENV === "development") {
+      return response;
+    }
     const loginUrl = new URL("/auth/login", request.url);
     loginUrl.searchParams.set("redirectTo", pathname);
     return NextResponse.redirect(loginUrl);

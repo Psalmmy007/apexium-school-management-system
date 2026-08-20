@@ -141,18 +141,18 @@ export function HRClient({
   const [loading, setLoading] = useState(false);
 
   const handleRegisterEmployee = async () => {
-    if (!empNum.trim() || !firstName.trim() || !lastName.trim() || !phone.trim()) return;
+    if (!firstName.trim() || !lastName.trim() || !phone.trim()) return;
     setLoading(true);
     try {
       const res = await fetch("/api/hr/employees", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          employeeNumber: empNum,
+          employeeNumber: empNum.trim() || undefined,
           firstName,
           lastName,
           phone,
-          email,
+          email: email.trim() || undefined,
           bankName,
           accountNumber: accNum,
           departmentId: selDept || undefined,
@@ -166,6 +166,9 @@ export function HRClient({
         setEmpNum("");
         setFirstName("");
         setLastName("");
+        setPhone("");
+        setEmail("");
+        setAccNum("");
       }
     } catch (e) {
       console.error(e);
@@ -406,7 +409,7 @@ export function HRClient({
                       <td className="text-xs text-slate-600">{e.phone}</td>
                       <td className="font-mono text-xs text-slate-500">{e.bankName || "GTBank"} ({e.accountNumber || "N/A"})</td>
                       <td>
-                        <span className={`badge ${e.employmentStatus === "active" ? "badge-success" : "badge-neutral"}`}>
+                        <span className={`badge ${e.employmentStatus?.toLowerCase() === "active" ? "badge-success" : "badge-neutral"}`}>
                           {e.employmentStatus}
                         </span>
                       </td>
@@ -739,10 +742,10 @@ export function HRClient({
             <h3 className="text-base font-bold text-slate-900">Register Staff Member</h3>
             <div className="space-y-3 text-xs">
               <div>
-                <label className="label">Employee Number *</label>
+                <label className="label">Employee Number (Optional — auto-assigned if blank)</label>
                 <input
                   type="text"
-                  placeholder="e.g. EMP-2026-001"
+                  placeholder="Auto-generated (e.g. EMP-2026-0001)"
                   value={empNum}
                   onChange={(e) => setEmpNum(e.target.value)}
                   className="input"
@@ -762,6 +765,10 @@ export function HRClient({
                 <label className="label">Phone Number *</label>
                 <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} className="input" />
               </div>
+              <div>
+                <label className="label">Email Address</label>
+                <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="input" placeholder="e.g. staff@school.edu.ng" />
+              </div>
               <div className="grid grid-cols-2 gap-2">
                 <div>
                   <label className="label">Bank Name</label>
@@ -777,7 +784,7 @@ export function HRClient({
               <button type="button" onClick={() => setShowEmpModal(false)} className="btn-ghost btn-sm">
                 Cancel
               </button>
-              <button type="button" onClick={handleRegisterEmployee} disabled={loading || !empNum.trim() || !firstName.trim()} className="btn-primary btn-sm">
+              <button type="button" onClick={handleRegisterEmployee} disabled={loading || !firstName.trim() || !lastName.trim() || !phone.trim()} className="btn-primary btn-sm">
                 {loading ? "Saving..." : "Save Employee"}
               </button>
             </div>

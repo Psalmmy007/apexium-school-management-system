@@ -8,9 +8,9 @@ import {
   timetableEntries,
   subjects,
   hrEmployees,
+  registerStaffMember,
 } from "@apexium/db";
 import { eq, and, sql } from "drizzle-orm";
-import { randomUUID } from "crypto";
 
 export const dynamic = "force-dynamic";
 
@@ -119,54 +119,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const teacherId = randomUUID();
-
-    // 1. Insert into users table
-    const [newUser] = await db
-      .insert(users)
-      .values({
-        id: teacherId,
-        schoolId: user.schoolId,
-        email: email.trim().toLowerCase(),
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        role: "teacher",
-        isActive: true,
-      })
-      .returning();
-
-    // 2. Also register in hrEmployees table for unified HR & payroll linkage
-    try {
-      const empNumber = `EMP-T-${Date.now().toString().slice(-4)}`;
-      await db.insert(hrEmployees).values({
-        schoolId: user.schoolId,
-        employeeNumber: empNumber,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        email: email.trim().toLowerCase(),
-        phone: phone || null,
-        employmentType: "Full-time",
-        employmentStatus: "Active",
-        hireDate: new Date(),
-      });
-    } catch (hrErr) {
-      console.warn("HR employee auto-creation note:", hrErr);
-    }
-
-    // 3. If formClassId is specified, assign as class teacher
-    if (formClassId) {
-      await db
-        .update(classes)
-        .set({ classTeacherId: teacherId, updatedAt: new Date() })
-        .where(and(eq(classes.id, formClassId), eq(classes.schoolId, user.schoolId)));
-    }
-
-    // 4. Return success response
+    // Unified staff creation across users and hrEmployees
+    const { employee, userId } = await registerStaffMember({
+      schoolId: user.schoolId,
+      firstName,
+      lastName,
+      email,
+      phone: phone || "",
+      isTeachingStaff: true,
+      formClassId: formClassId || undefined,
+      performedById: user.id,
+    });
 
     return NextResponse.json({
       success: true,
       message: `Teacher ${firstName} ${lastName} added successfully.`,
-      data: newUser,
+      data: { id: userId, ...employee },
     });
   } catch (error: any) {
     return NextResponse.json(

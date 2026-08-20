@@ -121,3 +121,10 @@ This file records every technical decision made during development. It exists so
 **Date:** 2026-08-19
 **Context:** The main apexium.app marketing landing page sells the ERP platform to school proprietors and administrators. Placing a generic admissions application button on the main platform homepage would break multi-tenant boundaries by pretending the platform is a single school.
 **Decision:** Scoped the public admissions application flow directly to individual school portal pages (`/s/[slug]`), where parents apply with full tenant context. Added a public "Find Your School" directory search tool on the main platform landing page allowing parents and students to search registered schools by name, city, or state and navigate directly to their school's `/s/[slug]` gateway.
+
+---
+
+## Decision 021 — Unified Employee Numbering Standard (EMP-YYYY-NNNN) & Centralized Staff Provisioning
+**Date:** 2026-08-20
+**Context:** Staff was previously created through fragmented mechanisms (HR & Payroll vs Teachers page) with inconsistent employee number formats (`EMP-T-XXXX` vs `TEC-YYYY-NNN`) and mixed status casing (`"Active"` vs `"active"`), causing count and data-integrity divergence.
+**Decision:** Standardized all school staff identifiers to the institutional format `EMP-YYYY-NNNN` (e.g. `EMP-2026-0001`), generated sequentially per school. Centralized all staff creation into a single shared database service (`registerStaffMember` in `@apexium/db`) that atomically provisions `users` (for teachers with login capabilities) and `hrEmployees` (for unified payroll, leave, and compliance tracking). Normalized all employment status values to Title Case `"Active"`. Migrated legacy records and purged temporary demo records.

@@ -14,6 +14,8 @@ import {
   hrPayrollItems,
   hrAuditLogs,
   staffAttendance,
+  users,
+  classes,
 } from "../index";
 import { eq, and, sql, gte, lte, inArray, desc } from "drizzle-orm";
 
@@ -94,10 +96,44 @@ export async function createPosition(data: {
   return position;
 }
 
-// ── 2. Employee Management & Salary History ──────────────────
+// ── 2. Employee Number Sequence Generator ───────────────────
+export async function generateNextEmployeeNumber(schoolId: string, year?: number): Promise<string> {
+  const currentYear = year || new Date().getFullYear();
+  const pattern = `EMP-${currentYear}-%`;
+
+  // Find all existing records for this school to extract the highest sequence
+  const existingRecords = await db
+    .select({ employeeNumber: hrEmployees.employeeNumber })
+    .from(hrEmployees)
+    .where(and(eq(hrEmployees.schoolId, schoolId), sql`${hrEmployees.employeeNumber} LIKE ${pattern}`));
+
+  let maxSeq = 0;
+  for (const rec of existingRecords) {
+    const parts = rec.employeeNumber.split("-");
+    if (parts.length >= 3) {
+      const num = parseInt(parts[2], 10);
+      if (!isNaN(num) && num > maxSeq) {
+        maxSeq = num;
+      }
+    }
+  }
+
+  if (maxSeq === 0 && existingRecords.length === 0) {
+    const allRecords = await db
+      .select({ id: hrEmployees.id })
+      .from(hrEmployees)
+      .where(eq(hrEmployees.schoolId, schoolId));
+    maxSeq = allRecords.length;
+  }
+
+  const nextSeq = maxSeq + 1;
+  return `EMP-${currentYear}-${String(nextSeq).padStart(4, "0")}`;
+}
+
+// ── 3. Employee Management & Salary History ──────────────────
 export async function createEmployee(data: {
   schoolId: string;
-  employeeNumber: string;
+  employeeNumber?: string;
   firstName: string;
   lastName: string;
   middleName?: string;
@@ -109,6 +145,7 @@ export async function createEmployee(data: {
   departmentId?: string;
   positionId?: string;
   employmentType?: string;
+  employmentStatus?: string;
   hireDate?: Date;
   bankName?: string;
   accountNumber?: string;
@@ -118,32 +155,41 @@ export async function createEmployee(data: {
   userId?: string;
   performedById?: string;
 }) {
+  let empNum = data.employeeNumber?.trim().toUpperCase();
+  if (!empNum) {
+    empNum = await generateNextEmployeeNumber(data.schoolId);
+  }
+
   const existing = await db
     .select()
     .from(hrEmployees)
-    .where(and(eq(hrEmployees.schoolId, data.schoolId), eq(hrEmployees.employeeNumber, data.employeeNumber.trim().toUpperCase())));
+    .where(and(eq(hrEmployees.schoolId, data.schoolId), eq(hrEmployees.employeeNumber, empNum)));
 
   if (existing.length > 0) {
-    throw new Error(`Employee number "${data.employeeNumber}" already exists.`);
+    throw new Error(`Employee number "${empNum}" already exists.`);
   }
+
+  const normalizedStatus = data.employmentStatus
+    ? data.employmentStatus.charAt(0).toUpperCase() + data.employmentStatus.slice(1).toLowerCase()
+    : "Active";
 
   const [employee] = await db
     .insert(hrEmployees)
     .values({
       schoolId: data.schoolId,
-      employeeNumber: data.employeeNumber.trim().toUpperCase(),
+      employeeNumber: empNum,
       firstName: data.firstName.trim(),
       lastName: data.lastName.trim(),
       middleName: data.middleName?.trim(),
       gender: data.gender,
       dateOfBirth: data.dateOfBirth,
       phone: data.phone.trim(),
-      email: data.email?.trim(),
+      email: data.email?.trim().toLowerCase(),
       address: data.address?.trim(),
       departmentId: data.departmentId,
       positionId: data.positionId,
-      employmentType: data.employmentType || "full_time",
-      employmentStatus: "active",
+      employmentType: data.employmentType || "Full-time",
+      employmentStatus: normalizedStatus,
       hireDate: data.hireDate || new Date(),
       bankName: data.bankName?.trim(),
       accountNumber: data.accountNumber?.trim(),
@@ -156,11 +202,14 @@ export async function createEmployee(data: {
 
   // Initialize Leave Balances (30 Days Annual, 10 Days Sick, 5 Days Casual)
   const currentYear = new Date().getFullYear();
-  await db.insert(hrLeaveBalances).values([
-    { schoolId: data.schoolId, employeeId: employee.id, leaveType: "Annual", year: currentYear, entitledDays: 30, remainingDays: 30 },
-    { schoolId: data.schoolId, employeeId: employee.id, leaveType: "Sick", year: currentYear, entitledDays: 10, remainingDays: 10 },
-    { schoolId: data.schoolId, employeeId: employee.id, leaveType: "Casual", year: currentYear, entitledDays: 5, remainingDays: 5 },
-  ]).onConflictDoNothing();
+  await db
+    .insert(hrLeaveBalances)
+    .values([
+      { schoolId: data.schoolId, employeeId: employee.id, leaveType: "Annual", year: currentYear, entitledDays: 30, remainingDays: 30 },
+      { schoolId: data.schoolId, employeeId: employee.id, leaveType: "Sick", year: currentYear, entitledDays: 10, remainingDays: 10 },
+      { schoolId: data.schoolId, employeeId: employee.id, leaveType: "Casual", year: currentYear, entitledDays: 5, remainingDays: 5 },
+    ])
+    .onConflictDoNothing();
 
   await logHRAuditEvent({
     schoolId: data.schoolId,
@@ -171,6 +220,103 @@ export async function createEmployee(data: {
   });
 
   return employee;
+}
+
+// ── 4. Unified Staff Member Registration (Teachers & HR) ─────
+export async function registerStaffMember(data: {
+  schoolId: string;
+  firstName: string;
+  lastName: string;
+  middleName?: string;
+  gender?: string;
+  dateOfBirth?: Date;
+  phone: string;
+  email: string;
+  address?: string;
+  departmentId?: string;
+  positionId?: string;
+  employmentType?: string;
+  hireDate?: Date;
+  bankName?: string;
+  accountNumber?: string;
+  taxIdNumber?: string;
+  pensionPin?: string;
+  pensionPfaName?: string;
+  isTeachingStaff?: boolean;
+  formClassId?: string;
+  performedById?: string;
+  employeeNumber?: string;
+}) {
+  const normalizedEmail = data.email.trim().toLowerCase();
+  const normalizedPhone = data.phone.trim();
+  const normalizedFirstName = data.firstName.trim();
+  const normalizedLastName = data.lastName.trim();
+
+  // 1. If teaching staff, provision / link user account
+  let userId: string | undefined = undefined;
+  if (data.isTeachingStaff) {
+    const [existingUser] = await db
+      .select()
+      .from(users)
+      .where(and(eq(users.schoolId, data.schoolId), eq(users.email, normalizedEmail)));
+
+    if (existingUser) {
+      userId = existingUser.id;
+      await db
+        .update(users)
+        .set({ role: "teacher", isActive: true, updatedAt: new Date() })
+        .where(eq(users.id, existingUser.id));
+    } else {
+      const [newUser] = await db
+        .insert(users)
+        .values({
+          schoolId: data.schoolId,
+          email: normalizedEmail,
+          firstName: normalizedFirstName,
+          lastName: normalizedLastName,
+          role: "teacher",
+          isActive: true,
+        })
+        .returning();
+      userId = newUser.id;
+    }
+
+    // 2. Assign as form teacher if formClassId specified
+    if (data.formClassId && userId) {
+      await db
+        .update(classes)
+        .set({ classTeacherId: userId, updatedAt: new Date() })
+        .where(and(eq(classes.id, data.formClassId), eq(classes.schoolId, data.schoolId)));
+    }
+  }
+
+  // 3. Create HR Employee record using standard format and Title Case "Active" status
+  const employee = await createEmployee({
+    schoolId: data.schoolId,
+    employeeNumber: data.employeeNumber,
+    firstName: normalizedFirstName,
+    lastName: normalizedLastName,
+    middleName: data.middleName?.trim(),
+    gender: data.gender,
+    dateOfBirth: data.dateOfBirth,
+    phone: normalizedPhone,
+    email: normalizedEmail,
+    address: data.address?.trim(),
+    departmentId: data.departmentId,
+    positionId: data.positionId,
+    employmentType: data.employmentType || "Full-time",
+    employmentStatus: "Active",
+    hireDate: data.hireDate || new Date(),
+    bankName: data.bankName?.trim(),
+    accountNumber: data.accountNumber?.trim(),
+    taxIdNumber: data.taxIdNumber?.trim(),
+    pensionPin: data.pensionPin?.trim(),
+    pensionPfaName: data.pensionPfaName?.trim(),
+    userId,
+    performedById: data.performedById,
+  });
+
+  return { employee, userId };
 }
 
 export async function recordSalaryChange(data: {
@@ -482,11 +628,11 @@ export async function calculateMonthlyPayrollRun(data: {
     }
   }
 
-  // Fetch active employees under school
+  // Fetch active employees under school (case-insensitive)
   const activeEmployees = await db
     .select()
     .from(hrEmployees)
-    .where(and(eq(hrEmployees.schoolId, schoolId), eq(hrEmployees.employmentStatus, "active")));
+    .where(and(eq(hrEmployees.schoolId, schoolId), sql`LOWER(${hrEmployees.employmentStatus}) = 'active'`));
 
   let runTotalGross = 0;
   let runTotalDeductions = 0;
