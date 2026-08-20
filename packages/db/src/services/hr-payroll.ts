@@ -270,6 +270,7 @@ export async function registerStaffMember(data: {
       const [newUser] = await db
         .insert(users)
         .values({
+          id: crypto.randomUUID(),
           schoolId: data.schoolId,
           email: normalizedEmail,
           firstName: normalizedFirstName,

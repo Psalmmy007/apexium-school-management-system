@@ -134,7 +134,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: `Teacher ${firstName} ${lastName} added successfully.`,
-      data: { id: userId, ...employee },
+      data: employee,
     });
   } catch (error: any) {
     return NextResponse.json(

@@ -341,7 +341,6 @@ describe("Milestone 42 — Admissions Data Integrity & Pipeline Transitions", ()
       cbtExamQuestions,
       subjects,
       terms,
-      academicYears,
       startApplicantExamSession,
       submitExamSession,
     } = await import("@apexium/db");
