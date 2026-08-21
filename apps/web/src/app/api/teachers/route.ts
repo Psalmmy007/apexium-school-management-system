@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getSessionUser } from "@/lib/auth/session";
+import { getSessionUser, getValidUserIdForAudit } from "@/lib/auth/session";
 import {
   db,
   users,
@@ -120,6 +120,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Unified staff creation across users and hrEmployees
+    const auditUserId = await getValidUserIdForAudit(user.id);
     const { employee, userId } = await registerStaffMember({
       schoolId: user.schoolId,
       firstName,
@@ -128,7 +129,7 @@ export async function POST(request: NextRequest) {
       phone: phone || "",
       isTeachingStaff: true,
       formClassId: formClassId || undefined,
-      performedById: user.id,
+      performedById: auditUserId || undefined,
     });
 
     return NextResponse.json({

@@ -19,6 +19,23 @@ import {
 } from "../index";
 import { eq, and, sql, gte, lte, inArray, desc } from "drizzle-orm";
 
+/**
+ * Helper to safely resolve a valid user ID present in public.users to prevent FK violations.
+ */
+async function resolveValidUserId(userId: string | null | undefined): Promise<string | null> {
+  if (!userId || typeof userId !== "string") return null;
+  try {
+    const [u] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    return u ? u.id : null;
+  } catch {
+    return null;
+  }
+}
+
 // ── Audit Trail Logger Helper ────────────────────────────────
 export async function logHRAuditEvent(data: {
   schoolId: string;
@@ -28,11 +45,12 @@ export async function logHRAuditEvent(data: {
   details: string;
   metadata?: any;
 }) {
+  const safePerformedById = await resolveValidUserId(data.performedById);
   const [log] = await db
     .insert(hrAuditLogs)
     .values({
       schoolId: data.schoolId,
-      performedById: data.performedById,
+      performedById: safePerformedById,
       action: data.action,
       employeeId: data.employeeId,
       details: data.details,
