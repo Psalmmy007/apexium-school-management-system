@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getSessionUser } from "@/lib/auth/session";
+import { getSessionUser, getValidUserIdForAudit } from "@/lib/auth/session";
 import { db, studentDocuments, studentActivityTimeline, students, users } from "@apexium/db";
 import { eq, and, desc } from "drizzle-orm";
 import { canPerformAction } from "@/lib/auth/rbac";
@@ -115,34 +115,35 @@ export async function POST(
       return NextResponse.json({ success: false, error: "Cannot add documents to a merged/read-only student record." }, { status: 400 });
     }
 
-    const [doc] = await db
-      .insert(studentDocuments)
-      .values({
+      const auditUserId = await getValidUserIdForAudit(user.id);
+      const [doc] = await db
+        .insert(studentDocuments)
+        .values({
+          schoolId: user.schoolId,
+          studentId: id,
+          documentType: documentType.trim(),
+          title: title.trim(),
+          fileUrl,
+          fileSize: fileSize || null,
+          mimeType: mimeType || null,
+          fileHash: fileHash || null,
+          uploadedBy: auditUserId,
+        })
+        .returning();
+
+      // Log document upload to activity timeline
+      await db.insert(studentActivityTimeline).values({
         schoolId: user.schoolId,
         studentId: id,
-        documentType: documentType.trim(),
-        title: title.trim(),
-        fileUrl,
-        fileSize: fileSize || null,
-        mimeType: mimeType || null,
-        fileHash: fileHash || null,
-        uploadedBy: user.id,
-      })
-      .returning();
-
-    // Log document upload to activity timeline
-    await db.insert(studentActivityTimeline).values({
-      schoolId: user.schoolId,
-      studentId: id,
-      performedBy: user.id,
-      eventType: "document_upload",
-      description: `Uploaded document "${title}" (${documentType.replace(/_/g, " ")})`,
-      metadata: {
-        documentId: doc.id,
-        documentType: doc.documentType,
-        title: doc.title,
-      },
-    });
+        performedBy: auditUserId,
+        eventType: "document_upload",
+        description: `Uploaded document "${title}" (${documentType.replace(/_/g, " ")})`,
+        metadata: {
+          documentId: doc.id,
+          documentType: doc.documentType,
+          title: doc.title,
+        },
+      });
 
     return NextResponse.json({ success: true, data: doc }, { status: 201 });
   } catch (error: any) {

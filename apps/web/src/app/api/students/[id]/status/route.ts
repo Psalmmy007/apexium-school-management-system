@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getSessionUser } from "@/lib/auth/session";
+import { getSessionUser, getValidUserIdForAudit } from "@/lib/auth/session";
 import { db, students, studentActivityTimeline } from "@apexium/db";
 import { eq, and } from "drizzle-orm";
 
@@ -80,6 +80,8 @@ export async function PATCH(
 
     const previousStatus = student.status;
 
+    const auditUserId = await getValidUserIdForAudit(user.id);
+
     // Update student status
     const [updated] = await db
       .update(students)
@@ -91,14 +93,14 @@ export async function PATCH(
     await db.insert(studentActivityTimeline).values({
       schoolId: user.schoolId,
       studentId: id,
-      performedBy: user.id,
+      performedBy: auditUserId,
       eventType: "status_change",
       description: `Status changed from "${previousStatus}" to "${status}". Reason: ${reason.trim()}`,
       metadata: {
         previousStatus,
         newStatus: status,
         reason: reason.trim(),
-        changedBy: user.id,
+        changedBy: auditUserId,
       },
     });
 

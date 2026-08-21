@@ -1,4 +1,4 @@
-import { db, students, studentActivityTimeline } from "../index";
+import { db, students, studentActivityTimeline, users } from "../index";
 import { eq, and, inArray } from "drizzle-orm";
 
 export type BulkOperationType =
@@ -176,17 +176,31 @@ export async function executeBulkOperation(
       .where(and(eq(students.schoolId, schoolId), inArray(students.id, eligibleIds)));
   }
 
-  // 4. Record Activity Timeline Events
+  // 4. Record Activity Timeline Events (safely checking performedBy FK)
+  let validPerformedBy: string | null = null;
+  if (performedBy) {
+    try {
+      const [u] = await db
+        .select({ id: users.id })
+        .from(users)
+        .where(eq(users.id, performedBy))
+        .limit(1);
+      if (u) validPerformedBy = u.id;
+    } catch {
+      validPerformedBy = null;
+    }
+  }
+
   for (const student of eligibleStudents) {
     await db.insert(studentActivityTimeline).values({
       schoolId,
       studentId: student.id,
-      performedBy,
+      performedBy: validPerformedBy,
       eventType: `bulk_${operation}`,
       description: `Bulk ${operation}: ${opReason}`,
       metadata: {
         operation,
-        performedBy,
+        performedBy: validPerformedBy,
         targetClassId: targetClassId || null,
         targetSectionId: targetSectionId || null,
         reason: opReason,

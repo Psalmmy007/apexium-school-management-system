@@ -25,6 +25,24 @@ export async function verifyPlatformOperator(user: SessionUser | null): Promise<
   return true;
 }
 
+/**
+ * Safely resolves a valid user UUID present in public.users table for audit logs and activity timelines.
+ * If the user ID does not exist in public.users, returns null to avoid foreign key constraint violations.
+ */
+export async function getValidUserIdForAudit(userId: string | null | undefined): Promise<string | null> {
+  if (!userId || !isValidUUID(userId)) return null;
+  try {
+    const [existing] = await db
+      .select({ id: users.id })
+      .from(users)
+      .where(eq(users.id, userId))
+      .limit(1);
+    return existing ? existing.id : null;
+  } catch {
+    return null;
+  }
+}
+
 // Get the current authenticated user's session data.
 export async function getSessionUser(): Promise<SessionUser | null> {
   try {
@@ -75,9 +93,39 @@ export async function getSessionUser(): Promise<SessionUser | null> {
               .from(users)
               .where(user.email ? eq(users.email, user.email) : eq(users.id, user.id))
               .limit(1);
-            if (dbUser?.schoolId && isValidUUID(dbUser.schoolId)) {
-              schoolId = dbUser.schoolId;
-              userRole = (dbUser.role as SessionUser["role"]) ?? userRole;
+
+            if (dbUser) {
+              if (dbUser.schoolId && isValidUUID(dbUser.schoolId)) {
+                schoolId = dbUser.schoolId;
+                userRole = (dbUser.role as SessionUser["role"]) ?? userRole;
+              }
+              // If user ID was different in public.users, update it to match Supabase Auth UUID
+              if (dbUser.id !== user.id) {
+                try {
+                  await db.update(users).set({ id: user.id }).where(eq(users.email, dbUser.email));
+                } catch {
+                  // ignore if conflict
+                }
+              }
+            } else if (isValidUUID(schoolId) && user.email) {
+              try {
+                const safeDbRole: "admin" | "teacher" | "parent" | "student" =
+                  userRole === "teacher" || userRole === "parent" || userRole === "student"
+                    ? userRole
+                    : "admin";
+
+                await db.insert(users).values({
+                  id: user.id,
+                  schoolId,
+                  email: user.email,
+                  role: safeDbRole,
+                  firstName: (meta.first_name as string) || "Administrator",
+                  lastName: (meta.last_name as string) || "Admin",
+                  isActive: true,
+                }).onConflictDoNothing();
+              } catch {
+                // ignore
+              }
             }
           }
         }

@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getSessionUser } from "@/lib/auth/session";
+import { getSessionUser, getValidUserIdForAudit } from "@/lib/auth/session";
 import { db, students, classes, sections, enforceStudentCap, linkStudentGuardian, studentActivityTimeline } from "@apexium/db";
 import { eq, and, like, or, sql } from "drizzle-orm";
 
@@ -246,11 +246,12 @@ export async function POST(request: NextRequest) {
       await linkStudentGuardian(user.schoolId, newStudent.id, guardianId, guardianRelationship || "Father", true);
     }
 
-    // Log admission event to activity timeline
+    // Log admission event to activity timeline (with safe user FK resolution)
+    const auditUserId = await getValidUserIdForAudit(user.id);
     await db.insert(studentActivityTimeline).values({
       schoolId: user.schoolId,
       studentId: newStudent.id,
-      performedBy: user.id,
+      performedBy: auditUserId,
       eventType: "admission",
       description: `Student admitted: ${newStudent.firstName} ${newStudent.lastName} (${newStudent.admissionNumber})`,
       metadata: {

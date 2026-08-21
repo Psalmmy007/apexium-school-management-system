@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getSessionUser } from "@/lib/auth/session";
+import { getSessionUser, getValidUserIdForAudit } from "@/lib/auth/session";
 import { db, studentDocuments, studentActivityTimeline, students } from "@apexium/db";
 import { eq, and } from "drizzle-orm";
 import { canPerformAction } from "@/lib/auth/rbac";
@@ -51,13 +51,15 @@ export async function DELETE(
       return NextResponse.json({ success: false, error: "Document is already deleted." }, { status: 400 });
     }
 
+    const auditUserId = await getValidUserIdForAudit(user.id);
+
     // Perform soft delete
     const [updated] = await db
       .update(studentDocuments)
       .set({
         isDeleted: true,
         deletedAt: new Date(),
-        deletedBy: user.id,
+        deletedBy: auditUserId,
         deleteReason: deleteReason.trim(),
         updatedAt: new Date(),
       })
@@ -68,7 +70,7 @@ export async function DELETE(
     await db.insert(studentActivityTimeline).values({
       schoolId: user.schoolId,
       studentId,
-      performedBy: user.id,
+      performedBy: auditUserId,
       eventType: "document_deletion",
       description: `Soft-deleted document "${doc.title}" (${doc.documentType.replace(/_/g, " ")}). Reason: ${deleteReason.trim()}`,
       metadata: {
@@ -76,7 +78,7 @@ export async function DELETE(
         title: doc.title,
         documentType: doc.documentType,
         deleteReason: deleteReason.trim(),
-        deletedBy: user.id,
+        deletedBy: auditUserId,
       },
     });
 

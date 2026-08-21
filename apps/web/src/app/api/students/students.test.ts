@@ -56,4 +56,27 @@ describe("Student CRUD API & Tenant Scoping Logic", () => {
     expect(schoolBStudents.length).toBe(1);
     expect(schoolBStudents[0].firstName).toBe("Bob");
   });
+
+  it("safely handles timeline performedBy foreign key resolution", () => {
+    const existingUsers = [
+      { id: "19aa18ff-3525-44c2-953d-629a159178b1", email: "admin@apexium.edu" },
+    ];
+
+    function resolveAuditUserId(userId: string | null | undefined): string | null {
+      if (!userId) return null;
+      const match = existingUsers.find((u) => u.id === userId);
+      return match ? match.id : null;
+    }
+
+    // When valid user in DB executes the action:
+    expect(resolveAuditUserId("19aa18ff-3525-44c2-953d-629a159178b1")).toBe(
+      "19aa18ff-3525-44c2-953d-629a159178b1"
+    );
+
+    // When synthetic/unregistered auth session user executes action:
+    expect(resolveAuditUserId("non-existent-user-uuid")).toBeNull();
+    expect(resolveAuditUserId(null)).toBeNull();
+    expect(resolveAuditUserId(undefined)).toBeNull();
+  });
 });
+

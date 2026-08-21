@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getSessionUser } from "@/lib/auth/session";
+import { getSessionUser, getValidUserIdForAudit } from "@/lib/auth/session";
 import { db, studentDocuments, studentActivityTimeline } from "@apexium/db";
 import { eq, and } from "drizzle-orm";
 import { canPerformAction } from "@/lib/auth/rbac";
@@ -40,6 +40,8 @@ export async function POST(
       return NextResponse.json({ success: false, error: "Document is active and not deleted." }, { status: 400 });
     }
 
+    const auditUserId = await getValidUserIdForAudit(user.id);
+
     // Restore document
     const [restored] = await db
       .update(studentDocuments)
@@ -57,14 +59,14 @@ export async function POST(
     await db.insert(studentActivityTimeline).values({
       schoolId: user.schoolId,
       studentId,
-      performedBy: user.id,
+      performedBy: auditUserId,
       eventType: "document_restoration",
       description: `Restored soft-deleted document "${doc.title}" (${doc.documentType.replace(/_/g, " ")})`,
       metadata: {
         documentId: docId,
         title: doc.title,
         documentType: doc.documentType,
-        restoredBy: user.id,
+        restoredBy: auditUserId,
       },
     });
 
