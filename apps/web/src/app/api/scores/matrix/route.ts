@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { getSessionUser } from "@/lib/auth/session";
-import { db, studentScores, students, subjects, classes, terms } from "@apexium/db";
-import { eq, and, sql } from "drizzle-orm";
+import { db, studentScores, students, subjects } from "@apexium/db";
+import { eq, and } from "drizzle-orm";
 import { calculateGrade } from "@apexium/db";
 
 export const dynamic = "force-dynamic";

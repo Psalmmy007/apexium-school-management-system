@@ -1,21 +1,31 @@
 "use client";
 
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { BackNavigation } from "@/components/ui/BackNavigation";
-import { calculateGrade } from "@apexium/db";
 import {
   GraduationCap,
   Save,
   Download,
   CheckCircle,
   AlertCircle,
-  Sparkles,
   LayoutGrid,
   FileSpreadsheet,
   Layers,
-  ChevronRight,
-  TrendingUp,
 } from "lucide-react";
+
+// Client-safe WAEC Standard Senior Secondary Grade Calculator
+function calculateGrade(totalScore: number): { grade: string; remark: string } {
+  const safeScore = Math.min(100, Math.max(0, totalScore));
+  if (safeScore >= 75) return { grade: "A1", remark: "Excellent" };
+  if (safeScore >= 70) return { grade: "B2", remark: "Very Good" };
+  if (safeScore >= 65) return { grade: "B3", remark: "Good" };
+  if (safeScore >= 60) return { grade: "C4", remark: "Credit" };
+  if (safeScore >= 55) return { grade: "C5", remark: "Credit" };
+  if (safeScore >= 50) return { grade: "C6", remark: "Credit" };
+  if (safeScore >= 45) return { grade: "D7", remark: "Pass" };
+  if (safeScore >= 40) return { grade: "E8", remark: "Pass" };
+  return { grade: "F9", remark: "Fail" };
+}
 
 interface ClassItem {
   id: string;
