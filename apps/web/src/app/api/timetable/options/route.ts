@@ -3,6 +3,8 @@ import { getSessionUser } from "@/lib/auth/session";
 import { db, classes, sections, subjects, periods, users } from "@apexium/db";
 import { eq, and } from "drizzle-orm";
 
+export const dynamic = "force-dynamic";
+
 export async function GET() {
   const user = await getSessionUser();
   if (!user || (user.role !== "admin" && user.role !== "teacher")) {
@@ -25,10 +27,10 @@ export async function GET() {
       .from(subjects)
       .where(eq(subjects.schoolId, user.schoolId));
 
-    const schoolPeriods = await db
+    const schoolPeriods = (await db
       .select()
       .from(periods)
-      .where(eq(periods.schoolId, user.schoolId));
+      .where(eq(periods.schoolId, user.schoolId))).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
     const schoolTeachers = await db
       .select({
