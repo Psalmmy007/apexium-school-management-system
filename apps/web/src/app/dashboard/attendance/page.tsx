@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { BackNavigation } from "@/components/ui/BackNavigation";
 import { getRxDB, type RxAttendanceDoc } from "@/lib/rxdb/database";
-import { Users, CheckCircle, Calendar, Plus, AlertCircle } from "lucide-react";
+import { Users, CheckCircle, Calendar, Plus, AlertCircle, BarChart3, Clock, Check, X, ShieldAlert } from "lucide-react";
 
 interface ClassItem {
   id: string;
@@ -31,7 +31,46 @@ interface StudentItem {
 
 type AttendanceStatus = "present" | "absent" | "late" | "excused";
 
+interface AttendanceSummaryData {
+  totalEnrolled: number;
+  today: {
+    date: string;
+    totalMarked: number;
+    present: number;
+    absent: number;
+    late: number;
+    excused: number;
+    rate: number;
+  };
+  classSummaries: Array<{
+    id: string;
+    name: string;
+    totalStudents: number;
+    presentToday: number;
+    absentToday: number;
+    lateToday: number;
+    excusedToday: number;
+    markedToday: number;
+    rate: number;
+  }>;
+  past7Days: Array<{
+    date: string;
+    dayName: string;
+    present: number;
+    absent: number;
+    rate: number;
+  }>;
+}
+
 export default function MarkAttendancePage() {
+  const [activeTab, setActiveTab] = useState<"kpi" | "register">("kpi");
+  const [initialLoading, setInitialLoading] = useState<boolean>(true);
+
+  // KPI Data
+  const [summaryData, setSummaryData] = useState<AttendanceSummaryData | null>(null);
+  const [loadingSummary, setLoadingSummary] = useState<boolean>(false);
+
+  // Register Data
   const [classList, setClassList] = useState<ClassItem[]>([]);
   const [sectionList, setSectionList] = useState<SectionItem[]>([]);
   const [selectedClassId, setSelectedClassId] = useState("");
@@ -66,140 +105,200 @@ export default function MarkAttendancePage() {
     };
   }, []);
 
-  // Fetch classes and sections
+  // Fetch initial summary & classes
   useEffect(() => {
-    async function loadClasses() {
+    async function loadInitialData() {
+      setInitialLoading(true);
       try {
-        const res = await fetch("/api/classes");
-        const json = await res.json();
-        if (json.success && json.data.classes?.length > 0) {
-          const classes = json.data.classes as ClassItem[];
-          setClassList(classes);
-          setSectionList(json.data.sections || []);
-          setTotalSchoolStudents(json.data.totalSchoolStudents ?? 0);
+        const [classesRes, summaryRes] = await Promise.allSettled([
+          fetch("/api/classes").then((r) => r.json()),
+          fetch("/api/attendance/summary").then((r) => r.json()),
+        ]);
 
-          // Select first class that has students, or fall back to the first class
+        if (classesRes.status === "fulfilled" && classesRes.value.success) {
+          const classes = (classesRes.value.data.classes || []) as ClassItem[];
+          setClassList(classes);
+          setSectionList(classesRes.value.data.sections || []);
+          setTotalSchoolStudents(classesRes.value.data.totalSchoolStudents ?? 0);
+
           const firstWithStudents = classes.find((c) => (c.studentCount || 0) > 0) || classes[0];
-          setSelectedClassId(firstWithStudents.id);
-        } else {
-          setClassList([]);
-          setSelectedClassId("");
-          setTotalSchoolStudents(0);
+          if (firstWithStudents) {
+            setSelectedClassId(firstWithStudents.id);
+          }
+        }
+
+        if (summaryRes.status === "fulfilled" && summaryRes.value.success) {
+          setSummaryData(summaryRes.value.data);
         }
       } catch (err) {
-        console.warn("Offline or failed loading classes", err);
-        setClassList([]);
-        setSelectedClassId("");
-        setTotalSchoolStudents(0);
+        console.warn("Failed loading attendance initial data", err);
+      } finally {
+        setInitialLoading(false);
       }
     }
-    loadClasses();
+    loadInitialData();
   }, []);
+
+  // Refresh summary data
+  async function refreshSummary() {
+    setLoadingSummary(true);
+    try {
+      const res = await fetch("/api/attendance/summary");
+      const json = await res.json();
+      if (json.success) {
+        setSummaryData(json.data);
+      }
+    } catch (err) {
+      console.warn("Failed refreshing summary", err);
+    } finally {
+      setLoadingSummary(false);
+    }
+  }
 
   // Fetch students for selected class
   useEffect(() => {
     async function loadStudents() {
       if (!selectedClassId) {
         setStudentList([]);
-        setAttendanceMap({});
         return;
       }
       setLoadingStudents(true);
       try {
-        const res = await fetch(`/api/students?classId=${selectedClassId}&pageSize=100`);
+        let url = `/api/students?classId=${selectedClassId}`;
+        if (selectedSectionId) {
+          url += `&sectionId=${selectedSectionId}`;
+        }
+        const res = await fetch(url);
         const json = await res.json();
-        if (json.success && json.data.items?.length > 0) {
-          const list = json.data.items;
-          setStudentList(list);
+        if (json.success && json.data.students) {
+          const students = json.data.students as StudentItem[];
+          setStudentList(students);
 
-          const initialMap: Record<string, { status: AttendanceStatus; remarks: string }> = {};
-          list.forEach((st: StudentItem) => {
-            initialMap[st.id] = { status: "present", remarks: "" };
+          // Default all students to 'present' initially
+          const initialMap: Record<
+            string,
+            { status: AttendanceStatus; remarks: string }
+          > = {};
+          students.forEach((s) => {
+            initialMap[s.id] = { status: "present", remarks: "" };
           });
+
+          // Check if existing attendance docs exist in RxDB for this date/class
+          try {
+            const rxdb = await getRxDB();
+            const docs = await rxdb.attendance
+              .find({
+                selector: {
+                  date: selectedDate,
+                  classId: selectedClassId,
+                },
+              })
+              .exec();
+
+            docs.forEach((doc) => {
+              const data = doc.toJSON() as RxAttendanceDoc;
+              initialMap[data.studentId] = {
+                status: data.status,
+                remarks: data.remarks || "",
+              };
+            });
+          } catch (e) {
+            console.warn("RxDB offline read skipped or unavailable", e);
+          }
+
           setAttendanceMap(initialMap);
         } else {
           setStudentList([]);
-          setAttendanceMap({});
         }
       } catch (err) {
-        console.warn("Offline or failed loading students", err);
+        console.warn("Failed loading student roster", err);
         setStudentList([]);
-        setAttendanceMap({});
       } finally {
         setLoadingStudents(false);
       }
     }
-    loadStudents();
-  }, [selectedClassId]);
+
+    if (activeTab === "register") {
+      loadStudents();
+    }
+  }, [selectedClassId, selectedSectionId, selectedDate, activeTab]);
 
   const availableSections = sectionList.filter(
-    (sec) => sec.classId === selectedClassId
+    (s) => s.classId === selectedClassId
   );
 
-  const selectedClass = classList.find((c) => c.id === selectedClassId);
-
-  function handleStatusChange(studentId: string, status: AttendanceStatus) {
+  function setStatus(studentId: string, status: AttendanceStatus) {
     setAttendanceMap((prev) => ({
       ...prev,
-      [studentId]: { ...prev[studentId], status },
+      [studentId]: {
+        ...prev[studentId],
+        status,
+      },
     }));
   }
 
-  function handleMarkAll(status: AttendanceStatus) {
+  function setRemarks(studentId: string, remarks: string) {
+    setAttendanceMap((prev) => ({
+      ...prev,
+      [studentId]: {
+        ...prev[studentId],
+        remarks,
+      },
+    }));
+  }
+
+  function markAll(status: AttendanceStatus) {
     setAttendanceMap((prev) => {
       const updated = { ...prev };
-      studentList.forEach((st) => {
-        updated[st.id] = { ...updated[st.id], status };
+      Object.keys(updated).forEach((id) => {
+        updated[id] = { ...updated[id], status };
       });
       return updated;
     });
   }
 
-  // Save attendance locally to RxDB IndexedDB, then sync if online
-  async function handleSaveAttendance() {
+  async function handleSave() {
     setSaving(true);
-    setSyncStatus("Saving locally to IndexedDB...");
-
+    setSyncStatus(null);
     try {
-      const db = await getRxDB();
-      const now = Date.now();
-      const recordsToSync: RxAttendanceDoc[] = [];
-
-      // Save each student record into local RxDB
-      for (const student of studentList) {
-        const entry = attendanceMap[student.id] || { status: "present", remarks: "" };
-        const docId = `${student.id}_${selectedDate}_daily`;
-
-        const docData: RxAttendanceDoc = {
-          id: docId,
-          schoolId: "current-school",
-          studentId: student.id,
-          classId: selectedClassId,
-          date: selectedDate,
-          status: entry.status,
-          remarks: entry.remarks || undefined,
-          updatedAt: now,
-          synced: false,
+      const rxdb = await getRxDB();
+      const recordsToSave: RxAttendanceDoc[] = studentList.map((s) => {
+        const att = attendanceMap[s.id] || {
+          status: "present",
+          remarks: "",
         };
+        return {
+          id: `${s.id}_${selectedDate}_daily`,
+          schoolId: "default-school",
+          studentId: s.id,
+          classId: selectedClassId,
+          sectionId: selectedSectionId || undefined,
+          date: selectedDate,
+          period: "daily",
+          status: att.status,
+          remarks: att.remarks,
+          synced: false,
+          updatedAt: Date.now(),
+        };
+      });
 
-        await db.attendance.upsert(docData);
-        recordsToSync.push(docData);
+      // 1. Bulk Upsert into RxDB (IndexedDB local offline storage)
+      for (const record of recordsToSave) {
+        await rxdb.attendance.upsert(record);
       }
 
-      setSyncStatus("Saved locally!");
-
-      // If online, sync to server API immediately
+      // 2. If online, immediately sync to server backend
       if (navigator.onLine) {
-        setSyncStatus("Syncing to server...");
         const syncRes = await fetch("/api/attendance/sync", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ records: recordsToSync }),
+          body: JSON.stringify({ records: recordsToSave }),
         });
 
         const syncJson = await syncRes.json();
         if (syncJson.success) {
-          setSyncStatus(`Synced ${syncJson.data.syncedCount} records to server!`);
+          setSyncStatus(`Synced ${syncJson.data.syncedCount} records to server successfully!`);
+          refreshSummary();
         } else {
           setSyncStatus("Saved locally (server sync pending)");
         }
@@ -219,42 +318,72 @@ export default function MarkAttendancePage() {
       {/* Back to Dashboard Navigation */}
       <BackNavigation href="/dashboard" label="Back to Dashboard" />
 
-      {/* Header & Status Indicator */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      {/* Header & Mode Switcher */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
-          <h1 className="text-2xl font-bold text-white">Mark Class Attendance</h1>
+          <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2.5">
+            <span className="w-8 h-8 rounded-lg bg-indigo-600/20 text-indigo-400 flex items-center justify-center">
+              <CheckCircle className="w-5 h-5" />
+            </span>
+            Attendance Management
+          </h1>
           <p className="text-sm text-slate-400 mt-1">
-            Offline-first attendance register powered by RxDB & IndexedDB.
+            School-wide daily attendance metrics, weekly institutional trends, and offline-first class registers.
           </p>
         </div>
 
-        {/* Network indicator badge */}
-        <div className="flex items-center gap-3">
-          <div
-            id="network-status-badge"
-            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-semibold ${
-              isOnline
-                ? "bg-emerald-950/60 text-emerald-300 border border-emerald-800/60"
-                : "bg-amber-950/60 text-amber-300 border border-amber-800/60"
+        {/* Tab Selector */}
+        <div className="flex items-center bg-slate-900 border border-slate-800 rounded-xl p-1 gap-1">
+          <button
+            type="button"
+            onClick={() => setActiveTab("kpi")}
+            className={`px-4 py-2 text-xs font-bold rounded-lg transition flex items-center gap-2 ${
+              activeTab === "kpi"
+                ? "bg-indigo-600 text-white shadow-sm"
+                : "text-slate-400 hover:text-white"
             }`}
           >
-            <span
-              className={`w-2 h-2 rounded-full ${
-                isOnline ? "bg-emerald-500 animate-pulse" : "bg-amber-500"
-              }`}
-            />
-            {isOnline ? "Online — Auto Sync Active" : "Offline Mode — Saving to Local DB"}
-          </div>
+            <BarChart3 className="w-4 h-4" />
+            Attendance Intelligence (KPIs)
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("register")}
+            className={`px-4 py-2 text-xs font-bold rounded-lg transition flex items-center gap-2 ${
+              activeTab === "register"
+                ? "bg-indigo-600 text-white shadow-sm"
+                : "text-slate-400 hover:text-white"
+            }`}
+          >
+            <Users className="w-4 h-4" />
+            Class Roll Call Register
+          </button>
         </div>
       </div>
 
-      {classList.length === 0 ? (
+      {/* ── SMOOTH INITIAL LOADING SKELETON (PREVENTS SETUP WIZARD FLASH) ──── */}
+      {initialLoading ? (
+        <div className="space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-slate-900 border border-slate-800 rounded-2xl p-5 animate-pulse space-y-3">
+                <div className="h-4 bg-slate-800 rounded w-1/2" />
+                <div className="h-8 bg-slate-800 rounded w-3/4" />
+              </div>
+            ))}
+          </div>
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center text-slate-400 animate-pulse">
+            <p className="text-sm font-medium">Loading attendance records and class rosters...</p>
+          </div>
+        </div>
+      ) : classList.length === 0 ? (
         <div className="card p-8 text-center space-y-3 bg-slate-900 border border-slate-800 rounded-2xl">
-          <p className="text-sm font-semibold text-slate-200">
-            No classes found — complete School Setup first
-          </p>
+          <div className="w-12 h-12 rounded-2xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center mx-auto text-xl font-bold">
+            🏫
+          </div>
+          <p className="text-base font-bold text-white">No Classes Registered Yet</p>
           <p className="text-xs text-slate-400 max-w-md mx-auto">
-            Your school institution needs to have classes configured before taking attendance.
+            Configure your school classes (e.g. JSS 1, SSS 2) to begin tracking attendance.
           </p>
           <div className="pt-2">
             <a
@@ -268,206 +397,353 @@ export default function MarkAttendancePage() {
         </div>
       ) : (
         <>
-          {/* Filter Bar */}
-          <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 grid grid-cols-1 sm:grid-cols-3 gap-4 shadow-sm">
-            <div>
-              <label htmlFor="select-class" className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                Select Class *
-              </label>
-              <select
-                id="select-class"
-                value={selectedClassId}
-                onChange={(e) => {
-                  setSelectedClassId(e.target.value);
-                  setSelectedSectionId("");
-                }}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500 transition"
-              >
-                {classList.map((cls) => (
-                  <option key={cls.id} value={cls.id}>
-                    {cls.name} ({cls.studentCount ?? 0} {cls.studentCount === 1 ? "student" : "students"})
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                Section / Arm
-              </label>
-              <select
-                id="select-section"
-                value={selectedSectionId}
-                onChange={(e) => setSelectedSectionId(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500 transition"
-              >
-                <option value="">All Sections</option>
-                {availableSections.map((sec) => (
-                  <option key={sec.id} value={sec.id}>
-                    {sec.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
-                Date *
-              </label>
-              <input
-                id="attendance-date"
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500 transition"
-              />
-            </div>
-          </div>
-
-          {/* Roster or Distinguishable Empty States */}
-          {loadingStudents ? (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center">
-              <p className="text-sm font-medium text-slate-400 animate-pulse">Loading class roster...</p>
-            </div>
-          ) : studentList.length === 0 ? (
-            // Distinguish: Whole school has 0 students VS This specific class has 0 students
-            totalSchoolStudents === 0 ? (
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center space-y-3 shadow-sm">
-                <div className="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 text-slate-400 flex items-center justify-center mx-auto">
-                  <Users className="w-6 h-6" />
+          {/* ── TAB 1: ATTENDANCE INTELLIGENCE & KPIS ───────────────────────── */}
+          {activeTab === "kpi" && (
+            <div className="space-y-6">
+              {/* Top Metric Cards */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    <span>Total Students</span>
+                    <Users className="w-4 h-4 text-indigo-400" />
+                  </div>
+                  <div className="text-3xl font-extrabold text-white">
+                    {summaryData?.totalEnrolled ?? totalSchoolStudents ?? 0}
+                  </div>
+                  <p className="text-[11px] text-slate-400">Active enrolled students across all classes</p>
                 </div>
-                <p className="text-base font-semibold text-white">No Students Registered in School Yet</p>
-                <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-                  Your school directory is currently empty. Register students in the Students directory to begin recording daily class roll-calls.
-                </p>
-                <div className="pt-2">
-                  <a
-                    href="/dashboard/students/new"
-                    id="btn-add-student"
-                    className="inline-flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition shadow-sm cursor-pointer"
-                  >
-                    <Plus className="w-4 h-4" />
-                    Register Student
-                  </a>
+
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    <span>Present Today</span>
+                    <CheckCircle className="w-4 h-4 text-emerald-400" />
+                  </div>
+                  <div className="text-3xl font-extrabold text-emerald-400">
+                    {summaryData?.today.present ?? 0}
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    {summaryData?.today.late ? `+ ${summaryData.today.late} arrived late` : "Marked present today"}
+                  </p>
+                </div>
+
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    <span>Absent Today</span>
+                    <X className="w-4 h-4 text-rose-400" />
+                  </div>
+                  <div className="text-3xl font-extrabold text-rose-400">
+                    {summaryData?.today.absent ?? 0}
+                  </div>
+                  <p className="text-[11px] text-slate-400">
+                    {summaryData?.today.excused ? `${summaryData.today.excused} excused absences` : "Unexcused absences today"}
+                  </p>
+                </div>
+
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 space-y-2">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase tracking-wider">
+                    <span>Today&apos;s Rate</span>
+                    <BarChart3 className="w-4 h-4 text-indigo-400" />
+                  </div>
+                  <div className="text-3xl font-extrabold text-white">
+                    {summaryData?.today.rate ?? 0}%
+                  </div>
+                  <div className="w-full bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                    <div
+                      className="bg-indigo-500 h-full rounded-full transition-all"
+                      style={{ width: `${summaryData?.today.rate ?? 0}%` }}
+                    />
+                  </div>
                 </div>
               </div>
-            ) : (
-              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center space-y-3 shadow-sm">
-                <div className="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 text-slate-400 flex items-center justify-center mx-auto">
-                  <Users className="w-6 h-6" />
-                </div>
-                <p className="text-base font-semibold text-white">
-                  No students currently enrolled in {selectedClass?.name || "this class"}
-                </p>
-                <p className="text-xs text-slate-400 max-w-md mx-auto leading-relaxed">
-                  This specific class currently has 0 active students assigned to it. Please select a different class from the dropdown above or assign students to {selectedClass?.name || "this class"} in the Students directory.
-                </p>
-              </div>
-            )
-          ) : (
-            <div className="bg-slate-900 border border-slate-800 rounded-2xl shadow-sm overflow-hidden space-y-4 p-6">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
-                <span className="text-sm font-semibold text-white">
-                  Class Roster: {selectedClass?.name} ({studentList.length} {studentList.length === 1 ? "Student" : "Students"})
-                </span>
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-400 mr-1">Quick Mark:</span>
+
+              {/* Class-by-Class Attendance Summary */}
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+                <div className="p-5 border-b border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-base font-bold text-white">Today&apos;s Class-by-Class Attendance</h3>
+                    <p className="text-xs text-slate-400 mt-0.5">
+                      Live attendance metrics reported by form teachers across each classroom.
+                    </p>
+                  </div>
                   <button
                     type="button"
-                    onClick={() => handleMarkAll("present")}
-                    className="px-3 py-1.5 rounded-lg text-xs font-semibold text-emerald-400 bg-emerald-950/60 border border-emerald-800 hover:bg-emerald-900/60 transition cursor-pointer"
+                    onClick={refreshSummary}
+                    disabled={loadingSummary}
+                    className="btn-secondary btn-sm text-xs"
                   >
-                    All Present
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleMarkAll("absent")}
-                    className="px-3 py-1.5 rounded-lg text-xs font-semibold text-red-400 bg-red-950/60 border border-red-800 hover:bg-red-900/60 transition cursor-pointer"
-                  >
-                    All Absent
+                    {loadingSummary ? "Refreshing..." : "🔄 Refresh Metrics"}
                   </button>
                 </div>
-              </div>
 
-              {/* Student List Table */}
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm text-slate-200">
-                  <thead className="text-xs uppercase bg-slate-800/60 text-slate-400 border-b border-slate-800 font-semibold">
-                    <tr>
-                      <th className="px-4 py-3">Student Name</th>
-                      <th className="px-4 py-3">Admission No</th>
-                      <th className="px-4 py-3 text-center">Attendance Status</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-800">
-                    {studentList.map((student) => {
-                      const currentStatus = attendanceMap[student.id]?.status || "present";
-                      return (
-                        <tr key={student.id} id={`student-attendance-row-${student.id}`} className="hover:bg-slate-800/40 transition">
-                          <td className="px-4 py-3.5">
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse text-xs">
+                    <thead>
+                      <tr className="bg-slate-950/80 text-slate-400 border-b border-slate-800">
+                        <th className="py-3 px-4">Class</th>
+                        <th className="py-3 px-4">Total Enrolled</th>
+                        <th className="py-3 px-4">Present</th>
+                        <th className="py-3 px-4">Absent</th>
+                        <th className="py-3 px-4">Attendance Rate</th>
+                        <th className="py-3 px-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-800 font-medium">
+                      {summaryData?.classSummaries.map((cls) => (
+                        <tr key={cls.id} className="hover:bg-slate-800/40 transition">
+                          <td className="py-3.5 px-4 font-bold text-white">
+                            {cls.name}
+                          </td>
+                          <td className="py-3.5 px-4 text-slate-300">
+                            {cls.totalStudents} students
+                          </td>
+                          <td className="py-3.5 px-4 text-emerald-400 font-semibold">
+                            {cls.presentToday} present
+                          </td>
+                          <td className="py-3.5 px-4 text-rose-400 font-semibold">
+                            {cls.absentToday} absent
+                          </td>
+                          <td className="py-3.5 px-4">
                             <div className="flex items-center gap-3">
-                              <div className="w-8 h-8 rounded-full bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center font-bold text-indigo-300 text-xs flex-shrink-0">
-                                {student.firstName.charAt(0)}
-                                {student.lastName.charAt(0)}
+                              <span className="font-mono font-bold text-white">{cls.rate}%</span>
+                              <div className="w-24 bg-slate-800 h-1.5 rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full rounded-full ${
+                                    cls.rate >= 90
+                                      ? "bg-emerald-500"
+                                      : cls.rate >= 75
+                                      ? "bg-amber-500"
+                                      : "bg-rose-500"
+                                  }`}
+                                  style={{ width: `${cls.rate}%` }}
+                                />
                               </div>
-                              <span className="font-semibold text-white">
-                                {student.lastName}, {student.firstName}
-                              </span>
                             </div>
                           </td>
-                          <td className="px-4 py-3.5 font-mono text-xs text-slate-400">
-                            {student.admissionNumber}
-                          </td>
-                          <td className="px-4 py-3.5 text-center">
-                            <div className="inline-flex items-center gap-1 bg-slate-800 p-1 rounded-xl border border-slate-700">
-                              {(["present", "late", "absent", "excused"] as AttendanceStatus[]).map(
-                                (st) => (
-                                  <button
-                                    key={st}
-                                    type="button"
-                                    onClick={() => handleStatusChange(student.id, st)}
-                                    className={`px-3 py-1 rounded-lg text-xs font-semibold capitalize transition-all cursor-pointer ${
-                                      currentStatus === st
-                                        ? st === "present"
-                                          ? "bg-emerald-600 text-white shadow-xs"
-                                          : st === "late"
-                                          ? "bg-amber-500 text-white shadow-xs"
-                                          : st === "absent"
-                                          ? "bg-red-600 text-white shadow-xs"
-                                          : "bg-sky-600 text-white shadow-xs"
-                                        : "text-slate-400 hover:text-white"
-                                    }`}
-                                  >
-                                    {st}
-                                  </button>
-                                )
-                              )}
-                            </div>
+                          <td className="py-3.5 px-4 text-right">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedClassId(cls.id);
+                                setActiveTab("register");
+                              }}
+                              className="btn-ghost btn-xs text-indigo-400 hover:text-white"
+                            >
+                              Open Roll Call →
+                            </button>
                           </td>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── TAB 2: CLASS ROLL CALL REGISTER ─────────────────────────────── */}
+          {activeTab === "register" && (
+            <div className="space-y-5">
+              {/* Filter & Controls Bar */}
+              <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 grid grid-cols-1 sm:grid-cols-3 gap-4 shadow-sm">
+                <div>
+                  <label htmlFor="select-class" className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                    Select Class *
+                  </label>
+                  <select
+                    id="select-class"
+                    value={selectedClassId}
+                    onChange={(e) => {
+                      setSelectedClassId(e.target.value);
+                      setSelectedSectionId("");
+                    }}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500 transition cursor-pointer"
+                  >
+                    {classList.map((cls) => (
+                      <option key={cls.id} value={cls.id}>
+                        {cls.name} ({cls.studentCount ?? 0} {cls.studentCount === 1 ? "student" : "students"})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                    Section / Arm
+                  </label>
+                  <select
+                    id="select-section"
+                    value={selectedSectionId}
+                    onChange={(e) => setSelectedSectionId(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500 transition cursor-pointer"
+                  >
+                    <option value="">All Sections</option>
+                    {availableSections.map((sec) => (
+                      <option key={sec.id} value={sec.id}>
+                        {sec.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">
+                    Roll Call Date *
+                  </label>
+                  <input
+                    id="attendance-date"
+                    type="date"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                    className="w-full bg-slate-800 border border-slate-700 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-hidden focus:ring-2 focus:ring-indigo-500 transition font-mono"
+                  />
+                </div>
               </div>
 
-              {/* Submit Footer */}
-              <div className="flex items-center justify-between border-t border-slate-800 pt-4">
-                <span className="text-xs text-slate-400 font-mono">
-                  {syncStatus || "Ready to save attendance"}
-                </span>
-
-                <button
-                  id="save-attendance-btn"
-                  type="button"
-                  onClick={handleSaveAttendance}
-                  disabled={saving}
-                  className="px-5 py-2.5 rounded-xl font-semibold text-xs text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 transition shadow-sm flex items-center gap-2 cursor-pointer"
+              {/* Network / Sync Status Alert */}
+              <div className="flex items-center justify-between gap-3">
+                <div
+                  className={`inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full text-xs font-semibold ${
+                    isOnline
+                      ? "bg-emerald-950/60 text-emerald-300 border border-emerald-800/60"
+                      : "bg-amber-950/60 text-amber-300 border border-amber-800/60"
+                  }`}
                 >
-                  <CheckCircle className="w-4 h-4" />
-                  {saving ? "Saving Register..." : "Save Attendance Register"}
-                </button>
+                  <span className={`w-2 h-2 rounded-full ${isOnline ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`} />
+                  {isOnline ? "Online — Instant Server Sync" : "Offline Mode — Caching to IndexedDB"}
+                </div>
+
+                {syncStatus && (
+                  <p className="text-xs text-indigo-400 font-semibold">{syncStatus}</p>
+                )}
               </div>
+
+              {/* Student Roll Call Table */}
+              {loadingStudents ? (
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-12 text-center">
+                  <p className="text-sm font-medium text-slate-400 animate-pulse">Loading class student roster...</p>
+                </div>
+              ) : studentList.length === 0 ? (
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl p-10 text-center space-y-3">
+                  <div className="w-12 h-12 rounded-2xl bg-slate-800 border border-slate-700 text-slate-400 flex items-center justify-center mx-auto text-xl font-bold">
+                    👥
+                  </div>
+                  <p className="text-base font-bold text-white">No Students in this Class</p>
+                  <p className="text-xs text-slate-400 max-w-sm mx-auto">
+                    There are no enrolled students assigned to this class yet. Add students from the Students Directory.
+                  </p>
+                  <div className="pt-2">
+                    <a
+                      href="/dashboard/students/new"
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-500 text-white font-bold text-xs rounded-xl transition"
+                    >
+                      <Plus className="w-4 h-4" />
+                      Add Student
+                    </a>
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl space-y-4 p-5">
+                  {/* Quick Mark All Buttons */}
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+                    <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      Roster: {studentList.length} Students
+                    </p>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => markAll("present")}
+                        className="btn-ghost btn-xs text-emerald-400 hover:bg-emerald-950/40"
+                      >
+                        ✓ Mark All Present
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => markAll("absent")}
+                        className="btn-ghost btn-xs text-rose-400 hover:bg-rose-950/40"
+                      >
+                        ✕ Mark All Absent
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Student Table */}
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse text-xs">
+                      <thead>
+                        <tr className="bg-slate-950/80 text-slate-400 border-b border-slate-800">
+                          <th className="py-3 px-4">Student</th>
+                          <th className="py-3 px-4">Admission No</th>
+                          <th className="py-3 px-4">Attendance Status</th>
+                          <th className="py-3 px-4">Remarks</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-800 font-medium">
+                        {studentList.map((student) => {
+                          const currentStatus = attendanceMap[student.id]?.status || "present";
+                          const currentRemarks = attendanceMap[student.id]?.remarks || "";
+
+                          return (
+                            <tr key={student.id} className="hover:bg-slate-800/40 transition">
+                              <td className="py-3.5 px-4 font-bold text-white">
+                                {student.lastName}, {student.firstName} {student.middleName || ""}
+                              </td>
+                              <td className="py-3.5 px-4 font-mono text-slate-300">
+                                {student.admissionNumber}
+                              </td>
+                              <td className="py-3.5 px-4">
+                                <div className="flex items-center gap-1.5">
+                                  {(["present", "absent", "late", "excused"] as AttendanceStatus[]).map((status) => (
+                                    <button
+                                      key={status}
+                                      type="button"
+                                      onClick={() => setStatus(student.id, status)}
+                                      className={`px-2.5 py-1 rounded-lg text-[11px] font-bold capitalize transition ${
+                                        currentStatus === status
+                                          ? status === "present"
+                                            ? "bg-emerald-600 text-white shadow-xs"
+                                            : status === "absent"
+                                            ? "bg-rose-600 text-white shadow-xs"
+                                            : status === "late"
+                                            ? "bg-amber-600 text-white shadow-xs"
+                                            : "bg-indigo-600 text-white shadow-xs"
+                                          : "bg-slate-800 text-slate-400 hover:text-white"
+                                      }`}
+                                    >
+                                      {status}
+                                    </button>
+                                  ))}
+                                </div>
+                              </td>
+                              <td className="py-3.5 px-4">
+                                <input
+                                  type="text"
+                                  placeholder="e.g. Doctor's note, late arrival"
+                                  value={currentRemarks}
+                                  onChange={(e) => setRemarks(student.id, e.target.value)}
+                                  className="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1 text-xs text-white placeholder:text-slate-500"
+                                />
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+
+                  {/* Save Footer */}
+                  <div className="flex items-center justify-end pt-4 border-t border-slate-800">
+                    <button
+                      type="button"
+                      onClick={handleSave}
+                      disabled={saving}
+                      className="btn-primary btn-sm font-bold text-xs flex items-center gap-2"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      {saving ? "Saving Records..." : "Save & Sync Attendance"}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </>
